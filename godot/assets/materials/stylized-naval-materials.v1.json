@@ -1,0 +1,18 @@
+{
+  "schema": "abyssal-dominion/material-library/v1",
+  "colorSpace": "sRGB",
+  "workflow": "metallic-roughness",
+  "maxTextureSize": { "mobile": 1024, "hero": 2048 },
+  "materials": {
+    "stylized_wood": { "baseColor": "#754226", "roughness": 0.78, "metallic": 0.02 },
+    "dark_wood": { "baseColor": "#2D1C18", "roughness": 0.84, "metallic": 0.02 },
+    "sail_cloth": { "baseColor": "#E8DDC3", "roughness": 0.9, "metallic": 0 },
+    "metal": { "baseColor": "#292F33", "roughness": 0.31, "metallic": 0.88 },
+    "bronze": { "baseColor": "#B7833F", "roughness": 0.42, "metallic": 0.68 },
+    "rock": { "baseColor": "#565C58", "roughness": 0.94, "metallic": 0.02 },
+    "sand": { "baseColor": "#CDBA86", "roughness": 0.96, "metallic": 0 },
+    "wet_rock": { "baseColor": "#303C3A", "roughness": 0.48, "metallic": 0.04 },
+    "reef": { "baseColor": "#52766C", "roughness": 0.82, "metallic": 0 },
+    "ruin_stone": { "baseColor": "#686861", "roughness": 0.95, "metallic": 0.02 }
+  }
+}

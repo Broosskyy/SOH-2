@@ -1,0 +1,64 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
+[ext_resource type="PackedScene" path="res://scenes/ships/PlayerShip.tscn" id="2_ship"]
+[ext_resource type="Script" path="res://scripts/camera/camera_controller.gd" id="3_camera"]
+[ext_resource type="Script" path="res://scripts/input/mobile_controls.gd" id="4_mobile"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.14, 0.48, 0.62, 1)
+sky_horizon_color = Color(0.63, 0.84, 0.85, 1)
+ground_bottom_color = Color(0.02, 0.12, 0.17, 1)
+ground_horizon_color = Color(0.22, 0.48, 0.52, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.75, 0.92, 1, 1)
+ambient_light_energy = 0.72
+fog_enabled = true
+fog_light_color = Color(0.32, 0.63, 0.68, 1)
+fog_density = 0.0012
+
+[sub_resource type="PlaneMesh" id="OceanMesh"]
+size = Vector2(3000, 2200)
+subdivide_width = 80
+subdivide_depth = 60
+
+[sub_resource type="StandardMaterial3D" id="OceanMaterial"]
+albedo_color = Color(0.025, 0.38, 0.51, 1)
+metallic = 0.18
+roughness = 0.27
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_world")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -32, 0)
+light_color = Color(1, 0.9, 0.72, 1)
+light_energy = 1.8
+shadow_enabled = true
+
+[node name="Ocean" type="MeshInstance3D" parent="."]
+mesh = SubResource("OceanMesh")
+material_override = SubResource("OceanMaterial")
+
+[node name="PlayerShip" parent="." instance=ExtResource("2_ship")]
+
+[node name="Camera" type="Camera3D" parent="."]
+position = Vector3(-42, 185, 235)
+current = true
+fov = 39.0
+script = ExtResource("3_camera")
+target_path = NodePath("../PlayerShip")
+
+[node name="MobileControls" type="CanvasLayer" parent="."]
+script = ExtResource("4_mobile")
+player_path = NodePath("../PlayerShip")

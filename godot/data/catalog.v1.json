@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "gameId": "abyssal-dominion",
+  "coordinateSystem": "XZ_UP_Y",
+  "presentation": {
+    "gameplayMode": "2.5D_NAVAL_COMBAT",
+    "rendering": "FULL_3D",
+    "gameplayPlane": "XZ",
+    "waterLevel": 0,
+    "heightIsPlayerControlled": false,
+    "camera": {
+      "projection": "FIXED_OBLIQUE_PERSPECTIVE",
+      "fovDegrees": 39,
+      "zoomMin": 0.68,
+      "zoomMax": 1.35,
+      "playerOrbitEnabled": false,
+      "thirdPersonChaseEnabled": false,
+      "firstPersonEnabled": false,
+      "zoomEnabled": true,
+      "bossOverviewMultiplier": 1.3,
+      "eventOverviewMultiplier": 1.14,
+      "cameraShakeEnabled": true
+    }
+  },
+  "ships": {
+    "sovereign": { "name": "Sovereign-Fregatte", "role": "balanced", "price": 0, "level": 1, "hp": 1250, "shield": 350, "speed": 180, "turn": 1.85, "damage": 1.0 },
+    "tempest": { "name": "Sturmsegler", "role": "scout", "price": 1800, "level": 1, "hp": 920, "shield": 260, "speed": 238, "turn": 2.45, "damage": 0.92 },
+    "ironclad": { "name": "Eisenkrone", "role": "tank", "price": 6800, "level": 2, "hp": 2050, "shield": 420, "speed": 138, "turn": 1.35, "damage": 1.22 },
+    "arcanum": { "name": "Arkanum der Tiefe", "role": "arcane", "price": 11800, "level": 3, "hp": 1450, "shield": 820, "speed": 172, "turn": 1.72, "damage": 1.16 }
+  },
+  "cannons": {
+    "bronze": { "name": "Bronze-Breitseiten", "price": 0, "level": 1, "damage": 1.0, "reload": 1.0, "range": 1.0 },
+    "storm": { "name": "Sturmfeuer-Batterie", "price": 1400, "level": 1, "damage": 0.82, "reload": 0.68, "range": 0.94 },
+    "siege": { "name": "Belagerungsgeschütze", "price": 5200, "level": 2, "damage": 1.55, "reload": 1.42, "range": 1.08 },
+    "abyssal": { "name": "Abyssale Langrohre", "price": 9500, "level": 3, "damage": 1.26, "reload": 1.08, "range": 1.32 }
+  },
+  "ammo": {
+    "iron": { "name": "Eisenkugeln", "damage": 72, "reload": 1.15, "range": 540, "effect": "standard" },
+    "piercing": { "name": "Panzerbrecher", "damage": 98, "reload": 1.5, "range": 525, "effect": "armored_bonus_35" },
+    "fire": { "name": "Brandmunition", "damage": 84, "reload": 1.35, "range": 510, "effect": "burn" },
+    "frost": { "name": "Frostmunition", "damage": 63, "reload": 1.1, "range": 560, "effect": "slow" },
+    "harpoon": { "name": "Tiefenharpune", "damage": 105, "reload": 1.45, "range": 450, "effect": "monster_weapon" }
+  },
+  "harpoons": {
+    "deep": { "name": "Tiefenharpune", "damageMultiplier": 1.0, "monsterMultiplier": 1.0, "upgradePerLevel": 0.12 }
+  },
+  "abilities": {
+    "surge": { "name": "Sturmsegel", "cooldownMs": 15000, "durationMs": 4200, "speedMultiplier": 1.55 },
+    "volley": { "name": "Streusalve", "cooldownMs": 10000, "ammoCost": 4, "maxTargets": 5 },
+    "aegis": { "name": "Reliktschild", "cooldownMs": 12000, "pearlCost": 6, "shieldRestore": 0.32 }
+  },
+  "deckLevels": {
+    "1": { "name": "Eichendeck", "cost": 0, "weaponSlots": 12, "expansionSlots": 6, "hpBonus": 0.0, "shieldBonus": 0.0 },
+    "2": { "name": "Verstärktes Deck", "cost": 1400, "weaponSlots": 16, "expansionSlots": 8, "hpBonus": 0.06, "shieldBonus": 0.05 },
+    "3": { "name": "Veteranendeck", "cost": 2600, "weaponSlots": 20, "expansionSlots": 10, "hpBonus": 0.12, "shieldBonus": 0.1 },
+    "4": { "name": "Königsdeck", "cost": 4300, "weaponSlots": 24, "expansionSlots": 12, "hpBonus": 0.19, "shieldBonus": 0.17 },
+    "5": { "name": "Tiefendeck", "cost": 6800, "weaponSlots": 28, "expansionSlots": 15, "hpBonus": 0.27, "shieldBonus": 0.26 },
+    "6": { "name": "Dominion-Deck", "cost": 9800, "weaponSlots": 32, "expansionSlots": 18, "hpBonus": 0.36, "shieldBonus": 0.36 }
+  },
+  "enemies": {
+    "raider": { "name": "Scherben-Plünderer", "level": 1, "hp": 300, "speed": 52, "damage": 38, "range": 410, "reward": 320 },
+    "scout": { "name": "Nox-Kundschafter", "level": 2, "hp": 350, "speed": 68, "damage": 34, "range": 430, "reward": 390 },
+    "escort": { "name": "Kupfer-Eskorte", "level": 3, "hp": 520, "speed": 43, "damage": 52, "range": 450, "reward": 520 },
+    "frigate": { "name": "Schwere Dämmerfregatte", "level": 5, "hp": 850, "speed": 34, "damage": 72, "range": 480, "reward": 780, "armored": true },
+    "ghost": { "name": "Geisterbarke", "level": 5, "hp": 620, "speed": 46, "damage": 64, "range": 470, "reward": 720 },
+    "elite": { "name": "Elitekapitän Veyra", "level": 7, "hp": 1350, "speed": 38, "damage": 88, "range": 510, "reward": 1400, "boss": true, "armored": true }
+  },
+  "monsters": {
+    "kraken": { "name": "Tiefenkrake", "level": 5, "hp": 1250, "speed": 28, "damage": 74, "range": 360, "reward": 1100 },
+    "serpent": { "name": "Smaragd-Seeschlange", "level": 3, "hp": 680, "speed": 76, "damage": 50, "range": 300, "reward": 690 },
+    "leviathan": { "name": "Panzerleviathan", "level": 8, "hp": 2100, "speed": 24, "damage": 105, "range": 390, "reward": 1900, "boss": true, "armored": true }
+  },
+  "bosses": {
+    "abyss_lord": { "entityKind": "boss", "name": "Abyssfürst Kharon", "level": 10, "hp": 3400, "speed": 31, "damage": 125, "range": 520, "reward": 3500, "phases": 3 }
+  },
+  "maps": {
+    "aster": { "name": "Azurwacht", "sector": "1-A", "danger": 1, "recommended": 1, "size": [3000, 1900], "color": ["#0d6b7a", "#043847"], "weather": "clear", "port": "Hafen Aster", "enemySpawns": [{"kind":"raider","position":[1050,1040]},{"kind":"scout","position":[1540,650]},{"kind":"escort","position":[2050,550]},{"kind":"raider","position":[2450,1450]},{"kind":"serpent","position":[1590,1450]}] },
+    "gloam": { "name": "Dämmersee", "sector": "2-C", "danger": 2, "recommended": 3, "size": [3400, 2100], "color": ["#175b68", "#082f43"], "weather": "rain", "port": "Dämmerhafen", "enemySpawns": [{"kind":"scout","position":[970,780]},{"kind":"escort","position":[1600,1150]},{"kind":"frigate","position":[2450,420]},{"kind":"ghost","position":[2760,1590]},{"kind":"kraken","position":[1750,1740]},{"kind":"elite","position":[3040,1160]}] },
+    "coral": { "name": "Korallenmark", "sector": "3-B", "danger": 3, "recommended": 4, "size": [3600, 2200], "color": ["#22a6ae", "#0b6377"], "weather": "clear", "port": "Perlenkai", "enemySpawns": [{"kind":"escort","position":[1060,1320]},{"kind":"scout","position":[1580,810]},{"kind":"frigate","position":[2350,700]},{"kind":"serpent","position":[1910,1760]},{"kind":"kraken","position":[3040,1370]},{"kind":"elite","position":[3260,920]}] },
+    "maelstrom": { "name": "Sturmbruch", "sector": "4-F", "danger": 4, "recommended": 6, "size": [3600, 2300], "color": ["#224f5e", "#071f35"], "weather": "storm", "port": "Bollwerk Nox", "enemySpawns": [{"kind":"frigate","position":[1120,1350]},{"kind":"ghost","position":[1700,920]},{"kind":"elite","position":[2450,680]},{"kind":"leviathan","position":[1850,1880]},{"kind":"kraken","position":[3030,1550]},{"kind":"elite","position":[3240,1040]}] },
+    "abyss": { "name": "Abyssale Prüfung", "sector": "BOSS", "danger": 5, "recommended": 7, "size": [2800, 1800], "color": ["#283b62", "#100e2d"], "weather": "void", "port": "Rückkehrsiegel", "waves": 3, "enemySpawns": [{"kind":"ghost","position":[1050,560]},{"kind":"frigate","position":[1080,1280]},{"kind":"elite","position":[1900,520]},{"kind":"leviathan","position":[2050,1250]}] }
+  },
+  "islands": [
+    { "map": "aster", "name": "Hafen Aster", "position": [410, 900], "radius": [210, 135], "port": true },
+    { "map": "aster", "name": "Glasriff", "position": [1200, 370], "radius": [170, 95] },
+    { "map": "aster", "name": "Sonnenruh", "position": [2050, 1260], "radius": [230, 135] },
+    { "map": "aster", "name": "Wachtklippe", "position": [2580, 480], "radius": [145, 90] },
+    { "map": "gloam", "name": "Dämmerhafen", "position": [390, 1050], "radius": [195, 120], "port": true },
+    { "map": "gloam", "name": "Kräheninsel", "position": [1350, 390], "radius": [240, 120] },
+    { "map": "gloam", "name": "Flüsterzahn", "position": [2180, 1390], "radius": [180, 105] },
+    { "map": "gloam", "name": "Ruinenhort", "position": [2920, 650], "radius": [230, 150] },
+    { "map": "coral", "name": "Perlenkai", "position": [420, 1100], "radius": [220, 135], "port": true },
+    { "map": "coral", "name": "Papageienkrone", "position": [1280, 480], "radius": [270, 135] },
+    { "map": "coral", "name": "Smaragdatoll", "position": [2250, 1510], "radius": [250, 155] },
+    { "map": "coral", "name": "Sonnenzahn", "position": [3020, 620], "radius": [205, 120] },
+    { "map": "coral", "name": "Mojo-Riff", "position": [3190, 1760], "radius": [145, 90] },
+    { "map": "maelstrom", "name": "Bollwerk Nox", "position": [430, 1150], "radius": [205, 125], "port": true },
+    { "map": "maelstrom", "name": "Donnergrat", "position": [1380, 550], "radius": [160, 100] },
+    { "map": "maelstrom", "name": "Geborstene Krone", "position": [2300, 1660], "radius": [250, 140] },
+    { "map": "maelstrom", "name": "Exilklippe", "position": [3180, 590], "radius": [180, 110] },
+    { "map": "abyss", "name": "Rückkehrsiegel", "position": [340, 900], "radius": [160, 105], "port": true },
+    { "map": "abyss", "name": "Auge der Tiefe", "position": [1400, 900], "radius": [95, 60] }
+  ],
+  "missions": [
+    { "id": "first-blood", "type": "ships", "goal": 3, "gold": 900, "xp": 250 },
+    { "id": "deep-hunt", "type": "monsters", "goal": 2, "pearls": 40, "xp": 350 },
+    { "id": "salvager", "type": "loot", "goal": 5, "gold": 1200 },
+    { "id": "storm-vanguard", "type": "elite", "goal": 1, "pearls": 75 },
+    { "id": "cartographer", "type": "maps", "goal": 3, "gold": 1500 },
+    { "id": "shipwright", "type": "ships-owned", "goal": 1, "gold": 2000, "pearls": 5 },
+    { "id": "ritualist", "type": "rituals", "goal": 5, "xp": 350, "mapFragments": 1 },
+    { "id": "refit", "type": "upgrades", "goal": 3, "xp": 200 }
+  ],
+  "loot": {
+    "ship": { "materials": 1, "pearls": 0 },
+    "monster": { "materials": 1, "pearls": 12 },
+    "elite": { "materials": 3, "pearls": 35 },
+    "cauldronPity": 9
+  },
+  "economy": {
+    "currencies": ["gold", "pearls", "materials", "mojo", "mapFragments"],
+    "shop": {
+      "repairKit": 600,
+      "ironAmmo80": 300,
+      "piercingAmmo25": 850,
+      "mojo": 500
+    },
+    "upgradeScaling": {
+      "cannon": 1600,
+      "harpoon": 1400,
+      "hull": 1250,
+      "sails": 1100,
+      "crew": 1500
+    }
+  },
+  "progression": {
+    "xpPerLevelBase": 600,
+    "mapUnlockLevels": { "gloam": 2, "coral": 3, "maelstrom": 4, "abyss": 5 },
+    "bonusMapFragments": 8
+  },
+  "events": {
+    "hollowCrown": { "name": "Sturmflut der Vergessenen", "localAiOnly": true, "sealGoal": 10 }
+  },
+  "assetSlots": {
+    "playerShips": "assets/ships/player/{id}/{lod}.glb",
+    "enemyShips": "assets/ships/enemy/{id}/{lod}.glb",
+    "monsters": "assets/monsters/{id}/{lod}.glb",
+    "bosses": "assets/bosses/{id}/{lod}.glb",
+    "islands": "assets/world/islands/{id}/{lod}.glb",
+    "ports": "assets/world/ports/{id}/{lod}.glb",
+    "props": "assets/world/props/{id}/{lod}.glb",
+    "vfx": "assets/vfx/{id}"
+  }
+}

@@ -1,0 +1,46 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/ships/player_ship.gd" id="1_ship"]
+
+[sub_resource type="CapsuleShape3D" id="ShipCollision"]
+radius = 4.0
+height = 18.0
+
+[sub_resource type="BoxMesh" id="HullMesh"]
+size = Vector3(9, 3, 24)
+
+[sub_resource type="StandardMaterial3D" id="HullMaterial"]
+albedo_color = Color(0.24, 0.10, 0.045, 1)
+roughness = 0.72
+
+[node name="PlayerShip" type="CharacterBody3D"]
+script = ExtResource("1_ship")
+
+[node name="Collision" type="CollisionShape3D" parent="."]
+rotation_degrees = Vector3(90, 0, 0)
+shape = SubResource("ShipCollision")
+
+[node name="Hull" type="MeshInstance3D" parent="."]
+position = Vector3(0, 2.4, 0)
+mesh = SubResource("HullMesh")
+material_override = SubResource("HullMaterial")
+
+[node name="Bow" type="MeshInstance3D" parent="."]
+position = Vector3(0, 2.4, -13)
+rotation_degrees = Vector3(0, 0, 45)
+mesh = SubResource("HullMesh")
+material_override = SubResource("HullMaterial")
+scale = Vector3(0.55, 0.55, 0.45)
+
+[node name="Mast" type="MeshInstance3D" parent="."]
+position = Vector3(0, 10, 0)
+mesh = SubResource("HullMesh")
+material_override = SubResource("HullMaterial")
+scale = Vector3(0.12, 2.6, 0.12)
+
+[node name="Sail" type="MeshInstance3D" parent="."]
+position = Vector3(0, 12, -1)
+mesh = SubResource("HullMesh")
+material_override = SubResource("HullMaterial")
+scale = Vector3(0.08, 1.5, 0.75)
+

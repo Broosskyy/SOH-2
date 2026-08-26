@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "kraken-player-30k",
+  "source": "Kraken_ship_player_30k.glb",
+  "role": "player-ship-visual",
+  "format": "glTF 2.0 binary",
+  "analysis": {
+    "bytes": 21394148,
+    "triangles": 30744,
+    "vertices": 53674,
+    "meshInstances": 1,
+    "drawCalls": 1,
+    "materials": 1,
+    "animations": 0,
+    "skins": 0,
+    "normals": true,
+    "uv0": true,
+    "upAxis": "+Y",
+    "sourceForwardAxis": "+Z",
+    "boundsMin": [-0.3415999711, -0.641866982, -0.9999999404],
+    "boundsMax": [0.3416529596, 0.6424930096, 0.9988939762]
+  },
+  "textures": [
+    { "role": "baseColor", "width": 2048, "height": 2048, "mimeType": "image/png" },
+    { "role": "metallicRoughness", "width": 4096, "height": 4096, "mimeType": "image/png" }
+  ],
+  "visual": {
+    "scale": 48,
+    "rotationOffsetYRadians": 1.5707963267948966,
+    "waterlineOffset": 22.5,
+    "wakeOffset": { "forward": -50, "lateral": 0 }
+  },
+  "lods": [],
+  "fallback": [
+    "sovereign-frigate-lod-set",
+    "procedural-player-ship"
+  ]
+}
