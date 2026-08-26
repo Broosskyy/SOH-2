@@ -7,10 +7,11 @@
   },
   "scripts": {
     "install:ci": "bash scripts/install-ci.sh",
-    "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vite",
+    "dev": "node scripts/run-with-sites-env.mjs node node_modules/vite/bin/vite.js",
     "prebuild": "npm run sync:game-data",
     "build": "bash scripts/build-verified.sh",
-    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
+    "start": "node scripts/run-with-sites-env.mjs node node_modules/vinext/dist/cli.js start",
+    "preview:web": "node scripts/run-with-sites-env.mjs node scripts/preview-web.mjs",
     "typecheck": "tsc --noEmit --project tsconfig.app.json",
     "sync:game-data": "node scripts/sync-game-data.mjs",
     "sync:web-build": "node scripts/sync-web-build.mjs",

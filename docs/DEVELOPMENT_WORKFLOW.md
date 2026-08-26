@@ -46,10 +46,14 @@ Der Web-Build in `web-build/` wird nach jedem erfolgreichen Produktionsbuild aus
 
 | Befehl | Zweck |
 |--------|--------|
-| `npm run dev` | Lokaler Entwicklungsserver |
+| `npm run dev` | Lokaler Entwicklungsserver (Vite HMR) |
 | `npm run build` | Produktionsbuild + Validierung + `web-build`-Sync |
+| `npm run preview:web` | **Sites/Production-Preview** (Wrangler Worker + ASSETS, Port 8787) |
+| `npm run start` | Vinext Node-Prod-Server (Port 3000; auf Windows Asset-Pfad-Bug) |
 | `npm run sync:web-build` | Nur `dist/` → `web-build/` (nach manuellem Build) |
 | `npm run validate:artifact` | Prüft `dist/server/index.js` und Hosting-Manifest |
+
+Details und Diagnose „Seekarten werden geladen …“: `docs/V20_2_1_RUNTIME_RECOVERY.md`.
 
 ## Sicherheitsregeln
 
@@ -68,5 +72,6 @@ Bei Auth-, Merge-, Build- oder Größenproblemen: stoppen und berichten.
 |---------|----------|
 | `vinext is unavailable` | `npm ci` ausführen |
 | Build-Skripte schlagen fehl | Git Bash verwenden, nicht PowerShell direkt |
+| `npm run start` hängt bei Loading (Windows) | `npm run preview:web` verwenden (Sites-Runtime) |
 | `Missing dist artifact` bei Sync | Zuerst `npm run build` |
 | Datei > 100 MB | Nicht committen; STOP und Asset-Pipeline prüfen |
