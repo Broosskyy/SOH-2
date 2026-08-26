@@ -1,5 +1,5 @@
 import { a as require_react, o as __commonJSMin, s as __toESM, t as require_jsx_runtime } from "../index.js";
-import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-CNvRvm9j.js";
+import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-BmWvIFOt.js";
 //#region node_modules/ipaddr.js/lib/ipaddr.js
 var require_ipaddr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(root) {
@@ -3232,7 +3232,7 @@ var createRuntimeState = () => ({
 	monsterKills: 0,
 	lootCount: 0,
 	wave: 1,
-	zoom: 1,
+	zoom: .96,
 	cameraPan: {
 		x: 0,
 		y: 0
@@ -4413,7 +4413,7 @@ function Home() {
 		const canvas = threeCanvasRef.current;
 		if (!canvas || !ready) return;
 		let renderer = null, raf = 0, disposed = false;
-		import("./threeRenderer-Br86Tyxk.js").then(({ AbyssalThreeRenderer }) => {
+		import("./threeRenderer-DsjUivC-.js").then(({ AbyssalThreeRenderer }) => {
 			if (disposed) return;
 			renderer = new AbyssalThreeRenderer(canvas, qualityPreference);
 			renderer3DRef.current = renderer;
@@ -4563,6 +4563,7 @@ function Home() {
 		targetKind: hud.selected.kind
 	}).range : 0;
 	const targetInRange = !!hud.selected && hud.selected.range <= combatRange;
+	const showShipVisualDebug = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && new URLSearchParams(window.location.search).get("shipDebug") === "1";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 		className: "game-shell",
 		children: [
@@ -4586,7 +4587,7 @@ function Home() {
 				className: "runtime-error",
 				children: runtimeError
 			}),
-			playerVisualStatus && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			showShipVisualDebug && playerVisualStatus && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: `player-visual-device-status ${playerVisualStatus.status}`,
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: playerVisualStatus.status === "kraken-attached" ? "KRAKEN AKTIV" : playerVisualStatus.status === "loading" ? "KRAKEN WIRD GELADEN" : playerVisualStatus.status === "kraken-failed" ? "KRAKEN-LADEFEHLER" : "PLAYER-FALLBACK" }),

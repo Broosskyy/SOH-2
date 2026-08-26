@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, f as ENTITY_DATA, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, n as validateShipVisualDefinition, p as MAPS, s as resolveQuality, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-CNvRvm9j.js";
+import { a as resolveCameraPresentation, f as ENTITY_DATA, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, n as validateShipVisualDefinition, p as MAPS, s as resolveQuality, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-BmWvIFOt.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -40247,28 +40247,30 @@ function sail(width, height, color, ghost = false, lateen = false) {
 		emissiveIntensity: color === 11111904 ? .12 : 0
 	}));
 }
-function createHullWaterInteraction(length, width) {
+function createHullWaterInteraction(length, width, subtle = false) {
 	const root = new Group(), foamMaterial = new MeshBasicMaterial({
-		color: 14679295,
+		color: 13168376,
 		transparent: true,
-		opacity: .34,
+		opacity: subtle ? .18 : .28,
 		depthWrite: false,
 		side: 2,
 		blending: 2
 	});
 	root.name = "HullWaterInteraction";
-	const bow = new Mesh(new TubeGeometry(new CatmullRomCurve3([
-		new Vector3(length * .42, 1, -width * .72),
-		new Vector3(length * .57, 1, 0),
-		new Vector3(length * .42, 1, width * .72)
-	]), 18, 1.25, 6, false), foamMaterial.clone());
-	root.add(bow);
+	if (!subtle) {
+		const bow = new Mesh(new TubeGeometry(new CatmullRomCurve3([
+			new Vector3(length * .42, 1, -width * .72),
+			new Vector3(length * .57, 1, 0),
+			new Vector3(length * .42, 1, width * .72)
+		]), 18, 1.25, 6, false), foamMaterial.clone());
+		root.add(bow);
+	}
 	for (const side of [-1, 1]) {
 		const stern = new Mesh(new TubeGeometry(new CatmullRomCurve3([
 			new Vector3(-length * .42, 1, side * width * .5),
 			new Vector3(-length * .55, 1, side * width * .72),
 			new Vector3(-length * .7, 1, side * width * .96)
-		]), 12, 1, 6, false), foamMaterial.clone());
+		]), 12, .85, 6, false), foamMaterial.clone());
 		root.add(stern);
 	}
 	root.userData.waterInteraction = true;
@@ -40615,24 +40617,28 @@ function paintHealthMarker(marker, e, selected) {
 	if (!ctx) return;
 	const d = ENTITY_DATA[e.kind], ratio = clamp(e.hp / e.maxHp, 0, 1);
 	ctx.clearRect(0, 0, 384, 84);
-	ctx.fillStyle = "rgba(2,12,18,.88)";
-	ctx.fillRect(48, 7, 288, 58);
-	ctx.strokeStyle = selected ? "#ffd76b" : "rgba(193,222,218,.42)";
-	ctx.lineWidth = selected ? 4 : 2;
-	ctx.strokeRect(48, 7, 288, 58);
-	ctx.fillStyle = monsterKinds.has(e.kind) ? "#8deee3" : "#f8ead1";
-	ctx.font = "700 19px system-ui";
 	ctx.textAlign = "center";
-	ctx.fillText(`${monsterKinds.has(e.kind) ? "MONSTER" : "KI"} · ${d.name} · LV ${d.level}`, 192, 29);
-	ctx.fillStyle = "#14252b";
-	ctx.fillRect(68, 39, 248, 12);
+	ctx.shadowColor = "rgba(0,0,0,.85)";
+	ctx.shadowBlur = 6;
+	ctx.fillStyle = monsterKinds.has(e.kind) ? "#8deee3" : "#f8ead1";
+	ctx.font = "700 18px system-ui";
+	ctx.fillText(d.name, 192, 26);
+	ctx.shadowBlur = 0;
+	ctx.fillStyle = "rgba(193,222,218,.82)";
+	ctx.font = "600 15px system-ui";
+	ctx.fillText(`LV ${d.level}`, 192, 42);
+	ctx.fillStyle = "rgba(2,12,18,.88)";
+	ctx.fillRect(68, 50, 248, 14);
+	ctx.strokeStyle = selected ? "#ffd76b" : "rgba(193,222,218,.42)";
+	ctx.lineWidth = selected ? 3 : 2;
+	ctx.strokeRect(68, 50, 248, 14);
 	const gradient = ctx.createLinearGradient(68, 0, 316, 0);
 	gradient.addColorStop(0, ratio > .45 ? "#d84c45" : "#d43b35");
 	gradient.addColorStop(1, ratio > .45 ? "#ff9a58" : "#ff5e3f");
 	ctx.fillStyle = gradient;
-	ctx.fillRect(70, 41, 244 * ratio, 8);
+	ctx.fillRect(70, 52, 244 * ratio, 10);
 	marker.texture.needsUpdate = true;
-	marker.sprite.scale.set(selected ? 128 : 108, selected ? 28 : 23, 1);
+	marker.sprite.scale.set(selected ? 118 : 100, selected ? 30 : 26, 1);
 }
 function createPlayerMarker() {
 	const canvas = document.createElement("canvas");
@@ -40664,22 +40670,66 @@ function paintPlayerMarker(marker, frame) {
 	if (!ctx) return;
 	ctx.clearRect(0, 0, 512, 104);
 	ctx.textAlign = "center";
-	ctx.shadowColor = "rgba(0,0,0,.95)";
-	ctx.shadowBlur = 8;
+	ctx.shadowColor = "rgba(0,0,0,.9)";
+	ctx.shadowBlur = 7;
 	ctx.fillStyle = "#fff4d3";
-	ctx.font = "800 29px Georgia,serif";
-	ctx.fillText(`${frame.playerName} · LV ${frame.playerLevel}`, 256, 35);
+	ctx.font = "800 26px Georgia,serif";
+	ctx.fillText(frame.playerName, 256, 30);
 	ctx.shadowBlur = 0;
+	ctx.fillStyle = "rgba(220,236,240,.9)";
+	ctx.font = "600 18px system-ui";
+	ctx.fillText(`LV ${frame.playerLevel}`, 256, 50);
 	ctx.fillStyle = "rgba(3,17,22,.9)";
-	ctx.fillRect(118, 47, 276, 18);
+	ctx.fillRect(118, 58, 276, 16);
 	ctx.strokeStyle = "rgba(240,211,129,.78)";
 	ctx.lineWidth = 2;
-	ctx.strokeRect(118, 47, 276, 18);
+	ctx.strokeRect(118, 58, 276, 16);
 	const hpGradient = ctx.createLinearGradient(121, 0, 391, 0);
 	hpGradient.addColorStop(0, "#2f9d49");
 	hpGradient.addColorStop(1, "#75e66b");
 	ctx.fillStyle = hpGradient;
-	ctx.fillRect(121, 50, 270 * ratio, 12);
+	ctx.fillRect(121, 61, 270 * ratio, 10);
+	marker.texture.needsUpdate = true;
+}
+function createIslandMarker() {
+	const canvas = document.createElement("canvas");
+	canvas.width = 360;
+	canvas.height = 72;
+	const texture = new CanvasTexture(canvas);
+	texture.colorSpace = SRGBColorSpace;
+	texture.minFilter = LinearFilter;
+	const sprite = new Sprite(new SpriteMaterial({
+		map: texture,
+		transparent: true,
+		depthTest: false,
+		depthWrite: false
+	}));
+	sprite.renderOrder = 70;
+	sprite.scale.set(118, 24, 1);
+	return {
+		sprite,
+		canvas,
+		texture,
+		lastKey: ""
+	};
+}
+function paintIslandMarker(marker, name, level) {
+	const key = `${name}|${level}`;
+	if (marker.lastKey === key) return;
+	marker.lastKey = key;
+	const ctx = marker.canvas.getContext("2d");
+	if (!ctx) return;
+	ctx.clearRect(0, 0, 360, 72);
+	ctx.textAlign = "center";
+	ctx.shadowColor = "rgba(0,0,0,.85)";
+	ctx.shadowBlur = 6;
+	ctx.fillStyle = "#e8f6f8";
+	ctx.font = "700 17px system-ui";
+	ctx.fillText(name, 180, 28);
+	ctx.shadowBlur = 0;
+	ctx.fillStyle = "rgba(180,220,228,.88)";
+	ctx.font = "600 14px system-ui";
+	ctx.fillText(`LV ${level}`, 180, 48);
 	marker.texture.needsUpdate = true;
 }
 function createImpactEffect(monster = false) {
@@ -40959,34 +41009,44 @@ function createMuzzleEffect(color) {
 }
 function createWakePatch(strength) {
 	const root = new Group(), foam = new MeshBasicMaterial({
-		color: 14285823,
+		color: 12118256,
 		transparent: true,
-		opacity: .2 + .25 * strength,
+		opacity: .07 + .16 * strength,
 		depthWrite: false,
 		side: 2,
 		blending: 2
 	});
 	for (const side of [-1, 1]) {
 		const line = new Mesh(new TubeGeometry(new CatmullRomCurve3([
-			new Vector3(0, .5, side * 3),
-			new Vector3(-12, .4, side * (6 + strength * 3)),
-			new Vector3(-30 - strength * 15, .25, side * (10 + strength * 7))
-		]), 10, .7 + strength * .45, 5, false), foam.clone());
+			new Vector3(-4, .35, side * 2),
+			new Vector3(-16, .28, side * (4 + strength * 2)),
+			new Vector3(-32 - strength * 12, .2, side * (6 + strength * 4))
+		]), 8, .42 + strength * .22, 4, false), foam.clone());
 		root.add(line);
 	}
-	const ripple = new Mesh(new RingGeometry(8 + strength * 4, 11 + strength * 5, 22), foam.clone());
+	const ripple = new Mesh(new RingGeometry(6 + strength * 3, 8 + strength * 4, 20), foam.clone());
 	ripple.rotation.x = -Math.PI / 2;
-	ripple.position.x = -18;
-	ripple.position.y = .2;
+	ripple.position.x = -14;
+	ripple.position.y = .15;
 	root.add(ripple);
 	return root;
 }
 function tuneImportedMaterial(material, maxAnisotropy) {
 	const tuned = material.clone();
 	if (tuned instanceof MeshStandardMaterial) {
-		tuned.metalness = Math.min(tuned.metalness, .55);
-		tuned.roughness = Math.max(tuned.roughness, .68);
-		tuned.envMapIntensity = .72;
+		tuned.metalness = Math.min(tuned.metalness, .48);
+		tuned.roughness = Math.max(tuned.roughness, .72);
+		tuned.envMapIntensity = .88;
+		const hsl = {
+			h: 0,
+			s: 0,
+			l: 0
+		};
+		tuned.color.getHSL(hsl);
+		if (hsl.l < .28) {
+			tuned.emissive = tuned.emissive?.clone() ?? tuned.color.clone();
+			tuned.emissiveIntensity = Math.max(tuned.emissiveIntensity, .07);
+		}
 		for (const texture of [
 			tuned.map,
 			tuned.metalnessMap,
@@ -41081,6 +41141,8 @@ var AbyssalThreeRenderer = class {
 		this.cameraShakeStrength = 0;
 		this.cameraShakeUntil = 0;
 		this.playerVisualTemplates = /* @__PURE__ */ new Map();
+		this.islandMarkers = [];
+		this.islandMarkerLevel = 1;
 		this.lastKrakenPlacementProof = "";
 		this.quality = resolveQuality(qualityPreference);
 		this.renderer = new WebGLRenderer({
@@ -41094,13 +41156,13 @@ var AbyssalThreeRenderer = class {
 		this.renderer.shadowMap.type = 2;
 		this.renderer.outputColorSpace = SRGBColorSpace;
 		this.renderer.toneMapping = 4;
-		this.renderer.toneMappingExposure = 1.38;
-		this.scene.background = new Color(745336);
-		this.scene.fog = new FogExp2(745336, 9e-5);
+		this.renderer.toneMappingExposure = 1.48;
+		this.scene.background = new Color(2792637);
+		this.scene.fog = new FogExp2(2792637, 11e-5);
 		this.scene.add(this.world);
-		this.scene.add(new AmbientLight(16774364, .82));
-		this.scene.add(new HemisphereLight(15334399, 6847056, 2.55));
-		const sun = new DirectionalLight(16769192, 3.65);
+		this.scene.add(new AmbientLight(16774364, .95));
+		this.scene.add(new HemisphereLight(15334399, 8032360, 2.85));
+		const sun = new DirectionalLight(16771256, 3.9);
 		sun.position.set(-700, 1100, -480);
 		sun.castShadow = this.quality.shadows;
 		sun.shadow.mapSize.set(this.quality.shadowMapSize, this.quality.shadowMapSize);
@@ -41109,7 +41171,7 @@ var AbyssalThreeRenderer = class {
 		sun.shadow.camera.top = 1100;
 		sun.shadow.camera.bottom = -1100;
 		this.scene.add(sun);
-		const rim = new DirectionalLight(5691647, 1.1);
+		const rim = new DirectionalLight(7005439, 1.48);
 		rim.position.set(900, 420, 700);
 		this.scene.add(rim);
 		this.player.name = "PlayerShipRoot";
@@ -41123,14 +41185,14 @@ var AbyssalThreeRenderer = class {
 		const auraRing = new Mesh(new RingGeometry(55, 60, 64), new MeshBasicMaterial({
 			color: 5435877,
 			transparent: true,
-			opacity: .25,
+			opacity: .12,
 			side: 2,
 			depthWrite: false,
 			blending: 2
 		}));
 		auraRing.rotation.x = -Math.PI / 2;
 		auraRing.userData.auraRing = true;
-		const auraLight = new PointLight(5563615, 1.7, 170);
+		const auraLight = new PointLight(5563615, .85, 140);
 		auraLight.position.y = 30;
 		auraLight.userData.auraLight = true;
 		this.playerAura.add(auraRing, auraLight);
@@ -41229,7 +41291,7 @@ var AbyssalThreeRenderer = class {
 				o.material = Array.isArray(o.material) ? o.material.map((m) => tuneImportedMaterial(m, maxAnisotropy)) : tuneImportedMaterial(o.material, maxAnisotropy);
 			}
 		});
-		root.add(visual, createHullWaterInteraction(96, 33));
+		root.add(visual, createHullWaterInteraction(96, 33, true));
 		root.userData.entityRoot = true;
 		root.userData.baseScale = 1;
 		root.userData.visualDefinitionId = definition.id;
@@ -41351,6 +41413,12 @@ var AbyssalThreeRenderer = class {
 			this.destinationRing
 		]);
 		for (const child of [...this.world.children]) if (!keep.has(child)) this.world.remove(child);
+		for (const marker of this.islandMarkers) {
+			this.world.remove(marker.sprite);
+			marker.texture.dispose();
+			marker.sprite.material.dispose();
+		}
+		this.islandMarkers = [];
 		this.entityMeshes.clear();
 		for (const marker of this.entityBars.values()) {
 			marker.texture.dispose();
@@ -41364,7 +41432,7 @@ var AbyssalThreeRenderer = class {
 		this.impactMeshes = [];
 		this.lastHitSeen.clear();
 		this.createOcean();
-		const map = MAPS[id], colors = map.color, shallow = new Color(colors[0]).offsetHSL(0, .07, .1), deep = new Color(colors[1]).offsetHSL(0, .05, -.04);
+		const map = MAPS[id], colors = map.color, shallow = new Color(colors[0]).offsetHSL(0, .08, .14), deep = new Color(colors[1]).offsetHSL(0, .04, .02);
 		this.waterUniforms.uShallow.value.copy(shallow);
 		this.waterUniforms.uDeep.value.copy(deep);
 		this.waterUniforms.uIslandCount.value = Math.min(8, map.islands.length);
@@ -41372,9 +41440,10 @@ var AbyssalThreeRenderer = class {
 			const isle = map.islands[i];
 			this.waterUniforms.uIslands.value[i].set(isle?.x ?? -9999, isle?.y ?? -9999, isle?.rx ?? 1, isle?.ry ?? 1);
 		}
-		const sky = map.weather === "void" ? new Color(3361895) : map.weather === "storm" ? new Color(6389387) : new Color(7913932);
+		const sky = map.weather === "void" ? new Color(3361895) : map.weather === "storm" ? new Color(6986411) : new Color(9098464);
 		this.scene.background = sky;
-		this.scene.fog = new FogExp2(sky, map.weather === "void" ? 32e-5 : map.weather === "storm" ? 25e-5 : 17e-5);
+		this.scene.fog = new FogExp2(sky, map.weather === "void" ? 28e-5 : map.weather === "storm" ? 2e-4 : 13e-5);
+		this.islandMarkerLevel = map.recommended;
 		for (const [index, isle] of map.islands.entries()) {
 			const kind = id === "abyss" ? "abyss" : id === "gloam" || id === "maelstrom" ? "storm" : "tropical";
 			const root = createIslandPresentation(isle, islandArtTextures[kind], index + 1, kind);
@@ -41405,6 +41474,13 @@ var AbyssalThreeRenderer = class {
 				prop.rotation.y = a + seeded(index * 17 + p) * .5;
 				prop.scale.setScalar(.8 + seeded(index * 13 + p) * .45);
 				this.world.add(prop);
+			}
+			if (isle.port || isle.rx >= 170) {
+				const marker = createIslandMarker();
+				paintIslandMarker(marker, isle.name, this.islandMarkerLevel);
+				marker.sprite.position.set(isle.x, 18, isle.y + isle.ry * .42);
+				this.world.add(marker.sprite);
+				this.islandMarkers.push(marker);
 			}
 		}
 		const openKinds = [
@@ -41502,21 +41578,26 @@ var AbyssalThreeRenderer = class {
 		if (interaction) interaction.traverse((o) => {
 			if (o instanceof Mesh) {
 				const m = o.material;
-				m.opacity = .12 + clamp(frame.player.speed / 150, 0, 1) * .42;
+				m.opacity = .06 + clamp(frame.player.speed / 150, 0, 1) * .18;
 			}
 		});
 		paintPlayerMarker(this.playerMarker, frame);
-		const markerScale = clamp(1 / this.smoothedZoom, .82, 1.35);
-		this.playerMarker.sprite.scale.set(144 * markerScale, 29 * markerScale, 1);
-		this.playerMarker.sprite.position.set(frame.player.x, 108, frame.player.y);
+		const markerScale = clamp(1 / this.smoothedZoom, .78, 1.22);
+		this.playerMarker.sprite.scale.set(132 * markerScale, 30 * markerScale, 1);
+		this.playerMarker.sprite.position.set(frame.player.x, 10, frame.player.y + 50);
 		this.playerAura.position.set(frame.player.x, 3, frame.player.y);
 		this.playerAura.rotation.y = time * 8e-5;
-		const auraScale = 1 + Math.sin(time * .0032) * .025;
+		const auraScale = 1 + Math.sin(time * .0032) * .015, speedFactor = clamp(Math.abs(frame.player.speed) / 120, 0, 1);
 		this.playerAura.scale.setScalar(auraScale);
+		this.playerAura.visible = speedFactor > .08;
 		const auraColor = frame.shipId === "ironclad" ? 16742981 : frame.shipId === "arcanum" ? 11696895 : frame.shipId === "tempest" ? 4585448 : 15780449;
 		this.playerAura.traverse((o) => {
 			if (o instanceof Mesh && o.material.color) o.material.color.setHex(auraColor);
-			if (o instanceof PointLight) o.color.setHex(auraColor);
+			if (o instanceof Mesh) o.material.opacity = .08 + speedFactor * .1;
+			if (o instanceof PointLight) {
+				o.color.setHex(auraColor);
+				o.intensity = .45 + speedFactor * .55;
+			}
 		});
 		if (frame.lastHit > 0 && frame.lastHit !== this.playerHitSeen) {
 			this.playerHitSeen = frame.lastHit;
@@ -41558,9 +41639,9 @@ var AbyssalThreeRenderer = class {
 			}
 			const selected = frame.selectedId === e.id;
 			paintHealthMarker(marker, e, selected);
-			const compact = clamp(1 / this.smoothedZoom, .82, 1.28);
-			marker.sprite.scale.set((selected ? 128 : 108) * compact, (selected ? 28 : 23) * compact, 1);
-			marker.sprite.position.set(e.x, monsterKinds.has(e.kind) ? 92 : 98, e.y);
+			const compact = clamp(1 / this.smoothedZoom, .78, 1.18);
+			marker.sprite.scale.set((selected ? 118 : 100) * compact, (selected ? 30 : 26) * compact, 1);
+			marker.sprite.position.set(e.x, 10, e.y + 34);
 			marker.sprite.visible = true;
 		}
 		for (const [id, mesh] of this.entityMeshes) if (!live.has(id)) {
@@ -41723,6 +41804,8 @@ var AbyssalThreeRenderer = class {
 			this.world.remove(mesh);
 			this.lootMeshes.delete(id);
 		}
+		const islandLabelScale = clamp(1 / this.smoothedZoom, .75, 1.12);
+		for (const marker of this.islandMarkers) marker.sprite.scale.set(118 * islandLabelScale, 24 * islandLabelScale, 1);
 		this.resize();
 		this.renderer.render(this.scene, this.camera);
 	}

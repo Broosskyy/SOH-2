@@ -207,7 +207,7 @@ var MAPS = {
 		recommended: 1,
 		width: 3e3,
 		height: 1900,
-		color: ["#0d6b7a", "#043847"],
+		color: ["#2ec8d8", "#0a6d82"],
 		weather: "clear",
 		islands: [
 			{
@@ -276,7 +276,7 @@ var MAPS = {
 		recommended: 3,
 		width: 3400,
 		height: 2100,
-		color: ["#175b68", "#082f43"],
+		color: ["#1f9aab", "#0a4f62"],
 		weather: "rain",
 		islands: [
 			{
@@ -350,7 +350,7 @@ var MAPS = {
 		recommended: 4,
 		width: 3600,
 		height: 2200,
-		color: ["#22a6ae", "#0b6377"],
+		color: ["#34d0dc", "#0c7a8e"],
 		weather: "clear",
 		islands: [
 			{
@@ -431,7 +431,7 @@ var MAPS = {
 		recommended: 6,
 		width: 3600,
 		height: 2300,
-		color: ["#224f5e", "#071f35"],
+		color: ["#1a7f92", "#083a50"],
 		weather: "storm",
 		islands: [
 			{
@@ -831,14 +831,14 @@ var GAMEPLAY_CAMERA_POLICY = {
 	waterLevel: 0,
 	projection: "fixed-oblique-perspective",
 	fieldOfViewDegrees: 35,
-	minZoom: .52,
-	maxZoom: 1.42,
-	baseHeight: 760,
-	minHeight: 535,
-	maxHeight: 1280,
-	baseBackDistance: 420,
-	minBackDistance: 270,
-	maxBackDistance: 760,
+	minZoom: .55,
+	maxZoom: 1.38,
+	baseHeight: 720,
+	minHeight: 520,
+	maxHeight: 1220,
+	baseBackDistance: 400,
+	minBackDistance: 260,
+	maxBackDistance: 720,
 	fixedLateralRatio: -.16,
 	targetOffsetX: 24,
 	targetOffsetZ: -72,
@@ -861,20 +861,14 @@ function resolveCameraPresentation(situation) {
 		backDistance: clamp(policy.baseBackDistance / zoom, policy.minBackDistance, policy.maxBackDistance) * overview
 	};
 }
-//#endregion
-//#region app/game/visuals/shipVisuals.ts
-/**
-* Meshy source axis: +Z bow, +Y up. The visual-only +90 degree Y offset maps
-* the bow to Abyssal Dominion's +X gameplay forward without touching heading.
-*/
 var KRAKEN_PLAYER_VISUAL = {
 	id: "kraken-player-30k",
 	assetPath: "/assets/3d/ships/player/kraken/Kraken_ship_player_30k.glb",
-	scale: 48,
+	scale: 52,
 	rotationOffsetY: Math.PI / 2,
-	waterlineOffset: 22.5,
+	waterlineOffset: 20.5,
 	wakeOffset: {
-		forward: -50,
+		forward: -58,
 		lateral: 0
 	},
 	cannonOffsets: {

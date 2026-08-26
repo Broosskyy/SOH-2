@@ -16,16 +16,19 @@ export type ShipVisualDefinition = {
 };
 
 /**
- * Meshy source axis: +Z bow, +Y up. The visual-only +90 degree Y offset maps
- * the bow to Abyssal Dominion's +X gameplay forward without touching heading.
+ * Meshy source axis: +Z bow, +Y up.
+ * MODEL_YAW_OFFSET = Math.PI / 2 maps GLB +Z bow to gameplay +X forward
+ * without rotating physics, navigation or heading.
  */
+export const KRAKEN_MODEL_YAW_OFFSET = Math.PI / 2;
+
 export const KRAKEN_PLAYER_VISUAL: ShipVisualDefinition = {
   id: "kraken-player-30k",
   assetPath: "/assets/3d/ships/player/kraken/Kraken_ship_player_30k.glb",
-  scale: 48,
-  rotationOffsetY: Math.PI / 2,
-  waterlineOffset: 22.5,
-  wakeOffset: { forward: -50, lateral: 0 },
+  scale: 52,
+  rotationOffsetY: KRAKEN_MODEL_YAW_OFFSET,
+  waterlineOffset: 20.5,
+  wakeOffset: { forward: -58, lateral: 0 },
   cannonOffsets: {
     port: [
       { forward: -18, lateral: 17, height: 10 },

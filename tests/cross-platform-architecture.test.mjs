@@ -152,10 +152,10 @@ test("V20.1 integrates the exact Kraken player GLB with visual-only configuratio
   assert.equal((await stat(webAsset)).size, (await stat(godotAsset)).size);
 
   assert.match(visualConfig, /Kraken_ship_player_30k\.glb/);
-  assert.match(visualConfig, /scale: 48/);
-  assert.match(visualConfig, /rotationOffsetY: Math\.PI \/ 2/);
-  assert.match(visualConfig, /waterlineOffset: 22\.5/);
-  assert.match(visualConfig, /wakeOffset: \{ forward: -50, lateral: 0 \}/);
+  assert.match(visualConfig, /scale: 52/);
+  assert.match(visualConfig, /rotationOffsetY: KRAKEN_MODEL_YAW_OFFSET/);
+  assert.match(visualConfig, /waterlineOffset: 20\.5/);
+  assert.match(visualConfig, /wakeOffset: \{ forward: -58, lateral: 0 \}/);
   for (const shipId of ["sovereign", "tempest", "ironclad", "arcanum"])
     assert.match(visualConfig, new RegExp(`${shipId}: KRAKEN_PLAYER_VISUAL`));
   assert.match(page, /PLAYER_SHIP_VISUALS/);

@@ -45,7 +45,7 @@ export const CANNONS: Record<CannonId,{name:string;price:number;level:number;dam
 
 export const MAPS: Record<MapId, MapConfig> = {
   aster: {
-    id: "aster", name: "Azurwacht", sector: "1-A", danger: 1, recommended: 1, width: 3000, height: 1900, color: ["#0d6b7a", "#043847"], weather: "clear",
+    id: "aster", name: "Azurwacht", sector: "1-A", danger: 1, recommended: 1, width: 3000, height: 1900, color: ["#2ec8d8", "#0a6d82"], weather: "clear",
     islands: [
       { x: 410, y: 900, rx: 210, ry: 135, name: "Hafen Aster", port: true },
       { x: 1200, y: 370, rx: 170, ry: 95, name: "Glasriff" },
@@ -58,7 +58,7 @@ export const MAPS: Record<MapId, MapConfig> = {
     ],
   },
   gloam: {
-    id: "gloam", name: "Dämmersee", sector: "2-C", danger: 2, recommended: 3, width: 3400, height: 2100, color: ["#175b68", "#082f43"], weather: "rain",
+    id: "gloam", name: "Dämmersee", sector: "2-C", danger: 2, recommended: 3, width: 3400, height: 2100, color: ["#1f9aab", "#0a4f62"], weather: "rain",
     islands: [
       { x: 390, y: 1050, rx: 195, ry: 120, name: "Dämmerhafen", port: true },
       { x: 1350, y: 390, rx: 240, ry: 120, name: "Kräheninsel" },
@@ -71,7 +71,7 @@ export const MAPS: Record<MapId, MapConfig> = {
     ],
   },
   coral: {
-    id: "coral", name: "Korallenmark", sector: "3-B", danger: 3, recommended: 4, width: 3600, height: 2200, color: ["#22a6ae", "#0b6377"], weather: "clear",
+    id: "coral", name: "Korallenmark", sector: "3-B", danger: 3, recommended: 4, width: 3600, height: 2200, color: ["#34d0dc", "#0c7a8e"], weather: "clear",
     islands: [
       { x: 420, y: 1100, rx: 220, ry: 135, name: "Perlenkai", port: true },
       { x: 1280, y: 480, rx: 270, ry: 135, name: "Papageienkrone" },
@@ -85,7 +85,7 @@ export const MAPS: Record<MapId, MapConfig> = {
     ],
   },
   maelstrom: {
-    id: "maelstrom", name: "Sturmbruch", sector: "4-F", danger: 4, recommended: 6, width: 3600, height: 2300, color: ["#224f5e", "#071f35"], weather: "storm",
+    id: "maelstrom", name: "Sturmbruch", sector: "4-F", danger: 4, recommended: 6, width: 3600, height: 2300, color: ["#1a7f92", "#083a50"], weather: "storm",
     islands: [
       { x: 430, y: 1150, rx: 205, ry: 125, name: "Bollwerk Nox", port: true },
       { x: 1380, y: 550, rx: 160, ry: 100, name: "Donnergrat" },

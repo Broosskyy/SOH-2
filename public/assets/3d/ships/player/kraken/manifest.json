@@ -25,10 +25,10 @@
     { "role": "metallicRoughness", "width": 4096, "height": 4096, "mimeType": "image/png" }
   ],
   "visual": {
-    "scale": 48,
+    "scale": 52,
     "rotationOffsetYRadians": 1.5707963267948966,
-    "waterlineOffset": 22.5,
-    "wakeOffset": { "forward": -50, "lateral": 0 }
+    "waterlineOffset": 20.5,
+    "wakeOffset": { "forward": -58, "lateral": 0 }
   },
   "lods": [],
   "fallback": [
