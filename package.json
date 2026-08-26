@@ -13,6 +13,7 @@
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "typecheck": "tsc --noEmit --project tsconfig.app.json",
     "sync:game-data": "node scripts/sync-game-data.mjs",
+    "sync:web-build": "node scripts/sync-web-build.mjs",
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:architecture": "node --test tests/cross-platform-architecture.test.mjs",
     "validate:artifact": "bash scripts/validate-artifact.sh",

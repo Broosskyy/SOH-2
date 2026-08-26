@@ -1,0 +1,15 @@
+{
+  "assetId": "sovereign-frigate",
+  "version": 20,
+  "format": "glTF 2.0 binary",
+  "units": "meters",
+  "upAxis": "+Y",
+  "forwardAxis": "+X",
+  "pivot": "waterline-center",
+  "lods": [
+    { "file": "sovereign-frigate-lod0.glb", "distance": 0 },
+    { "file": "sovereign-frigate-lod1.glb", "distance": 700 },
+    { "file": "sovereign-frigate-lod2.glb", "distance": 1200 }
+  ],
+  "fallback": "procedural-sovereign-v19"
+}
