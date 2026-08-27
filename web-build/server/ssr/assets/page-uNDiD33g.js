@@ -1,5 +1,5 @@
 import { a as require_react, o as __commonJSMin, s as __toESM, t as require_jsx_runtime } from "../index.js";
-import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-BmWvIFOt.js";
+import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-hcsXMVyF.js";
 //#region node_modules/ipaddr.js/lib/ipaddr.js
 var require_ipaddr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(root) {
@@ -3105,6 +3105,163 @@ var normalizeAngle = (value) => {
 	return angle;
 };
 //#endregion
+//#region app/game/navigation/shipMovement.ts
+var ARRIVAL_RADIUS = 36;
+var STUCK_SECONDS = 1.35;
+var STUCK_MIN_PROGRESS = 14;
+var ISLAND_MARGIN = .82;
+var ISLAND_SOFT = .9;
+function insideIsland(x, y, island, margin) {
+	const dx = (x - island.x) / island.rx;
+	const dy = (y - island.y) / island.ry;
+	return dx * dx + dy * dy < margin * margin;
+}
+function blockedAt(x, y, islands, margin = ISLAND_MARGIN) {
+	return islands.some((island) => insideIsland(x, y, island, margin));
+}
+function segmentBlocked(a, b, islands) {
+	const len = distance(a, b);
+	const steps = Math.max(6, Math.ceil(len / 36));
+	for (let i = 0; i <= steps; i++) {
+		const t = i / steps;
+		if (blockedAt(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, islands)) return true;
+	}
+	return false;
+}
+function findDetour(from, goal, islands) {
+	const blocking = islands.filter((island) => segmentBlocked(from, goal, [island]));
+	if (!blocking.length) return null;
+	const isle = blocking.reduce((best, island) => {
+		const d = distance({
+			x: island.x,
+			y: island.y
+		}, from);
+		return !best || d < distance({
+			x: best.x,
+			y: best.y
+		}, from) ? island : best;
+	}, blocking[0]);
+	const perpX = goal.y - from.y;
+	const perpY = -(goal.x - from.x);
+	const perpLen = Math.hypot(perpX, perpY) || 1;
+	const pad = Math.max(isle.rx, isle.ry) * 1.22;
+	const candidates = [
+		{
+			x: isle.x + perpX / perpLen * pad,
+			y: isle.y + perpY / perpLen * pad
+		},
+		{
+			x: isle.x - perpX / perpLen * pad,
+			y: isle.y - perpY / perpLen * pad
+		},
+		{
+			x: isle.x + ((from.x - isle.x) / Math.hypot(from.x - isle.x, from.y - isle.y) || 1) * pad,
+			y: isle.y + ((from.y - isle.y) / Math.hypot(from.x - isle.x, from.y - isle.y) || 1) * pad
+		}
+	];
+	for (const candidate of candidates) {
+		if (blockedAt(candidate.x, candidate.y, islands, ISLAND_SOFT)) continue;
+		if (!segmentBlocked(from, candidate, islands) && !segmentBlocked(candidate, goal, islands)) return candidate;
+	}
+	const dx = from.x - isle.x;
+	const dy = from.y - isle.y;
+	const dlen = Math.hypot(dx, dy) || 1;
+	return {
+		x: isle.x + dx / dlen * pad,
+		y: isle.y + dy / dlen * pad
+	};
+}
+function createNavigationState(anchor) {
+	return {
+		ultimateDestination: null,
+		detourWaypoint: null,
+		stuckTimer: 0,
+		stuckAnchorX: anchor.x,
+		stuckAnchorY: anchor.y
+	};
+}
+function planNavigationTo(goal, from, islands) {
+	const navigation = createNavigationState(from);
+	navigation.ultimateDestination = goal;
+	if (!segmentBlocked(from, goal, islands)) return {
+		destination: goal,
+		navigation
+	};
+	const detour = findDetour(from, goal, islands);
+	if (!detour) return {
+		destination: goal,
+		navigation
+	};
+	navigation.detourWaypoint = detour;
+	return {
+		destination: detour,
+		navigation
+	};
+}
+function stepShipMovement(config) {
+	const player = { ...config.player };
+	const navigation = { ...config.navigation };
+	let destination = config.destination;
+	let turn = config.keyboardTurn;
+	let thrust = config.keyboardThrust;
+	if (destination) {
+		const d = distance(player, destination);
+		const angleDiff = normalizeAngle(Math.atan2(destination.y - player.y, destination.x - player.x) - player.angle);
+		turn = clamp(angleDiff * 2.4, -1, 1);
+		const turningFactor = clamp(1 - Math.abs(angleDiff) / Math.PI * .72, .28, 1);
+		thrust = d > ARRIVAL_RADIUS ? turningFactor : 0;
+		if (d < ARRIVAL_RADIUS) if (navigation.detourWaypoint && navigation.ultimateDestination) {
+			navigation.detourWaypoint = null;
+			destination = navigation.ultimateDestination;
+		} else {
+			destination = null;
+			navigation.ultimateDestination = null;
+			player.speed *= .5;
+		}
+	}
+	player.angle += turn * config.shipTurnRate * config.dt;
+	const desiredSpeed = thrust * config.shipMaxSpeed * config.sailBonus * config.surgeMultiplier;
+	player.speed += (desiredSpeed - player.speed) * config.dt * 2.55;
+	player.speed *= Math.pow(.991, config.dt * 60);
+	const nx = player.x + Math.cos(player.angle) * player.speed * config.dt;
+	const ny = player.y + Math.sin(player.angle) * player.speed * config.dt;
+	if (!blockedAt(nx, ny, config.islands)) {
+		player.x = clamp(nx, 50, config.mapWidth - 50);
+		player.y = clamp(ny, 50, config.mapHeight - 50);
+		if (distance({
+			x: navigation.stuckAnchorX,
+			y: navigation.stuckAnchorY
+		}, player) > STUCK_MIN_PROGRESS || Math.abs(player.speed) < 8) {
+			navigation.stuckTimer = 0;
+			navigation.stuckAnchorX = player.x;
+			navigation.stuckAnchorY = player.y;
+		} else if (destination && Math.abs(player.speed) > 12) navigation.stuckTimer += config.dt;
+	} else {
+		player.speed *= -.12;
+		navigation.stuckTimer += config.dt;
+		if (navigation.stuckTimer > STUCK_SECONDS && navigation.ultimateDestination) {
+			const replanned = planNavigationTo(navigation.ultimateDestination, player, config.islands);
+			destination = replanned.destination;
+			navigation.ultimateDestination = replanned.navigation.ultimateDestination;
+			navigation.detourWaypoint = replanned.navigation.detourWaypoint;
+			navigation.stuckTimer = 0;
+			navigation.stuckAnchorX = player.x;
+			navigation.stuckAnchorY = player.y;
+		} else if (navigation.ultimateDestination && !navigation.detourWaypoint) {
+			const detour = findDetour(player, navigation.ultimateDestination, config.islands);
+			if (detour) {
+				navigation.detourWaypoint = detour;
+				destination = detour;
+			}
+		}
+	}
+	return {
+		player,
+		destination,
+		navigation
+	};
+}
+//#endregion
 //#region app/game/core/state.ts
 var MONSTER_KINDS = new Set([
 	"kraken",
@@ -3218,6 +3375,10 @@ var createRuntimeState = () => ({
 		speed: 0
 	},
 	destination: null,
+	navigation: createNavigationState({
+		x: 680,
+		y: 900
+	}),
 	entities: spawnMap("aster"),
 	shots: [],
 	loot: [],
@@ -3232,7 +3393,7 @@ var createRuntimeState = () => ({
 	monsterKills: 0,
 	lootCount: 0,
 	wave: 1,
-	zoom: .96,
+	zoom: 1,
 	cameraPan: {
 		x: 0,
 		y: 0
@@ -3332,6 +3493,42 @@ function grantMissionReward(save, missionId) {
 	save.xp += missionId === "first-blood" ? 250 : missionId === "deep-hunt" || missionId === "ritualist" ? 350 : 200;
 }
 //#endregion
+//#region app/game/settings/cameraSettings.ts
+var CAMERA_PAN_SPEEDS = {
+	slow: 520,
+	normal: 760,
+	fast: 1080
+};
+var ZOOM_SENSITIVITY = {
+	low: .82,
+	normal: 1,
+	high: 1.22
+};
+var CAMERA_PAN_KEY = "abyssal-camera-pan-speed";
+var ZOOM_SENS_KEY = "abyssal-zoom-sensitivity";
+function resolveCameraPanSpeed(preference) {
+	return CAMERA_PAN_SPEEDS[preference] ?? CAMERA_PAN_SPEEDS.normal;
+}
+function resolveZoomSensitivity(preference) {
+	return ZOOM_SENSITIVITY[preference] ?? ZOOM_SENSITIVITY.normal;
+}
+function loadCameraPanSpeed() {
+	if (typeof localStorage === "undefined") return "normal";
+	const value = localStorage.getItem(CAMERA_PAN_KEY);
+	return value === "slow" || value === "fast" ? value : "normal";
+}
+function saveCameraPanSpeed(value) {
+	if (typeof localStorage !== "undefined") localStorage.setItem(CAMERA_PAN_KEY, value);
+}
+function loadZoomSensitivity() {
+	if (typeof localStorage === "undefined") return "normal";
+	const value = localStorage.getItem(ZOOM_SENS_KEY);
+	return value === "low" || value === "high" ? value : "normal";
+}
+function saveZoomSensitivity(value) {
+	if (typeof localStorage !== "undefined") localStorage.setItem(ZOOM_SENS_KEY, value);
+}
+//#endregion
 //#region app/page.tsx
 var SHIP_ART = {
 	sovereign: "/assets/sovereign-frigate-v2.webp",
@@ -3350,6 +3547,8 @@ function Home() {
 		volley: 0
 	});
 	const [qualityPreference, setQualityPreference] = (0, import_react.useState)(() => loadQualityPreference());
+	const [cameraPanSpeed, setCameraPanSpeed] = (0, import_react.useState)(() => loadCameraPanSpeed());
+	const [zoomSensitivity, setZoomSensitivity] = (0, import_react.useState)(() => loadZoomSensitivity());
 	const [ritualing, setRitualing] = (0, import_react.useState)(false), [ritualResult, setRitualResult] = (0, import_react.useState)("Der Kessel wartet auf dein erstes Opfer.");
 	const [hud, setHud] = (0, import_react.useState)({
 		hp: 1250,
@@ -3517,6 +3716,9 @@ function Home() {
 	(0, import_react.useEffect)(() => {
 		loadSave().then((s) => {
 			applySave(s ?? freshSave());
+			const settings = saveRef.current.settings;
+			if (settings?.cameraPanSpeed) setCameraPanSpeed(settings.cameraPanSpeed);
+			if (settings?.zoomSensitivity) setZoomSensitivity(settings.zoomSensitivity);
 			setReady(true);
 			setAmmo("iron");
 		});
@@ -3570,6 +3772,10 @@ function Home() {
 			y: 0
 		};
 		g.destination = null;
+		g.navigation = createNavigationState({
+			x: g.player.x,
+			y: g.player.y
+		});
 		g.selectedId = null;
 		g.entities = spawnMap(id);
 		g.shots = [];
@@ -3618,10 +3824,12 @@ function Home() {
 		const range = broadsideStats.range, d = distance(g.player, chosen);
 		if (d > range) {
 			const ang = Math.atan2(chosen.y - g.player.y, chosen.x - g.player.x);
-			g.destination = {
+			const planned = planNavigationTo({
 				x: chosen.x - Math.cos(ang) * (range - 60),
 				y: chosen.y - Math.sin(ang) * (range - 60)
-			};
+			}, g.player, MAPS[g.mapId].islands);
+			g.destination = planned.destination;
+			g.navigation = planned.navigation;
 			return toast(`Außer Reichweite · ${Math.round(d)} m · Ziel wird angefahren`);
 		}
 		const ang = Math.atan2(chosen.y - g.player.y, chosen.x - g.player.x), count = broadsideStats.projectileCount, damage = broadsideStats.projectileDamage, side = Math.sin(ang - g.player.angle) >= 0 ? 1 : -1, broadside = g.player.angle + side * Math.PI / 2;
@@ -3642,6 +3850,24 @@ function Home() {
 		if (active !== "iron") s.ammo[active]--;
 		g.lastShot = now;
 	}, [ammo, toast]);
+	const updateCameraPanSpeed = (value) => {
+		setCameraPanSpeed(value);
+		saveCameraPanSpeed(value);
+		saveRef.current.settings = {
+			...saveRef.current.settings,
+			cameraPanSpeed: value
+		};
+		writeSave(saveRef.current).catch(() => void 0);
+	};
+	const updateZoomSensitivity = (value) => {
+		setZoomSensitivity(value);
+		saveZoomSensitivity(value);
+		saveRef.current.settings = {
+			...saveRef.current.settings,
+			zoomSensitivity: value
+		};
+		writeSave(saveRef.current).catch(() => void 0);
+	};
 	const selectAmmo = (a) => {
 		setAmmo(a);
 		toast(`${AMMO[a].name}: ${AMMO[a].effect}`);
@@ -3878,6 +4104,14 @@ function Home() {
 		g.player.y = MAPS.aster.height / 2;
 		g.player.speed = 0;
 		g.destination = null;
+		g.navigation = createNavigationState({
+			x: g.player.x,
+			y: g.player.y
+		});
+		g.cameraPan = {
+			x: 0,
+			y: 0
+		};
 		g.entities = spawnMap("aster");
 		g.shots = [];
 		g.loot = [];
@@ -3933,7 +4167,11 @@ function Home() {
 				const alive = g.entities.filter((x) => x.hp > 0);
 				g.selectedId = alive[(Math.max(0, alive.findIndex((x) => x.id === g.selectedId)) + 1) % alive.length]?.id ?? null;
 			}
-			if (action === "cancelNavigation") g.destination = null;
+			if (action === "cancelNavigation") {
+				g.destination = null;
+				g.navigation.ultimateDestination = null;
+				g.navigation.detourWaypoint = null;
+			}
 			if (action === "closePanel") setPanel(null);
 			if (action === "ability1") activateAbility("surge");
 			if (action === "ability2") activateAbility("volley");
@@ -4132,31 +4370,32 @@ function Home() {
 				if (g.actions.has("moveForward")) thrust = 1;
 				if (g.actions.has("moveBackward")) thrust = -.5;
 				if (Math.hypot(g.joystick.x, g.joystick.y) > .08) {
-					const panSpeed = 760 / Math.max(.65, g.zoom);
+					const panSpeed = resolveCameraPanSpeed(cameraPanSpeed) / Math.max(.65, g.zoom);
 					const nextPanX = g.cameraPan.x + g.joystick.x * panSpeed * dt, nextPanY = g.cameraPan.y + g.joystick.y * panSpeed * dt;
 					g.cameraPan.x = clamp(nextPanX, 320 - g.player.x, m.width - 320 - g.player.x);
 					g.cameraPan.y = clamp(nextPanY, 230 - g.player.y, m.height - 230 - g.player.y);
 				}
-				if (g.destination) {
-					const d = distance(g.player, g.destination);
-					turn = clamp(normalizeAngle(Math.atan2(g.destination.y - g.player.y, g.destination.x - g.player.x) - g.player.angle) * 2, -1, 1);
-					thrust = d > 35 ? 1 : 0;
-					if (d < 35) {
-						g.destination = null;
-						g.player.speed *= .5;
-					}
-				}
-				g.player.angle += turn * shipStats.turn * dt;
-				g.player.speed += (thrust * shipStats.speed * sailBonus * (g.surgeUntil > ts ? 1.55 : 1) - g.player.speed) * dt * 2.4;
-				g.player.speed *= Math.pow(.991, dt * 60);
-				const nx = g.player.x + Math.cos(g.player.angle) * g.player.speed * dt, ny = g.player.y + Math.sin(g.player.angle) * g.player.speed * dt;
-				if (!m.islands.some((i) => Math.hypot(nx - i.x, ny - i.y) < Math.max(i.rx * .78, i.ry))) {
-					g.player.x = clamp(nx, 50, m.width - 50);
-					g.player.y = clamp(ny, 50, m.height - 50);
-				} else {
-					g.player.speed *= -.15;
-					g.destination = null;
-				}
+				const movement = stepShipMovement({
+					dt,
+					player: g.player,
+					destination: g.destination,
+					navigation: g.navigation,
+					islands: m.islands,
+					mapWidth: m.width,
+					mapHeight: m.height,
+					shipTurnRate: shipStats.turn,
+					shipMaxSpeed: shipStats.speed,
+					sailBonus,
+					surgeMultiplier: g.surgeUntil > ts ? 1.55 : 1,
+					keyboardTurn: turn,
+					keyboardThrust: thrust
+				});
+				g.player.x = movement.player.x;
+				g.player.y = movement.player.y;
+				g.player.angle = movement.player.angle;
+				g.player.speed = movement.player.speed;
+				g.destination = movement.destination;
+				g.navigation = movement.navigation;
 				if (Math.abs(g.player.speed) > 32 && Math.random() < clamp(Math.abs(g.player.speed) / 350, .16, .55)) {
 					const wakeOffset = PLAYER_SHIP_VISUALS[g.shipId]?.wakeOffset ?? {
 						forward: -43,
@@ -4413,7 +4652,7 @@ function Home() {
 		const canvas = threeCanvasRef.current;
 		if (!canvas || !ready) return;
 		let renderer = null, raf = 0, disposed = false;
-		import("./threeRenderer-DsjUivC-.js").then(({ AbyssalThreeRenderer }) => {
+		import("./threeRenderer-CXiYKJC_.js").then(({ AbyssalThreeRenderer }) => {
 			if (disposed) return;
 			renderer = new AbyssalThreeRenderer(canvas, qualityPreference);
 			renderer3DRef.current = renderer;
@@ -4449,9 +4688,19 @@ function Home() {
 			}
 		}
 		const point = renderer.pointFromEvent(clientX, clientY);
-		if (point) g.destination = {
-			x: clamp(point.x, 40, MAPS[g.mapId].width - 40),
-			y: clamp(point.y, 40, MAPS[g.mapId].height - 40)
+		if (point) {
+			const planned = planNavigationTo({
+				x: clamp(point.x, 40, MAPS[g.mapId].width - 40),
+				y: clamp(point.y, 40, MAPS[g.mapId].height - 40)
+			}, g.player, MAPS[g.mapId].islands);
+			g.destination = planned.destination;
+			g.navigation = planned.navigation;
+		}
+	};
+	const recenterCamera = () => {
+		gameRef.current.cameraPan = {
+			x: 0,
+			y: 0
 		};
 	};
 	const onCanvasDown = (e) => {
@@ -4485,7 +4734,11 @@ function Home() {
 		if (gesture.down && Math.hypot(e.clientX - gesture.down.x, e.clientY - gesture.down.y) > 8) gesture.moved = true;
 		if (gesture.points.size >= 2) {
 			const points = [...gesture.points.values()], distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
-			if (gesture.startDistance > 0) gameRef.current.zoom = clamp(gesture.startZoom * (distance / gesture.startDistance), GAMEPLAY_CAMERA_POLICY.minZoom, GAMEPLAY_CAMERA_POLICY.maxZoom);
+			if (gesture.startDistance > 0) {
+				const sens = resolveZoomSensitivity(zoomSensitivity);
+				const ratio = distance / gesture.startDistance;
+				gameRef.current.zoom = clamp(gesture.startZoom * Math.pow(ratio, sens), GAMEPLAY_CAMERA_POLICY.minZoom, GAMEPLAY_CAMERA_POLICY.maxZoom);
+			}
 			gesture.pinching = true;
 			e.preventDefault();
 		}
@@ -4515,7 +4768,8 @@ function Home() {
 	};
 	const onWheel = (e) => {
 		e.preventDefault();
-		gameRef.current.zoom = clamp(gameRef.current.zoom - e.deltaY * 7e-4, GAMEPLAY_CAMERA_POLICY.minZoom, GAMEPLAY_CAMERA_POLICY.maxZoom);
+		const sens = resolveZoomSensitivity(zoomSensitivity);
+		gameRef.current.zoom = clamp(gameRef.current.zoom - e.deltaY * 7e-4 * sens, GAMEPLAY_CAMERA_POLICY.minZoom, GAMEPLAY_CAMERA_POLICY.maxZoom);
 	};
 	const joystickMove = (e) => {
 		const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left - r.width / 2) / (r.width * .36), y = (e.clientY - r.top - r.height / 2) / (r.height * .36), magnitude = Math.hypot(x, y), n = Math.max(1, magnitude), value = magnitude < .12 ? {
@@ -4526,10 +4780,6 @@ function Home() {
 			y: y / n
 		};
 		gameRef.current.joystick = value;
-		if (magnitude < .12) gameRef.current.cameraPan = {
-			x: 0,
-			y: 0
-		};
 		const knob = e.currentTarget.querySelector("i");
 		if (knob) knob.style.transform = `translate(${value.x * 24}px, ${value.y * 24}px)`;
 		e.currentTarget.setPointerCapture(e.pointerId);
@@ -4819,8 +5069,8 @@ function Home() {
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "joystick camera-stick",
-				"aria-label": "Kartenkamera verschieben; Mitte zentriert auf das Schiff",
-				title: "Kamera verschieben · Mitte antippen zum Zentrieren",
+				"aria-label": "Kartenkamera verschieben",
+				title: "Kamera verschieben",
 				onPointerDown: joystickMove,
 				onPointerMove: (e) => e.buttons && joystickMove(e),
 				onPointerUp: joystickEnd,
@@ -4831,91 +5081,116 @@ function Home() {
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "KAMERA" })
 				]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "ability-controls glass",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						onClick: () => activateAbility("surge"),
-						className: abilityHud.surge > 0 ? "cooling" : "",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "≋" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STURMSEGEL" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.surge > 0 ? `${Math.ceil(abilityHud.surge)} S` : "TEMPOSCHUB" })
-						]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						onClick: () => activateAbility("volley"),
-						className: abilityHud.volley > 0 ? "cooling" : "",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "✺" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STREUSALVE" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.volley > 0 ? `${Math.ceil(abilityHud.volley)} S` : "4 KUGELN" })
-						]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						onClick: () => activateAbility("aegis"),
-						className: abilityHud.aegis > 0 ? "cooling" : "",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⬡" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "RELIKTSCHILD" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.aegis > 0 ? `${Math.ceil(abilityHud.aegis)} S` : "6 PERLEN" })
-						]
-					})
-				]
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+				type: "button",
+				className: "recenter-ship-btn glass",
+				"aria-label": "Zurück zum Schiff",
+				title: "Zurück zum Schiff",
+				onClick: recenterCamera,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⚓" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "SCHIFF" })]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+				type: "button",
+				className: "settings-quick-btn glass",
+				"aria-label": "Einstellungen",
+				title: "Einstellungen",
+				onClick: () => setPanel(panel === "settings" ? null : "settings"),
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⚙" })
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "battle-controls",
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "ammo-select glass",
-						children: Object.keys(AMMO).map((a) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							className: ammo === a ? "active" : "",
-							onClick: () => selectAmmo(a),
-							title: AMMO[a].effect,
+				className: "combat-cluster",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "ability-controls glass",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => activateAbility("surge"),
+							className: abilityHud.surge > 0 ? "cooling" : "",
+							"aria-label": "Sturmsegel",
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									style: { color: AMMO[a].color },
-									children: a === "harpoon" ? "↯" : a === "fire" ? "✹" : "●"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: AMMO[a].short }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: hud.ammo[a] >= 999 ? "∞" : hud.ammo[a] })
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "≋" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STURMSEGEL" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.surge > 0 ? `${Math.ceil(abilityHud.surge)} S` : "TEMPOSCHUB" })
 							]
-						}, a))
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						className: "target-button",
-						onClick: cycleTarget,
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⌖" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "ZIEL" })]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						className: `auto-button ${autoFire ? "active" : ""}`,
-						onClick: () => {
-							const n = !autoFire;
-							setAutoFire(n);
-							gameRef.current.autoFire = n;
-						},
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "◎" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "AUTO" })]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						className: `fire-button ${activeMonster ? "harpoon" : ""} ${targetInRange ? "ready" : ""}`,
-						onPointerDown: fire,
-						style: { "--cooldown": `${cooldown * 360}deg` },
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: activeMonster ? "↯" : "☄" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: activeMonster ? "HARPUNE" : "FEUER" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: !hud.selected ? "ZIEL WÄHLEN" : targetInRange ? "BEREIT" : `${hud.selected.range} M` })
-						]
-					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-						className: "repair-button",
-						onClick: repair,
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "✚" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: hud.repairKits }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "REPARATUR" })
-						]
-					})
-				]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => activateAbility("volley"),
+							className: abilityHud.volley > 0 ? "cooling" : "",
+							"aria-label": "Streusalve",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "✺" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STREUSALVE" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.volley > 0 ? `${Math.ceil(abilityHud.volley)} S` : "4 KUGELN" })
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => activateAbility("aegis"),
+							className: abilityHud.aegis > 0 ? "cooling" : "",
+							"aria-label": "Reliktschild",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⬡" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "RELIKTSCHILD" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.aegis > 0 ? `${Math.ceil(abilityHud.aegis)} S` : "6 PERLEN" })
+							]
+						})
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "battle-controls",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "ammo-select glass",
+							children: Object.keys(AMMO).map((a) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: ammo === a ? "active" : "",
+								onClick: () => selectAmmo(a),
+								title: AMMO[a].effect,
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										style: { color: AMMO[a].color },
+										children: a === "harpoon" ? "↯" : a === "fire" ? "✹" : "●"
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: AMMO[a].short }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: hud.ammo[a] >= 999 ? "∞" : hud.ammo[a] })
+								]
+							}, a))
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							className: "target-button",
+							onClick: cycleTarget,
+							"aria-label": "Ziel wechseln",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⌖" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "ZIEL" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							className: `auto-button ${autoFire ? "active" : ""}`,
+							onClick: () => {
+								const n = !autoFire;
+								setAutoFire(n);
+								gameRef.current.autoFire = n;
+							},
+							"aria-label": "Automatisches Feuer",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "◎" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "AUTO" })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							className: `fire-button ${activeMonster ? "harpoon" : ""} ${targetInRange ? "ready" : ""}`,
+							onPointerDown: fire,
+							"aria-label": "Feuer",
+							style: { "--cooldown": `${cooldown * 360}deg` },
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: activeMonster ? "↯" : "☄" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: activeMonster ? "HARPUNE" : "FEUER" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: !hud.selected ? "ZIEL WÄHLEN" : targetInRange ? "BEREIT" : `${hud.selected.range} M` })
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							className: "repair-button",
+							onClick: repair,
+							"aria-label": "Reparatur",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "✚" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: hud.repairKits }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "REPARATUR" })
+							]
+						})
+					]
+				})]
 			}),
 			!started && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 				className: "start-screen",
@@ -4971,6 +5246,95 @@ function Home() {
 						onClick: () => setPanel(null),
 						children: "×"
 					}),
+					panel === "settings" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("label", { children: "STEUERUNG & DARSTELLUNG" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Einstellungen" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "settings-panel",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STEUERUNG" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+									className: "settings-row",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Kamera-Geschwindigkeit" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+										value: cameraPanSpeed,
+										onChange: (event) => updateCameraPanSpeed(event.target.value),
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "slow",
+												children: "Langsam"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "normal",
+												children: "Normal"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "fast",
+												children: "Schnell"
+											})
+										]
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+									className: "settings-row",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Zoom-Empfindlichkeit" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+										value: zoomSensitivity,
+										onChange: (event) => updateZoomSensitivity(event.target.value),
+										children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "low",
+												children: "Niedrig"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "normal",
+												children: "Normal"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+												value: "high",
+												children: "Hoch"
+											})
+										]
+									})]
+								})
+							] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("article", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "GRAFIK" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", {
+								className: "settings-row",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Grafikqualität" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("select", {
+									value: qualityPreference,
+									onChange: (event) => {
+										const value = event.target.value;
+										saveQualityPreference(value);
+										saveRef.current.settings = {
+											...saveRef.current.settings,
+											qualityProfile: value
+										};
+										writeSave(saveRef.current).catch(() => void 0);
+										setQualityPreference(value);
+									},
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+											value: "AUTO",
+											children: "AUTO"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+											value: "LOW",
+											children: "LOW"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+											value: "MEDIUM",
+											children: "MEDIUM"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+											value: "HIGH",
+											children: "HIGH"
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)("option", {
+											value: "ULTRA",
+											children: "ULTRA"
+										})
+									]
+								})]
+							})] })]
+						})
+					] }),
 					panel === "missions" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("label", { children: [
 							"LOGBUCH · ",

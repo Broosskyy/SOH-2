@@ -48,6 +48,7 @@ export type Panel =
   | "cauldron"
   | "inventory"
   | "events"
+  | "settings"
   | null;
 
 export type RendererFrame = {

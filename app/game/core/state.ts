@@ -11,6 +11,8 @@ import type { SaveGame } from "../save/model";
 import { clamp } from "./math";
 import type { Entity, Loot, Shot } from "./types";
 import type { GameAction } from "../input/actions";
+import type { NavigationState } from "../navigation/shipMovement";
+import { createNavigationState } from "../navigation/shipMovement";
 
 export const MONSTER_KINDS = new Set<EntityKind>([
   "kraken",
@@ -134,6 +136,7 @@ export type RuntimeGameState = {
     speed: number;
   };
   destination: { x: number; y: number } | null;
+  navigation: NavigationState;
   entities: Entity[];
   shots: Shot[];
   loot: Loot[];
@@ -177,6 +180,7 @@ export const createRuntimeState = (): RuntimeGameState => ({
     speed: 0,
   },
   destination: null,
+  navigation: createNavigationState({ x: 680, y: 900 }),
   entities: spawnMap("aster"),
   shots: [],
   loot: [],
@@ -191,7 +195,7 @@ export const createRuntimeState = (): RuntimeGameState => ({
   monsterKills: 0,
   lootCount: 0,
   wave: 1,
-  zoom: 0.96,
+  zoom: 1,
   cameraPan: { x: 0, y: 0 },
   joystick: { x: 0, y: 0 },
   surgeUntil: 0,

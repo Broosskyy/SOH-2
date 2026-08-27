@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, f as ENTITY_DATA, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, n as validateShipVisualDefinition, p as MAPS, s as resolveQuality, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-BmWvIFOt.js";
+import { a as resolveCameraPresentation, f as ENTITY_DATA, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, n as validateShipVisualDefinition, p as MAPS, s as resolveQuality, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-hcsXMVyF.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -41131,8 +41131,8 @@ var AbyssalThreeRenderer = class {
 		this.pointer = new Vector2();
 		this.waterUniforms = {
 			uTime: { value: 0 },
-			uDeep: { value: new Color(276551) },
-			uShallow: { value: new Color(879482) },
+			uDeep: { value: new Color(208703) },
+			uShallow: { value: new Color(679794) },
 			uIslandCount: { value: 0 },
 			uIslands: { value: Array.from({ length: 8 }, () => new Vector4()) }
 		};
@@ -41393,7 +41393,7 @@ var AbyssalThreeRenderer = class {
 		const material = new ShaderMaterial({
 			uniforms: this.waterUniforms,
 			vertexShader: `uniform float uTime;varying float vWave;varying vec3 vWorld;void main(){vec3 p=position;float a=sin(p.x*.009+uTime*.55)*.72;float b=sin(p.y*.013-uTime*.42)*.48;float c=sin((p.x*.7+p.y)*.026+uTime*.83)*.22;p.z+=(a+b+c)*1.25;vWave=a+b+c;vec4 wp=modelMatrix*vec4(p,1.);vWorld=wp.xyz;gl_Position=projectionMatrix*viewMatrix*wp;}`,
-			fragmentShader: `uniform float uTime;uniform vec3 uDeep;uniform vec3 uShallow;uniform int uIslandCount;uniform vec4 uIslands[8];varying float vWave;varying vec3 vWorld;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}float fbm(vec2 p){float v=0.;v+=noise(p)*.58;p=p*2.07+4.1;v+=noise(p)*.28;p=p*2.03-2.4;v+=noise(p)*.14;return v;}void main(){vec2 flow=vWorld.xz*.0065+vec2(uTime*.027,-uTime*.018);float body=fbm(flow),detail=fbm(flow*4.8+vec2(-uTime*.05,uTime*.035));float coast=0.;float foam=0.;for(int i=0;i<8;i++){if(i>=uIslandCount)break;vec4 q=uIslands[i];vec2 d=(vWorld.xz-q.xy)/q.zw;float edge=length(d)+(noise(vWorld.xz*.021+float(i)*7.3)-.5)*.13;coast=max(coast,1.-smoothstep(.98,1.72,edge));foam=max(foam,1.-smoothstep(.035,.13,abs(edge-1.05)));}float crest=smoothstep(1.05,1.55,vWave+detail*.3)*.13;float glint=smoothstep(.88,.985,detail+vWave*.035)*.12;vec3 col=mix(uDeep,uShallow,.22+(body-.5)*.12+coast*.72+vWave*.012);col=mix(col,vec3(.7,.96,.94),glint+crest+foam*.32);gl_FragColor=vec4(col,1.);}`,
+			fragmentShader: `uniform float uTime;uniform vec3 uDeep;uniform vec3 uShallow;uniform int uIslandCount;uniform vec4 uIslands[8];varying float vWave;varying vec3 vWorld;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}float fbm(vec2 p){float v=0.;v+=noise(p)*.58;p=p*2.07+4.1;v+=noise(p)*.28;p=p*2.03-2.4;v+=noise(p)*.14;return v;}void main(){vec2 flow=vWorld.xz*.0065+vec2(uTime*.027,-uTime*.018);float body=fbm(flow),detail=fbm(flow*4.8+vec2(-uTime*.05,uTime*.035));float coast=0.;float foam=0.;for(int i=0;i<8;i++){if(i>=uIslandCount)break;vec4 q=uIslands[i];vec2 d=(vWorld.xz-q.xy)/q.zw;float edge=length(d)+(noise(vWorld.xz*.021+float(i)*7.3)-.5)*.13;coast=max(coast,1.-smoothstep(.98,1.72,edge));foam=max(foam,1.-smoothstep(.035,.13,abs(edge-1.05)));}float crest=smoothstep(1.05,1.55,vWave+detail*.3)*.13;float glint=smoothstep(.88,.985,detail+vWave*.035)*.12;vec3 col=mix(uDeep,uShallow,.16+(body-.5)*.2+coast*.78+vWave*.018+detail*.08);col=mix(col,vec3(.12,.28,.42),smoothstep(.35,.92,body)*.22);col=mix(col,vec3(.7,.96,.94),glint+crest+foam*.36);gl_FragColor=vec4(col,1.);}`,
 			side: 2
 		});
 		this.ocean = new Mesh(geo, material);
@@ -41475,7 +41475,7 @@ var AbyssalThreeRenderer = class {
 				prop.scale.setScalar(.8 + seeded(index * 13 + p) * .45);
 				this.world.add(prop);
 			}
-			if (isle.port || isle.rx >= 170) {
+			if (isle.port || isle.rx >= 185) {
 				const marker = createIslandMarker();
 				paintIslandMarker(marker, isle.name, this.islandMarkerLevel);
 				marker.sprite.position.set(isle.x, 18, isle.y + isle.ry * .42);
@@ -41488,14 +41488,17 @@ var AbyssalThreeRenderer = class {
 			"barrel",
 			"driftwood",
 			"wreck",
-			"buoy"
+			"buoy",
+			"mast",
+			"reef"
 		];
-		for (let i = 0; i < (this.quality.id === "LOW" ? 3 : 6); i++) {
-			const prop = createWorldProp(openKinds[i % openKinds.length], 91 + i), x = map.width * (.18 + seeded(i + 81) * .64), z = map.height * (.16 + seeded(i + 121) * .68);
-			if (map.islands.every((isle) => Math.hypot((x - isle.x) / isle.rx, (z - isle.y) / isle.ry) > 1.65)) {
+		const openCount = this.quality.id === "LOW" ? 6 : 10;
+		for (let i = 0; i < openCount; i++) {
+			const prop = createWorldProp(openKinds[i % openKinds.length], 91 + i), x = map.width * (.14 + seeded(i + 81) * .72), z = map.height * (.12 + seeded(i + 121) * .76);
+			if (map.islands.every((isle) => Math.hypot((x - isle.x) / isle.rx, (z - isle.y) / isle.ry) > 1.55)) {
 				prop.position.set(x, 0, z);
 				prop.rotation.y = seeded(i + 221) * Math.PI * 2;
-				prop.scale.setScalar(.65 + seeded(i + 301) * .35);
+				prop.scale.setScalar(.65 + seeded(i + 301) * .38);
 				this.world.add(prop);
 			}
 		}

@@ -25,10 +25,10 @@ export const KRAKEN_MODEL_YAW_OFFSET = Math.PI / 2;
 export const KRAKEN_PLAYER_VISUAL: ShipVisualDefinition = {
   id: "kraken-player-30k",
   assetPath: "/assets/3d/ships/player/kraken/Kraken_ship_player_30k.glb",
-  scale: 52,
+  scale: 60,
   rotationOffsetY: KRAKEN_MODEL_YAW_OFFSET,
-  waterlineOffset: 20.5,
-  wakeOffset: { forward: -58, lateral: 0 },
+  waterlineOffset: 22,
+  wakeOffset: { forward: -62, lateral: 0 },
   cannonOffsets: {
     port: [
       { forward: -18, lateral: 17, height: 10 },

@@ -43,6 +43,8 @@ export type SaveGame = {
   talentPoints?: number;
   settings?: {
     qualityProfile?: QualityPreference;
+    cameraPanSpeed?: "slow" | "normal" | "fast";
+    zoomSensitivity?: "low" | "normal" | "high";
   };
 };
 
