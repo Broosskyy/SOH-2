@@ -7,8 +7,8 @@
 | Ausgangscommit (V20.2.7) | `67c6b04` — fix: V20.2.7 real mobile labels and visual asset readiness |
 | Basis (V20.2.6) | `5f069be` — fix: V20.2.6 mobile label projection and screen-space stability |
 | Revert-Commit | `0382bf4` — Revert "fix: V20.2.7 real mobile labels and visual asset readiness" |
-| Fix-Commit | *(see final push hash below)* |
-| Push Status | `origin/main` — pushed after fix commit |
+| Fix-Commit | `deb5e11` — fix: V20.2.8 restore V20.2.6 and stabilize mobile world labels |
+| Push Status | ✅ `origin/main` — `67c6b04..deb5e11` |
 
 ## B. Revert
 
