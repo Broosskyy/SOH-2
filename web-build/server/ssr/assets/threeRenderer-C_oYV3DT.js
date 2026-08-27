@@ -1,4 +1,4 @@
-import { a as GAMEPLAY_CAMERA_POLICY, c as resolveQuality, m as MAPS, n as PLAYER_SHIP_VISUALS, o as resolveCameraPresentation, p as ENTITY_DATA, r as validateShipVisualDefinition, t as KRAKEN_PLAYER_DISPLAY_NAME, u as AMMO } from "./shipVisuals-Biureq4S.js";
+import { a as GAMEPLAY_CAMERA_POLICY, c as resolveQuality, m as MAPS, n as PLAYER_SHIP_VISUALS, o as resolveCameraPresentation, p as ENTITY_DATA, r as validateShipVisualDefinition, t as KRAKEN_PLAYER_DISPLAY_NAME, u as AMMO } from "./shipVisuals-R8d7waQ7.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -984,7 +984,7 @@ function generateUUID() {
 * @param {number} max - The max value.
 * @return {number} The clamped value.
 */
-function clamp$1(value, min, max) {
+function clamp$2(value, min, max) {
 	return Math.max(min, Math.min(max, value));
 }
 /**
@@ -1293,7 +1293,7 @@ var MathUtils = {
 	* @param {number} max - The max value.
 	* @return {number} The clamped value.
 	*/
-	clamp: clamp$1,
+	clamp: clamp$2,
 	/**
 	* Computes the Euclidean modulo of the given parameters that
 	* is `( ( n % m ) + m ) % m`.
@@ -1856,8 +1856,8 @@ var Vector2 = class Vector2 {
 	* @return {Vector2} A reference to this vector.
 	*/
 	clamp(min, max) {
-		this.x = clamp$1(this.x, min.x, max.x);
-		this.y = clamp$1(this.y, min.y, max.y);
+		this.x = clamp$2(this.x, min.x, max.x);
+		this.y = clamp$2(this.y, min.y, max.y);
 		return this;
 	}
 	/**
@@ -1871,8 +1871,8 @@ var Vector2 = class Vector2 {
 	* @return {Vector2} A reference to this vector.
 	*/
 	clampScalar(minVal, maxVal) {
-		this.x = clamp$1(this.x, minVal, maxVal);
-		this.y = clamp$1(this.y, minVal, maxVal);
+		this.x = clamp$2(this.x, minVal, maxVal);
+		this.y = clamp$2(this.y, minVal, maxVal);
 		return this;
 	}
 	/**
@@ -1887,7 +1887,7 @@ var Vector2 = class Vector2 {
 	*/
 	clampLength(min, max) {
 		const length = this.length();
-		return this.divideScalar(length || 1).multiplyScalar(clamp$1(length, min, max));
+		return this.divideScalar(length || 1).multiplyScalar(clamp$2(length, min, max));
 	}
 	/**
 	* The components of this vector are rounded down to the nearest integer value.
@@ -2011,7 +2011,7 @@ var Vector2 = class Vector2 {
 		const denominator = Math.sqrt(this.lengthSq() * v.lengthSq());
 		if (denominator === 0) return Math.PI / 2;
 		const theta = this.dot(v) / denominator;
-		return Math.acos(clamp$1(theta, -1, 1));
+		return Math.acos(clamp$2(theta, -1, 1));
 	}
 	/**
 	* Computes the distance from the given vector to this instance.
@@ -2523,7 +2523,7 @@ var Quaternion = class {
 	* @return {number} The angle in radians.
 	*/
 	angleTo(q) {
-		return 2 * Math.acos(Math.abs(clamp$1(this.dot(q), -1, 1)));
+		return 2 * Math.acos(Math.abs(clamp$2(this.dot(q), -1, 1)));
 	}
 	/**
 	* Rotates this quaternion by a given angular step to the given quaternion.
@@ -3272,9 +3272,9 @@ var Vector3 = class Vector3 {
 	* @return {Vector3} A reference to this vector.
 	*/
 	clamp(min, max) {
-		this.x = clamp$1(this.x, min.x, max.x);
-		this.y = clamp$1(this.y, min.y, max.y);
-		this.z = clamp$1(this.z, min.z, max.z);
+		this.x = clamp$2(this.x, min.x, max.x);
+		this.y = clamp$2(this.y, min.y, max.y);
+		this.z = clamp$2(this.z, min.z, max.z);
 		return this;
 	}
 	/**
@@ -3288,9 +3288,9 @@ var Vector3 = class Vector3 {
 	* @return {Vector3} A reference to this vector.
 	*/
 	clampScalar(minVal, maxVal) {
-		this.x = clamp$1(this.x, minVal, maxVal);
-		this.y = clamp$1(this.y, minVal, maxVal);
-		this.z = clamp$1(this.z, minVal, maxVal);
+		this.x = clamp$2(this.x, minVal, maxVal);
+		this.y = clamp$2(this.y, minVal, maxVal);
+		this.z = clamp$2(this.z, minVal, maxVal);
 		return this;
 	}
 	/**
@@ -3305,7 +3305,7 @@ var Vector3 = class Vector3 {
 	*/
 	clampLength(min, max) {
 		const length = this.length();
-		return this.divideScalar(length || 1).multiplyScalar(clamp$1(length, min, max));
+		return this.divideScalar(length || 1).multiplyScalar(clamp$2(length, min, max));
 	}
 	/**
 	* The components of this vector are rounded down to the nearest integer value.
@@ -3515,7 +3515,7 @@ var Vector3 = class Vector3 {
 		const denominator = Math.sqrt(this.lengthSq() * v.lengthSq());
 		if (denominator === 0) return Math.PI / 2;
 		const theta = this.dot(v) / denominator;
-		return Math.acos(clamp$1(theta, -1, 1));
+		return Math.acos(clamp$2(theta, -1, 1));
 	}
 	/**
 	* Computes the distance from the given vector to this instance.
@@ -5635,10 +5635,10 @@ var Vector4 = class Vector4 {
 	* @return {Vector4} A reference to this vector.
 	*/
 	clamp(min, max) {
-		this.x = clamp$1(this.x, min.x, max.x);
-		this.y = clamp$1(this.y, min.y, max.y);
-		this.z = clamp$1(this.z, min.z, max.z);
-		this.w = clamp$1(this.w, min.w, max.w);
+		this.x = clamp$2(this.x, min.x, max.x);
+		this.y = clamp$2(this.y, min.y, max.y);
+		this.z = clamp$2(this.z, min.z, max.z);
+		this.w = clamp$2(this.w, min.w, max.w);
 		return this;
 	}
 	/**
@@ -5652,10 +5652,10 @@ var Vector4 = class Vector4 {
 	* @return {Vector4} A reference to this vector.
 	*/
 	clampScalar(minVal, maxVal) {
-		this.x = clamp$1(this.x, minVal, maxVal);
-		this.y = clamp$1(this.y, minVal, maxVal);
-		this.z = clamp$1(this.z, minVal, maxVal);
-		this.w = clamp$1(this.w, minVal, maxVal);
+		this.x = clamp$2(this.x, minVal, maxVal);
+		this.y = clamp$2(this.y, minVal, maxVal);
+		this.z = clamp$2(this.z, minVal, maxVal);
+		this.w = clamp$2(this.w, minVal, maxVal);
 		return this;
 	}
 	/**
@@ -5670,7 +5670,7 @@ var Vector4 = class Vector4 {
 	*/
 	clampLength(min, max) {
 		const length = this.length();
-		return this.divideScalar(length || 1).multiplyScalar(clamp$1(length, min, max));
+		return this.divideScalar(length || 1).multiplyScalar(clamp$2(length, min, max));
 	}
 	/**
 	* The components of this vector are rounded down to the nearest integer value.
@@ -8707,7 +8707,7 @@ var Euler = class Euler {
 		const m31 = te[2], m32 = te[6], m33 = te[10];
 		switch (order) {
 			case "XYZ":
-				this._y = Math.asin(clamp$1(m13, -1, 1));
+				this._y = Math.asin(clamp$2(m13, -1, 1));
 				if (Math.abs(m13) < .9999999) {
 					this._x = Math.atan2(-m23, m33);
 					this._z = Math.atan2(-m12, m11);
@@ -8717,7 +8717,7 @@ var Euler = class Euler {
 				}
 				break;
 			case "YXZ":
-				this._x = Math.asin(-clamp$1(m23, -1, 1));
+				this._x = Math.asin(-clamp$2(m23, -1, 1));
 				if (Math.abs(m23) < .9999999) {
 					this._y = Math.atan2(m13, m33);
 					this._z = Math.atan2(m21, m22);
@@ -8727,7 +8727,7 @@ var Euler = class Euler {
 				}
 				break;
 			case "ZXY":
-				this._x = Math.asin(clamp$1(m32, -1, 1));
+				this._x = Math.asin(clamp$2(m32, -1, 1));
 				if (Math.abs(m32) < .9999999) {
 					this._y = Math.atan2(-m31, m33);
 					this._z = Math.atan2(-m12, m22);
@@ -8737,7 +8737,7 @@ var Euler = class Euler {
 				}
 				break;
 			case "ZYX":
-				this._y = Math.asin(-clamp$1(m31, -1, 1));
+				this._y = Math.asin(-clamp$2(m31, -1, 1));
 				if (Math.abs(m31) < .9999999) {
 					this._x = Math.atan2(m32, m33);
 					this._z = Math.atan2(m21, m11);
@@ -8747,7 +8747,7 @@ var Euler = class Euler {
 				}
 				break;
 			case "YZX":
-				this._z = Math.asin(clamp$1(m21, -1, 1));
+				this._z = Math.asin(clamp$2(m21, -1, 1));
 				if (Math.abs(m21) < .9999999) {
 					this._x = Math.atan2(-m23, m22);
 					this._y = Math.atan2(-m31, m11);
@@ -8757,7 +8757,7 @@ var Euler = class Euler {
 				}
 				break;
 			case "XZY":
-				this._z = Math.asin(-clamp$1(m12, -1, 1));
+				this._z = Math.asin(-clamp$2(m12, -1, 1));
 				if (Math.abs(m12) < .9999999) {
 					this._x = Math.atan2(m32, m22);
 					this._y = Math.atan2(m13, m11);
@@ -10731,8 +10731,8 @@ var Color = class {
 	*/
 	setHSL(h, s, l, colorSpace = ColorManagement.workingColorSpace) {
 		h = euclideanModulo(h, 1);
-		s = clamp$1(s, 0, 1);
-		l = clamp$1(l, 0, 1);
+		s = clamp$2(s, 0, 1);
+		l = clamp$2(l, 0, 1);
 		if (s === 0) this.r = this.g = this.b = l;
 		else {
 			const p = l <= .5 ? l * (1 + s) : l + s - l * s;
@@ -10885,7 +10885,7 @@ var Color = class {
 	*/
 	getHex(colorSpace = SRGBColorSpace) {
 		ColorManagement.workingToColorSpace(_color.copy(this), colorSpace);
-		return Math.round(clamp$1(_color.r * 255, 0, 255)) * 65536 + Math.round(clamp$1(_color.g * 255, 0, 255)) * 256 + Math.round(clamp$1(_color.b * 255, 0, 255));
+		return Math.round(clamp$2(_color.r * 255, 0, 255)) * 65536 + Math.round(clamp$2(_color.g * 255, 0, 255)) * 256 + Math.round(clamp$2(_color.b * 255, 0, 255));
 	}
 	/**
 	* Returns the hexadecimal value of this color as a string (for example, 'FFFFFF').
@@ -19224,6 +19224,121 @@ var DodecahedronGeometry = class DodecahedronGeometry extends PolyhedronGeometry
 		return new DodecahedronGeometry(data.radius, data.detail);
 	}
 };
+var _v0$3 = /* @__PURE__ */ new Vector3();
+var _v1$1 = /* @__PURE__ */ new Vector3();
+var _normal = /* @__PURE__ */ new Vector3();
+var _triangle = /* @__PURE__ */ new Triangle();
+/**
+* Can be used as a helper object to view the edges of a geometry.
+*
+* ```js
+* const geometry = new THREE.BoxGeometry();
+* const edges = new THREE.EdgesGeometry( geometry );
+* const line = new THREE.LineSegments( edges );
+* scene.add( line );
+* ```
+*
+* Note: It is not yet possible to serialize/deserialize instances of this class.
+*
+* @augments BufferGeometry
+*/
+var EdgesGeometry = class extends BufferGeometry {
+	/**
+	* Constructs a new edges geometry.
+	*
+	* @param {?BufferGeometry} [geometry=null] - The geometry.
+	* @param {number} [thresholdAngle=1] - An edge is only rendered if the angle (in degrees)
+	* between the face normals of the adjoining faces exceeds this value.
+	*/
+	constructor(geometry = null, thresholdAngle = 1) {
+		super();
+		this.type = "EdgesGeometry";
+		/**
+		* Holds the constructor parameters that have been
+		* used to generate the geometry. Any modification
+		* after instantiation does not change the geometry.
+		*
+		* @type {Object}
+		*/
+		this.parameters = {
+			geometry,
+			thresholdAngle
+		};
+		if (geometry !== null) {
+			const precision = Math.pow(10, 4);
+			const thresholdDot = Math.cos(DEG2RAD * thresholdAngle);
+			const indexAttr = geometry.getIndex();
+			const positionAttr = geometry.getAttribute("position");
+			const indexCount = indexAttr ? indexAttr.count : positionAttr.count;
+			const indexArr = [
+				0,
+				0,
+				0
+			];
+			const vertKeys = [
+				"a",
+				"b",
+				"c"
+			];
+			const hashes = new Array(3);
+			const edgeData = {};
+			const vertices = [];
+			for (let i = 0; i < indexCount; i += 3) {
+				if (indexAttr) {
+					indexArr[0] = indexAttr.getX(i);
+					indexArr[1] = indexAttr.getX(i + 1);
+					indexArr[2] = indexAttr.getX(i + 2);
+				} else {
+					indexArr[0] = i;
+					indexArr[1] = i + 1;
+					indexArr[2] = i + 2;
+				}
+				const { a, b, c } = _triangle;
+				a.fromBufferAttribute(positionAttr, indexArr[0]);
+				b.fromBufferAttribute(positionAttr, indexArr[1]);
+				c.fromBufferAttribute(positionAttr, indexArr[2]);
+				_triangle.getNormal(_normal);
+				hashes[0] = `${Math.round(a.x * precision)},${Math.round(a.y * precision)},${Math.round(a.z * precision)}`;
+				hashes[1] = `${Math.round(b.x * precision)},${Math.round(b.y * precision)},${Math.round(b.z * precision)}`;
+				hashes[2] = `${Math.round(c.x * precision)},${Math.round(c.y * precision)},${Math.round(c.z * precision)}`;
+				if (hashes[0] === hashes[1] || hashes[1] === hashes[2] || hashes[2] === hashes[0]) continue;
+				for (let j = 0; j < 3; j++) {
+					const jNext = (j + 1) % 3;
+					const vecHash0 = hashes[j];
+					const vecHash1 = hashes[jNext];
+					const v0 = _triangle[vertKeys[j]];
+					const v1 = _triangle[vertKeys[jNext]];
+					const hash = `${vecHash0}_${vecHash1}`;
+					const reverseHash = `${vecHash1}_${vecHash0}`;
+					if (reverseHash in edgeData && edgeData[reverseHash]) {
+						if (_normal.dot(edgeData[reverseHash].normal) <= thresholdDot) {
+							vertices.push(v0.x, v0.y, v0.z);
+							vertices.push(v1.x, v1.y, v1.z);
+						}
+						edgeData[reverseHash] = null;
+					} else if (!(hash in edgeData)) edgeData[hash] = {
+						index0: indexArr[j],
+						index1: indexArr[jNext],
+						normal: _normal.clone()
+					};
+				}
+			}
+			for (const key in edgeData) if (edgeData[key]) {
+				const { index0, index1 } = edgeData[key];
+				_v0$3.fromBufferAttribute(positionAttr, index0);
+				_v1$1.fromBufferAttribute(positionAttr, index1);
+				vertices.push(_v0$3.x, _v0$3.y, _v0$3.z);
+				vertices.push(_v1$1.x, _v1$1.y, _v1$1.z);
+			}
+			this.setAttribute("position", new Float32BufferAttribute(vertices, 3));
+		}
+	}
+	copy(source) {
+		super.copy(source);
+		this.parameters = Object.assign({}, source.parameters);
+		return this;
+	}
+};
 /**
 * An abstract base class for creating an analytic curve object that contains methods
 * for interpolation.
@@ -19471,13 +19586,13 @@ var Curve = class {
 			vec.crossVectors(tangents[i - 1], tangents[i]);
 			if (vec.length() > Number.EPSILON) {
 				vec.normalize();
-				const theta = Math.acos(clamp$1(tangents[i - 1].dot(tangents[i]), -1, 1));
+				const theta = Math.acos(clamp$2(tangents[i - 1].dot(tangents[i]), -1, 1));
 				normals[i].applyMatrix4(mat.makeRotationAxis(vec, theta));
 			}
 			binormals[i].crossVectors(tangents[i], normals[i]);
 		}
 		if (closed === true) {
-			let theta = Math.acos(clamp$1(normals[0].dot(normals[segments]), -1, 1));
+			let theta = Math.acos(clamp$2(normals[0].dot(normals[segments]), -1, 1));
 			theta /= segments;
 			if (tangents[0].dot(vec.crossVectors(normals[0], normals[segments])) > 0) theta = -theta;
 			for (let i = 1; i <= segments; i++) {
@@ -23374,7 +23489,7 @@ var MeshPhysicalMaterial = class extends MeshStandardMaterial {
 		*/
 		Object.defineProperty(this, "reflectivity", {
 			get: function() {
-				return clamp$1(2.5 * (this.ior - 1) / (this.ior + 1), 0, 1);
+				return clamp$2(2.5 * (this.ior - 1) / (this.ior + 1), 0, 1);
 			},
 			set: function(reflectivity) {
 				this.ior = (1 + .4 * reflectivity) / (1 - .4 * reflectivity);
@@ -40187,7 +40302,357 @@ function resolveWorldDensityCounts(quality, mapWidth, mapHeight) {
 	};
 }
 //#endregion
+//#region app/game/visuals/worldLabels.ts
+var clamp$1 = (value, min, max) => Math.max(min, Math.min(max, value));
+function configureLabelTexture(texture) {
+	texture.colorSpace = SRGBColorSpace;
+	texture.minFilter = LinearFilter;
+	texture.magFilter = LinearFilter;
+	texture.generateMipmaps = false;
+	texture.wrapS = ClampToEdgeWrapping;
+	texture.wrapT = ClampToEdgeWrapping;
+	texture.premultiplyAlpha = false;
+	return texture;
+}
+function createLabelCanvas(width, height) {
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	return canvas;
+}
+function createTextSprite(canvasWidth, canvasHeight, renderOrder) {
+	const canvas = createLabelCanvas(canvasWidth, canvasHeight);
+	const texture = configureLabelTexture(new CanvasTexture(canvas));
+	const sprite = new Sprite(new SpriteMaterial({
+		map: texture,
+		transparent: true,
+		depthTest: false,
+		depthWrite: false
+	}));
+	sprite.center.set(.5, .5);
+	sprite.renderOrder = renderOrder;
+	return {
+		sprite,
+		canvas,
+		texture
+	};
+}
+function createHpBar(fillColor, borderColor) {
+	const group = new Group();
+	const geometry = new PlaneGeometry(1, 1);
+	const bg = new Mesh(geometry, new MeshBasicMaterial({
+		color: 135692,
+		transparent: true,
+		opacity: .92,
+		depthTest: false,
+		depthWrite: false
+	}));
+	bg.renderOrder = 81;
+	const fill = new Mesh(geometry, new MeshBasicMaterial({
+		color: fillColor,
+		transparent: true,
+		opacity: 1,
+		depthTest: false,
+		depthWrite: false
+	}));
+	fill.renderOrder = 82;
+	fill.position.z = .01;
+	const border = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({
+		color: borderColor,
+		transparent: true,
+		depthTest: false,
+		depthWrite: false
+	}));
+	border.renderOrder = 83;
+	group.add(bg, fill, border);
+	return {
+		group,
+		bg,
+		fill,
+		border
+	};
+}
+function paintCanvas(canvas, draw) {
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return;
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
+	ctx.globalAlpha = 1;
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	draw(ctx);
+}
+function drawOutlinedText(ctx, text, x, y, fill, font, align = "center") {
+	ctx.textAlign = align;
+	ctx.textBaseline = "middle";
+	ctx.font = font;
+	ctx.strokeStyle = "rgba(0,0,0,.88)";
+	ctx.lineWidth = 4;
+	ctx.strokeText(text, x, y);
+	ctx.fillStyle = fill;
+	ctx.fillText(text, x, y);
+}
+function worldUnitsPerPixel(camera, renderer, worldPosition) {
+	const distance = camera.position.distanceTo(worldPosition);
+	const vFov = camera.fov * Math.PI / 180;
+	const units = 2 * Math.tan(vFov / 2) * distance / (renderer.domElement.clientHeight || 1);
+	return Number.isFinite(units) && units > 0 ? units : .01;
+}
+function zoomLabelPixels(zoom, base, min, max) {
+	return clamp$1(base * clamp$1(.96 / zoom, .82, 1.14), min, max);
+}
+function billboardToCamera(object, camera) {
+	object.quaternion.copy(camera.quaternion);
+}
+function setTextSpriteScreenSize(sprite, canvas, unitsPerPixel, pixelWidth, pixelHeight) {
+	const aspect = canvas.width / canvas.height;
+	const height = Math.max(1, pixelHeight);
+	const width = Math.max(1, pixelWidth || height * aspect);
+	sprite.scale.set(width * unitsPerPixel, height * unitsPerPixel, 1);
+}
+function setHpBarScreenSize(bar, unitsPerPixel, pixelWidth, pixelHeight, ratio) {
+	const safeRatio = clamp$1(ratio, 0, 1);
+	const width = Math.max(8, pixelWidth) * unitsPerPixel;
+	const height = Math.max(4, pixelHeight) * unitsPerPixel;
+	const inset = 2 * unitsPerPixel;
+	bar.bg.scale.set(width, height, 1);
+	const fillWidth = Math.max(inset, (width - inset * 2) * safeRatio);
+	bar.fill.scale.set(fillWidth, Math.max(inset, height - inset * 2), 1);
+	bar.fill.position.set((-width + fillWidth) * .5 + inset, 0, .01);
+	bar.border.scale.set(width, height, 1);
+}
+function stackLabelParts(parts, unitsPerPixel, anchorY) {
+	let cursor = anchorY;
+	for (const part of parts) {
+		if (part.visible === false) continue;
+		const height = Math.max(1, part.pixelHeight) * unitsPerPixel;
+		part.object.position.set(0, cursor - height * .5, 0);
+		cursor -= height + 2 * unitsPerPixel;
+	}
+}
+function createPlayerWorldLabel(debugBoxes = false) {
+	const group = new Group();
+	group.name = "PlayerWorldLabel";
+	const nameLine = createTextSprite(256, 32, 91);
+	const shipLine = createTextSprite(256, 24, 92);
+	const hpBar = createHpBar(3978836, 14072952);
+	const debugBox = debugBoxes ? new LineSegments(new EdgesGeometry(new PlaneGeometry(1, 1)), new LineBasicMaterial({
+		color: 5502181,
+		depthTest: false
+	})) : null;
+	group.add(nameLine.sprite, shipLine.sprite, hpBar.group);
+	if (debugBox) group.add(debugBox);
+	return {
+		group,
+		nameLine,
+		shipLine,
+		hpBar,
+		debugBox,
+		lastKey: ""
+	};
+}
+function updatePlayerWorldLabel(label, frame, shipDisplayName, showShipName, camera, renderer, zoom, worldPosition) {
+	const hp = Math.max(0, Math.round(frame.player.hp));
+	const ratio = clamp$1(hp / Math.max(1, frame.player.maxHp), 0, 1);
+	const key = `${frame.playerName}|${frame.playerLevel}|${hp}|${showShipName ? 1 : 0}`;
+	if (key !== label.lastKey) {
+		label.lastKey = key;
+		paintCanvas(label.nameLine.canvas, (ctx) => {
+			drawOutlinedText(ctx, frame.playerName.toUpperCase(), 118, 16, "#f4ead8", "700 20px system-ui,sans-serif", "left");
+			drawOutlinedText(ctx, `LV ${frame.playerLevel}`, 244, 16, "rgba(188,210,205,.95)", "600 14px system-ui,sans-serif", "right");
+		});
+		label.nameLine.texture.needsUpdate = true;
+		paintCanvas(label.shipLine.canvas, (ctx) => {
+			if (!showShipName) return;
+			drawOutlinedText(ctx, shipDisplayName.toUpperCase(), 128, 12, "rgba(188,210,205,.78)", "600 12px system-ui,sans-serif");
+		});
+		label.shipLine.texture.needsUpdate = true;
+	}
+	label.shipLine.sprite.visible = showShipName;
+	const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
+	const nameHeight = zoomLabelPixels(zoom, 24, 20, 28);
+	const nameWidth = zoomLabelPixels(zoom, 148, 120, 168);
+	const shipHeight = zoomLabelPixels(zoom, 16, 13, 19);
+	const barWidth = zoomLabelPixels(zoom, 128, 104, 140);
+	const barHeight = 9;
+	setTextSpriteScreenSize(label.nameLine.sprite, label.nameLine.canvas, unitsPerPixel, nameWidth, nameHeight);
+	setTextSpriteScreenSize(label.shipLine.sprite, label.shipLine.canvas, unitsPerPixel, nameWidth * .88, shipHeight);
+	setHpBarScreenSize(label.hpBar, unitsPerPixel, barWidth, barHeight, ratio);
+	billboardToCamera(label.hpBar.group, camera);
+	const anchorY = (nameHeight + (showShipName ? shipHeight + 4 : 0) + barHeight + 6) * unitsPerPixel * .5;
+	stackLabelParts([
+		{
+			object: label.nameLine.sprite,
+			pixelHeight: nameHeight
+		},
+		{
+			object: label.shipLine.sprite,
+			pixelHeight: shipHeight,
+			visible: showShipName
+		},
+		{
+			object: label.hpBar.group,
+			pixelHeight: barHeight
+		}
+	], unitsPerPixel, anchorY);
+	label.group.position.copy(worldPosition);
+	if (label.debugBox) {
+		const totalHeight = nameHeight + (showShipName ? shipHeight + 4 : 0) + barHeight + 6;
+		label.debugBox.scale.set(nameWidth * unitsPerPixel, totalHeight * unitsPerPixel, 1);
+		label.debugBox.position.set(0, 0, .02);
+	}
+	return {
+		type: "player",
+		name: frame.playerName,
+		level: frame.playerLevel,
+		hpRatio: ratio,
+		textureWidth: label.nameLine.canvas.width,
+		textureHeight: label.nameLine.canvas.height,
+		targetPixelWidth: nameWidth,
+		targetPixelHeight: nameHeight,
+		projectedScreenWidth: nameWidth,
+		projectedScreenHeight: nameHeight
+	};
+}
+function disposePlayerWorldLabel(label) {
+	label.nameLine.texture.dispose();
+	label.shipLine.texture.dispose();
+	label.nameLine.sprite.material.dispose();
+	label.shipLine.sprite.material.dispose();
+	label.hpBar.bg.geometry.dispose();
+	label.hpBar.fill.geometry.dispose();
+	label.hpBar.border.geometry.dispose();
+	label.hpBar.bg.material.dispose();
+	label.hpBar.fill.material.dispose();
+	label.hpBar.border.material.dispose();
+}
+function createNpcWorldLabel(hostile, debugBoxes = false) {
+	const group = new Group();
+	group.name = "NpcWorldLabel";
+	const nameLine = createTextSprite(256, 32, 80);
+	const hpBar = createHpBar(hostile ? 14175301 : 3978836, hostile ? 16751192 : 12705453);
+	const debugBox = debugBoxes ? new LineSegments(new EdgesGeometry(new PlaneGeometry(1, 1)), new LineBasicMaterial({
+		color: 16741980,
+		depthTest: false
+	})) : null;
+	group.add(nameLine.sprite, hpBar.group);
+	if (debugBox) group.add(debugBox);
+	return {
+		group,
+		nameLine,
+		hpBar,
+		debugBox,
+		lastKey: ""
+	};
+}
+function updateNpcWorldLabel(label, name, level, hp, maxHp, selected, camera, renderer, zoom, worldPosition) {
+	const ratio = clamp$1(hp / Math.max(1, maxHp), 0, 1);
+	const key = `${name}|${level}|${hp}|${selected ? 1 : 0}`;
+	if (key !== label.lastKey) {
+		label.lastKey = key;
+		paintCanvas(label.nameLine.canvas, (ctx) => {
+			drawOutlinedText(ctx, name, 118, 16, "#f8ead1", "700 17px system-ui,sans-serif", "left");
+			drawOutlinedText(ctx, `LV ${level}`, 244, 16, "rgba(193,222,218,.9)", "600 13px system-ui,sans-serif", "right");
+		});
+		label.nameLine.texture.needsUpdate = true;
+	}
+	const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
+	const nameHeight = zoomLabelPixels(zoom, selected ? 20 : 18, 15, 22);
+	const nameWidth = zoomLabelPixels(zoom, selected ? 112 : 96, 80, 120);
+	const barWidth = zoomLabelPixels(zoom, selected ? 104 : 92, 72, 112);
+	const barHeight = 7;
+	setTextSpriteScreenSize(label.nameLine.sprite, label.nameLine.canvas, unitsPerPixel, nameWidth, nameHeight);
+	setHpBarScreenSize(label.hpBar, unitsPerPixel, barWidth, barHeight, ratio);
+	billboardToCamera(label.hpBar.group, camera);
+	const anchorY = (nameHeight + barHeight + 4) * unitsPerPixel * .5;
+	stackLabelParts([{
+		object: label.nameLine.sprite,
+		pixelHeight: nameHeight
+	}, {
+		object: label.hpBar.group,
+		pixelHeight: barHeight
+	}], unitsPerPixel, anchorY);
+	label.group.position.copy(worldPosition);
+	if (label.debugBox) {
+		const totalHeight = nameHeight + barHeight + 4;
+		label.debugBox.scale.set(nameWidth * unitsPerPixel, totalHeight * unitsPerPixel, 1);
+	}
+	return {
+		type: "npc",
+		name,
+		level,
+		hpRatio: ratio,
+		textureWidth: label.nameLine.canvas.width,
+		textureHeight: label.nameLine.canvas.height,
+		targetPixelWidth: nameWidth,
+		targetPixelHeight: nameHeight,
+		projectedScreenWidth: nameWidth,
+		projectedScreenHeight: nameHeight
+	};
+}
+function disposeNpcWorldLabel(label) {
+	label.nameLine.texture.dispose();
+	label.nameLine.sprite.material.dispose();
+	label.hpBar.bg.geometry.dispose();
+	label.hpBar.fill.geometry.dispose();
+	label.hpBar.border.geometry.dispose();
+	label.hpBar.bg.material.dispose();
+	label.hpBar.fill.material.dispose();
+	label.hpBar.border.material.dispose();
+}
+function createPoiWorldLabel(debugBoxes = false) {
+	const group = new Group();
+	group.name = "PoiWorldLabel";
+	const nameLine = createTextSprite(256, 48, 70);
+	const debugBox = debugBoxes ? new LineSegments(new EdgesGeometry(new PlaneGeometry(1, 1)), new LineBasicMaterial({
+		color: 9098464,
+		depthTest: false
+	})) : null;
+	group.add(nameLine.sprite);
+	if (debugBox) group.add(debugBox);
+	return {
+		group,
+		nameLine,
+		debugBox,
+		lastKey: ""
+	};
+}
+function updatePoiWorldLabel(label, name, level, camera, renderer, zoom, worldPosition) {
+	const key = `${name}|${level}`;
+	if (key !== label.lastKey) {
+		label.lastKey = key;
+		paintCanvas(label.nameLine.canvas, (ctx) => {
+			drawOutlinedText(ctx, name.toUpperCase(), 128, 16, "#e8f6f8", "700 17px system-ui,sans-serif");
+			drawOutlinedText(ctx, `LV ${level}`, 128, 34, "rgba(180,220,228,.9)", "600 13px system-ui,sans-serif");
+		});
+		label.nameLine.texture.needsUpdate = true;
+	}
+	const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
+	const pixelHeight = zoomLabelPixels(zoom, 34, 28, 40);
+	const pixelWidth = zoomLabelPixels(zoom, 108, 80, 140);
+	setTextSpriteScreenSize(label.nameLine.sprite, label.nameLine.canvas, unitsPerPixel, pixelWidth, pixelHeight);
+	label.group.position.copy(worldPosition);
+	if (label.debugBox) label.debugBox.scale.set(pixelWidth * unitsPerPixel, pixelHeight * unitsPerPixel, 1);
+	return {
+		type: "poi",
+		name,
+		level,
+		textureWidth: label.nameLine.canvas.width,
+		textureHeight: label.nameLine.canvas.height,
+		targetPixelWidth: pixelWidth,
+		targetPixelHeight: pixelHeight,
+		projectedScreenWidth: pixelWidth,
+		projectedScreenHeight: pixelHeight
+	};
+}
+function disposePoiWorldLabel(label) {
+	label.nameLine.texture.dispose();
+	label.nameLine.sprite.material.dispose();
+}
+//#endregion
 //#region app/threeRenderer.ts
+function isLocalDevHost() {
+	if (typeof location === "undefined") return false;
+	return location.hostname === "localhost" || location.hostname === "127.0.0.1" || /^192\.168\./.test(location.hostname) || /^10\./.test(location.hostname);
+}
 var PLAYER_SHIP_IDS = [
 	"sovereign",
 	"tempest",
@@ -40201,17 +40666,6 @@ var monsterKinds = new Set([
 	"boss"
 ]);
 var clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-/** Preserve canvas texture aspect on billboard sprites — never set arbitrary scale.x/scale.y pairs. */
-function canvasTextureAspect(canvas) {
-	return canvas.width / canvas.height;
-}
-function applyLabelSpriteScale(sprite, canvas, worldHeight) {
-	const aspect = canvasTextureAspect(canvas), h = worldHeight;
-	sprite.scale.set(h * aspect, h, 1);
-}
-function labelZoomScale(zoom, min = .75, max = 1.18) {
-	return clamp(1 / zoom, min, max);
-}
 var mat = (color, rough = .72, metal = .08, emissive = 0) => new MeshStandardMaterial({
 	color,
 	roughness: rough,
@@ -40698,162 +41152,6 @@ function createKraken(kind) {
 	group.userData.baseScale = kind === "serpent" ? .92 : boss ? 1.08 : 1;
 	return shadows(group);
 }
-function createHealthMarker(e) {
-	const canvas = document.createElement("canvas");
-	canvas.width = 384;
-	canvas.height = 84;
-	const texture = new CanvasTexture(canvas);
-	texture.colorSpace = SRGBColorSpace;
-	texture.minFilter = LinearFilter;
-	const sprite = new Sprite(new SpriteMaterial({
-		map: texture,
-		transparent: true,
-		depthTest: false,
-		depthWrite: false
-	}));
-	sprite.renderOrder = 80;
-	const marker = {
-		sprite,
-		canvas,
-		texture,
-		lastHp: -1,
-		lastSelected: false
-	};
-	paintHealthMarker(marker, e, false);
-	return marker;
-}
-function paintHealthMarker(marker, e, selected) {
-	if (marker.lastHp === e.hp && marker.lastSelected === selected) return;
-	marker.lastHp = e.hp;
-	marker.lastSelected = selected;
-	const ctx = marker.canvas.getContext("2d");
-	if (!ctx) return;
-	const d = ENTITY_DATA[e.kind], ratio = clamp(e.hp / e.maxHp, 0, 1);
-	ctx.clearRect(0, 0, 384, 84);
-	ctx.textAlign = "left";
-	ctx.shadowColor = "rgba(0,0,0,.85)";
-	ctx.shadowBlur = 5;
-	ctx.fillStyle = monsterKinds.has(e.kind) ? "#8deee3" : "#f8ead1";
-	ctx.font = "700 17px system-ui";
-	ctx.fillText(d.name, 24, 24);
-	ctx.shadowBlur = 0;
-	ctx.textAlign = "right";
-	ctx.fillStyle = "rgba(193,222,218,.88)";
-	ctx.font = "600 14px system-ui";
-	ctx.fillText(`LV ${d.level}`, 360, 24);
-	ctx.textAlign = "center";
-	ctx.fillStyle = "rgba(2,12,18,.9)";
-	ctx.fillRect(24, 34, 336, 13);
-	ctx.strokeStyle = selected ? "#ffd76b" : "rgba(193,222,218,.42)";
-	ctx.lineWidth = selected ? 2 : 1;
-	ctx.strokeRect(24, 34, 336, 13);
-	const gradient = ctx.createLinearGradient(24, 0, 360, 0);
-	gradient.addColorStop(0, ratio > .45 ? "#d84c45" : "#d43b35");
-	gradient.addColorStop(1, ratio > .45 ? "#ff9a58" : "#ff5e3f");
-	ctx.fillStyle = gradient;
-	ctx.fillRect(26, 36, 332 * ratio, 9);
-	marker.texture.needsUpdate = true;
-}
-function createPlayerMarker() {
-	const canvas = document.createElement("canvas");
-	canvas.width = 340;
-	canvas.height = 48;
-	const texture = new CanvasTexture(canvas);
-	texture.colorSpace = SRGBColorSpace;
-	texture.minFilter = LinearFilter;
-	const sprite = new Sprite(new SpriteMaterial({
-		map: texture,
-		transparent: true,
-		depthTest: false,
-		depthWrite: false
-	}));
-	sprite.center.set(.5, 1);
-	sprite.renderOrder = 90;
-	applyLabelSpriteScale(sprite, canvas, 20);
-	return {
-		sprite,
-		canvas,
-		texture,
-		lastKey: ""
-	};
-}
-function paintPlayerMarker(marker, frame) {
-	const hp = Math.max(0, Math.round(frame.player.hp)), ratio = clamp(hp / Math.max(1, frame.player.maxHp), 0, 1), showHero = frame.shipId && PLAYER_SHIP_VISUALS[frame.shipId], key = `${frame.playerName}|${frame.playerLevel}|${hp}|${showHero ? 1 : 0}`;
-	if (marker.lastKey === key) return;
-	marker.lastKey = key;
-	const ctx = marker.canvas.getContext("2d");
-	if (!ctx) return;
-	ctx.clearRect(0, 0, 340, 48);
-	ctx.textAlign = "left";
-	ctx.shadowColor = "rgba(0,0,0,.78)";
-	ctx.shadowBlur = 4;
-	ctx.fillStyle = "#f4ead8";
-	ctx.font = "700 15px Georgia,serif";
-	ctx.fillText(frame.playerName.toUpperCase(), 18, 16);
-	ctx.shadowBlur = 0;
-	ctx.textAlign = "right";
-	ctx.fillStyle = "rgba(188,210,205,.92)";
-	ctx.font = "600 12px system-ui";
-	ctx.fillText(`LV ${frame.playerLevel}`, 322, 16);
-	ctx.textAlign = "center";
-	ctx.fillStyle = "rgba(2,12,18,.92)";
-	ctx.fillRect(18, 22, 304, 12);
-	ctx.strokeStyle = "rgba(214,188,120,.65)";
-	ctx.lineWidth = 1;
-	ctx.strokeRect(18, 22, 304, 12);
-	const hpGradient = ctx.createLinearGradient(20, 0, 318, 0);
-	hpGradient.addColorStop(0, "#2f9d49");
-	hpGradient.addColorStop(1, "#6fdc62");
-	ctx.fillStyle = hpGradient;
-	ctx.fillRect(20, 24, 300 * ratio, 8);
-	if (showHero) {
-		ctx.fillStyle = "rgba(188,210,205,.72)";
-		ctx.font = "600 8px system-ui";
-		ctx.fillText(KRAKEN_PLAYER_DISPLAY_NAME.toUpperCase(), 170, 42);
-	}
-	marker.texture.needsUpdate = true;
-}
-function createIslandMarker() {
-	const canvas = document.createElement("canvas");
-	canvas.width = 360;
-	canvas.height = 72;
-	const texture = new CanvasTexture(canvas);
-	texture.colorSpace = SRGBColorSpace;
-	texture.minFilter = LinearFilter;
-	const sprite = new Sprite(new SpriteMaterial({
-		map: texture,
-		transparent: true,
-		depthTest: false,
-		depthWrite: false
-	}));
-	sprite.renderOrder = 70;
-	applyLabelSpriteScale(sprite, canvas, 24);
-	return {
-		sprite,
-		canvas,
-		texture,
-		lastKey: ""
-	};
-}
-function paintIslandMarker(marker, name, level) {
-	const key = `${name}|${level}`;
-	if (marker.lastKey === key) return;
-	marker.lastKey = key;
-	const ctx = marker.canvas.getContext("2d");
-	if (!ctx) return;
-	ctx.clearRect(0, 0, 360, 72);
-	ctx.textAlign = "center";
-	ctx.shadowColor = "rgba(0,0,0,.85)";
-	ctx.shadowBlur = 6;
-	ctx.fillStyle = "#e8f6f8";
-	ctx.font = "700 17px system-ui";
-	ctx.fillText(name, 180, 28);
-	ctx.shadowBlur = 0;
-	ctx.fillStyle = "rgba(180,220,228,.88)";
-	ctx.font = "600 14px system-ui";
-	ctx.fillText(`LV ${level}`, 180, 48);
-	marker.texture.needsUpdate = true;
-}
 function createImpactEffect(monster = false) {
 	const root = new Group(), flash = new PointLight(monster ? 7340014 : 16751693, 6, 170);
 	flash.position.y = 30;
@@ -41217,10 +41515,10 @@ function tuneKrakenPlayerMaterial(material, maxAnisotropy) {
 		};
 		tuned.color.getHSL(hsl);
 		tuned.emissive = tuned.emissive?.clone() ?? tuned.color.clone();
-		if (hsl.l < .34) tuned.emissiveIntensity = Math.max(tuned.emissiveIntensity, .16);
-		if (hsl.s > .28) tuned.emissiveIntensity = Math.max(tuned.emissiveIntensity, .24);
-		tuned.roughness = Math.min(tuned.roughness, .78);
-		tuned.envMapIntensity = 1.08;
+		if (hsl.l < .34) tuned.emissiveIntensity = Math.max(tuned.emissiveIntensity, .22);
+		if (hsl.s > .28) tuned.emissiveIntensity = Math.max(tuned.emissiveIntensity, .3);
+		tuned.roughness = Math.min(tuned.roughness, .72);
+		tuned.envMapIntensity = 1.14;
 	}
 	return tuned;
 }
@@ -41260,12 +41558,11 @@ var AbyssalThreeRenderer = class {
 		this.world = new Group();
 		this.player = new Group();
 		this.playerVisualRoot = new Group();
-		this.playerMarker = createPlayerMarker();
 		this.playerAura = new Group();
 		this.playerShipId = "sovereign";
 		this.playerDeckLevel = 1;
 		this.entityMeshes = /* @__PURE__ */ new Map();
-		this.entityBars = /* @__PURE__ */ new Map();
+		this.entityLabels = /* @__PURE__ */ new Map();
 		this.shotMeshes = /* @__PURE__ */ new Map();
 		this.wakeMeshes = /* @__PURE__ */ new Map();
 		this.lootMeshes = /* @__PURE__ */ new Map();
@@ -41293,6 +41590,7 @@ var AbyssalThreeRenderer = class {
 			uTime: { value: 0 },
 			uDeep: { value: new Color(208703) },
 			uShallow: { value: new Color(679794) },
+			uCameraPos: { value: new Vector3() },
 			uIslandCount: { value: 0 },
 			uIslands: { value: Array.from({ length: 8 }, () => new Vector4()) }
 		};
@@ -41301,10 +41599,11 @@ var AbyssalThreeRenderer = class {
 		this.cameraShakeStrength = 0;
 		this.cameraShakeUntil = 0;
 		this.playerVisualTemplates = /* @__PURE__ */ new Map();
-		this.islandMarkers = [];
+		this.poiLabels = [];
 		this.islandMarkerLevel = 1;
 		this.lastKrakenPlacementProof = "";
 		this.visualDebugEnabled = false;
+		this.labelDebugEnabled = false;
 		this.worldPropCount = 0;
 		this.lastLayoutWidth = 0;
 		this.lastLayoutHeight = 0;
@@ -41315,6 +41614,8 @@ var AbyssalThreeRenderer = class {
 			this.lastLayoutHeight = 0;
 			this.lastPixelRatio = 0;
 		};
+		this.labelWorldPos = new Vector3();
+		this.labelDebugEntries = [];
 		this.quality = resolveQuality(qualityPreference);
 		this.renderer = new WebGLRenderer({
 			canvas,
@@ -41359,7 +41660,10 @@ var AbyssalThreeRenderer = class {
 		auraLight.userData.visualEffectType = "aura";
 		this.playerAura.add(auraLight);
 		this.playerAura.userData.visualEffectType = "aura";
-		this.world.add(this.player, this.playerMarker.sprite, this.playerAura);
+		this.visualDebugEnabled = isLocalDevHost() && new URLSearchParams(location.search).get("visualDebug") === "1";
+		this.labelDebugEnabled = isLocalDevHost() && new URLSearchParams(location.search).get("labelDebug") === "1";
+		this.playerLabel = createPlayerWorldLabel(this.labelDebugEnabled);
+		this.world.add(this.player, this.playerLabel.group, this.playerAura);
 		this.ring.rotation.x = -Math.PI / 2;
 		this.ring.position.y = 3;
 		this.ring.visible = false;
@@ -41370,7 +41674,6 @@ var AbyssalThreeRenderer = class {
 		this.world.add(this.destinationRing);
 		this.setMap("aster");
 		this.loadPlayerShipVisuals();
-		this.visualDebugEnabled = typeof location !== "undefined" && (location.hostname === "localhost" || location.hostname === "127.0.0.1") && new URLSearchParams(location.search).get("visualDebug") === "1";
 		if (typeof window !== "undefined") {
 			window.addEventListener("resize", this.onLayoutChange);
 			const vv = window.visualViewport;
@@ -41469,16 +41772,16 @@ var AbyssalThreeRenderer = class {
 			}
 		});
 		root.add(visual, createHullWaterInteraction(96, 33, true));
-		const playerFill = new PointLight(16767144, .65, 260);
+		const playerFill = new PointLight(16767144, .78, 280);
 		playerFill.position.set(-36, 48, 28);
-		const playerRim = new PointLight(7262207, .44, 220);
+		const playerRim = new PointLight(7262207, .52, 240);
 		playerRim.position.set(48, 62, -40);
 		root.add(playerFill, playerRim);
 		root.userData.entityRoot = true;
 		root.userData.baseScale = 1;
 		root.userData.visualDefinitionId = definition.id;
-		const localDebug = typeof location !== "undefined" && (location.hostname === "localhost" || location.hostname === "127.0.0.1") && new URLSearchParams(location.search).get("shipDebug") === "1";
-		const visualDebug = typeof location !== "undefined" && (location.hostname === "localhost" || location.hostname === "127.0.0.1") && new URLSearchParams(location.search).get("visualDebug") === "1";
+		const localDebug = isLocalDevHost() && new URLSearchParams(location.search).get("shipDebug") === "1";
+		const visualDebug = isLocalDevHost() && new URLSearchParams(location.search).get("visualDebug") === "1";
 		if (localDebug) root.add(createShipVisualDebug(visual, definition));
 		if (visualDebug) root.userData.visualDebug = true;
 		return root;
@@ -41578,7 +41881,7 @@ var AbyssalThreeRenderer = class {
 		const material = new ShaderMaterial({
 			uniforms: this.waterUniforms,
 			vertexShader: `uniform float uTime;varying float vWave;varying vec3 vWorld;void main(){vec3 p=position;float a=sin(p.x*.009+uTime*.55)*.72;float b=sin(p.y*.013-uTime*.42)*.48;float c=sin((p.x*.7+p.y)*.026+uTime*.83)*.22;p.z+=(a+b+c)*1.25;vWave=a+b+c;vec4 wp=modelMatrix*vec4(p,1.);vWorld=wp.xyz;gl_Position=projectionMatrix*viewMatrix*wp;}`,
-			fragmentShader: `uniform float uTime;uniform vec3 uDeep;uniform vec3 uShallow;uniform int uIslandCount;uniform vec4 uIslands[8];varying float vWave;varying vec3 vWorld;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}float fbm(vec2 p){float v=0.;v+=noise(p)*.58;p=p*2.07+4.1;v+=noise(p)*.28;p=p*2.03-2.4;v+=noise(p)*.14;return v;}void main(){vec2 flow=vWorld.xz*.0065+vec2(uTime*.027,-uTime*.018);float body=fbm(flow),detail=fbm(flow*4.8+vec2(-uTime*.05,uTime*.035));float streak=fbm(flow*1.6+vec2(uTime*.012,0.));float coast=0.;float foam=0.;for(int i=0;i<8;i++){if(i>=uIslandCount)break;vec4 q=uIslands[i];vec2 d=(vWorld.xz-q.xy)/q.zw;float edge=length(d)+(noise(vWorld.xz*.021+float(i)*7.3)-.5)*.13;coast=max(coast,1.-smoothstep(.98,1.72,edge));foam=max(foam,1.-smoothstep(.035,.13,abs(edge-1.05)));}float crest=smoothstep(1.05,1.55,vWave+detail*.3)*.15;float glint=smoothstep(.84,.99,detail+vWave*.04+streak*.12)*.14;vec3 col=mix(uDeep,uShallow,.16+(body-.5)*.22+coast*.5+vWave*.018+detail*.08+streak*.04);col=mix(col,vec3(.08,.2,.34),smoothstep(.3,.9,body)*.2);col=mix(col,vec3(.62,.86,.9),glint+crest+foam*.2);gl_FragColor=vec4(col,1.);}`,
+			fragmentShader: `uniform float uTime;uniform vec3 uDeep;uniform vec3 uShallow;uniform vec3 uCameraPos;uniform int uIslandCount;uniform vec4 uIslands[8];varying float vWave;varying vec3 vWorld;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}float fbm(vec2 p){float v=0.;v+=noise(p)*.58;p=p*2.07+4.1;v+=noise(p)*.28;p=p*2.03-2.4;v+=noise(p)*.14;return v;}void main(){vec2 flow1=vWorld.xz*.0065+vec2(uTime*.027,-uTime*.018);vec2 flow2=vWorld.xz*.011+vec2(-uTime*.016,uTime*.011);float macro=fbm(flow1*.55);float body=fbm(flow1);float detail=fbm(flow2*4.8+vec2(-uTime*.05,uTime*.035));float streak=fbm(flow1*1.6+vec2(uTime*.012,0.));float patch=fbm(vWorld.xz*.0018+vec2(uTime*.004,-uTime*.003));float coast=0.;float foam=0.;for(int i=0;i<8;i++){if(i>=uIslandCount)break;vec4 q=uIslands[i];vec2 d=(vWorld.xz-q.xy)/q.zw;float edge=length(d)+(noise(vWorld.xz*.021+float(i)*7.3)-.5)*.13;coast=max(coast,1.-smoothstep(.98,1.72,edge));foam=max(foam,1.-smoothstep(.035,.13,abs(edge-1.05)));}vec3 viewDir=normalize(uCameraPos-vWorld);vec3 normal=normalize(vec3(-vWave*.35,1.,vWave*.25));float fresnel=pow(1.-max(dot(viewDir,normal),0.),2.2);float crest=smoothstep(1.05,1.55,vWave+detail*.3)*.15;float glint=smoothstep(.84,.99,detail+vWave*.04+streak*.12)*.14;vec3 col=mix(uDeep,uShallow,.16+(body-.5)*.22+coast*.5+vWave*.018+detail*.08+streak*.04+patch*.06+macro*.04);col=mix(col,vec3(.08,.2,.34),smoothstep(.3,.9,body)*.2);col=mix(col,vec3(.62,.86,.9),glint+crest+foam*.2+fresnel*.09);gl_FragColor=vec4(col,1.);}`,
 			side: 2
 		});
 		this.ocean = new Mesh(geo, material);
@@ -41592,24 +41895,23 @@ var AbyssalThreeRenderer = class {
 		this.mapId = id;
 		const keep = new Set([
 			this.player,
-			this.playerMarker.sprite,
+			this.playerLabel.group,
 			this.playerAura,
 			this.ring,
 			this.destinationRing
 		]);
 		for (const child of [...this.world.children]) if (!keep.has(child)) this.world.remove(child);
-		for (const marker of this.islandMarkers) {
-			this.world.remove(marker.sprite);
-			marker.texture.dispose();
-			marker.sprite.material.dispose();
+		for (const poi of this.poiLabels) {
+			this.world.remove(poi.label.group);
+			disposePoiWorldLabel(poi.label);
 		}
-		this.islandMarkers = [];
+		this.poiLabels = [];
 		this.entityMeshes.clear();
-		for (const marker of this.entityBars.values()) {
-			marker.texture.dispose();
-			marker.sprite.material.dispose();
+		for (const marker of this.entityLabels.values()) {
+			this.world.remove(marker.group);
+			disposeNpcWorldLabel(marker);
 		}
-		this.entityBars.clear();
+		this.entityLabels.clear();
 		this.shotMeshes.clear();
 		this.wakeMeshes.clear();
 		this.lootMeshes.clear();
@@ -41691,11 +41993,14 @@ var AbyssalThreeRenderer = class {
 				placedProps++;
 			}
 			if (isle.port || isle.rx >= 185) {
-				const marker = createIslandMarker();
-				paintIslandMarker(marker, isle.name, this.islandMarkerLevel);
-				marker.sprite.position.set(isle.x, 18, isle.y + isle.ry * .42);
-				this.world.add(marker.sprite);
-				this.islandMarkers.push(marker);
+				const label = createPoiWorldLabel(this.labelDebugEnabled);
+				label.group.position.set(isle.x, 18, isle.y + isle.ry * .42);
+				this.world.add(label.group);
+				this.poiLabels.push({
+					label,
+					name: isle.name,
+					level: this.islandMarkerLevel
+				});
 			}
 		}
 		for (let i = 0; i < density.openOceanProps; i++) {
@@ -41796,6 +42101,7 @@ var AbyssalThreeRenderer = class {
 		this.ensurePlayerShip(frame.shipId, frame.deckLevel);
 		this.setMap(frame.mapId);
 		this.waterUniforms.uTime.value = time * .001;
+		this.waterUniforms.uCameraPos.value.copy(this.camera.position);
 		this.smoothedZoom += (frame.zoom - this.smoothedZoom) * .12;
 		const boss = frame.entities.find((e) => e.id === frame.selectedId && ENTITY_DATA[e.kind].boss), cameraRig = resolveCameraPresentation({
 			zoom: this.smoothedZoom,
@@ -41822,10 +42128,9 @@ var AbyssalThreeRenderer = class {
 				m.opacity = .035 + clamp(Math.abs(frame.player.speed) / 180, 0, 1) * .08;
 			}
 		});
-		paintPlayerMarker(this.playerMarker, frame);
-		const markerScale = labelZoomScale(this.smoothedZoom, .84, 1.16);
-		applyLabelSpriteScale(this.playerMarker.sprite, this.playerMarker.canvas, 20 * markerScale);
-		this.playerMarker.sprite.position.set(frame.player.x, 8, frame.player.y + 42);
+		this.labelWorldPos.set(frame.player.x, 8, frame.player.y + 42);
+		const showHero = !!(frame.shipId && PLAYER_SHIP_VISUALS[frame.shipId]);
+		this.labelDebugEntries = [updatePlayerWorldLabel(this.playerLabel, frame, KRAKEN_PLAYER_DISPLAY_NAME, showHero, this.camera, this.renderer, this.smoothedZoom, this.labelWorldPos)];
 		this.playerAura.position.set(frame.player.x, 4, frame.player.y);
 		const speedFactor = clamp(Math.abs(frame.player.speed) / 120, 0, 1);
 		this.playerAura.visible = speedFactor > .28;
@@ -41868,18 +42173,16 @@ var AbyssalThreeRenderer = class {
 				});
 				if (frame.selectedId === e.id || ENTITY_DATA[e.kind].boss) this.requestCameraShake(ENTITY_DATA[e.kind].boss ? 4.5 : 1.8, time);
 			}
-			let marker = this.entityBars.get(e.id);
+			let marker = this.entityLabels.get(e.id);
 			if (!marker) {
-				marker = createHealthMarker(e);
-				this.entityBars.set(e.id, marker);
-				this.world.add(marker.sprite);
+				marker = createNpcWorldLabel(!monsterKinds.has(e.kind), this.labelDebugEnabled);
+				this.entityLabels.set(e.id, marker);
+				this.world.add(marker.group);
 			}
-			const selected = frame.selectedId === e.id;
-			paintHealthMarker(marker, e, selected);
-			const compact = labelZoomScale(this.smoothedZoom, .78, 1.18), entityLabelHeight = (selected ? 30 : 26) * compact;
-			applyLabelSpriteScale(marker.sprite, marker.canvas, entityLabelHeight);
-			marker.sprite.position.set(e.x, 10, e.y + 34);
-			marker.sprite.visible = true;
+			const selected = frame.selectedId === e.id, d = ENTITY_DATA[e.kind];
+			this.labelWorldPos.set(e.x, 10, e.y + 34);
+			this.labelDebugEntries.push(updateNpcWorldLabel(marker, d.name, d.level, e.hp, e.maxHp, selected, this.camera, this.renderer, this.smoothedZoom, this.labelWorldPos));
+			marker.group.visible = true;
 		}
 		for (const [id, mesh] of this.entityMeshes) if (!live.has(id)) {
 			const destroyed = frame.entities.some((e) => e.id === id && e.hp <= 0);
@@ -41889,12 +42192,11 @@ var AbyssalThreeRenderer = class {
 				start: time
 			});
 			else this.world.remove(mesh);
-			const marker = this.entityBars.get(id);
+			const marker = this.entityLabels.get(id);
 			if (marker) {
-				this.world.remove(marker.sprite);
-				marker.texture.dispose();
-				marker.sprite.material.dispose();
-				this.entityBars.delete(id);
+				this.world.remove(marker.group);
+				disposeNpcWorldLabel(marker);
+				this.entityLabels.delete(id);
 			}
 		}
 		for (const [id, sink] of this.sinkingMeshes) {
@@ -42041,10 +42343,12 @@ var AbyssalThreeRenderer = class {
 			this.world.remove(mesh);
 			this.lootMeshes.delete(id);
 		}
-		const islandLabelScale = labelZoomScale(this.smoothedZoom, .75, 1.12);
-		for (const marker of this.islandMarkers) applyLabelSpriteScale(marker.sprite, marker.canvas, 24 * islandLabelScale);
+		for (const poi of this.poiLabels) {
+			this.labelWorldPos.copy(poi.label.group.position);
+			this.labelDebugEntries.push(updatePoiWorldLabel(poi.label, poi.name, poi.level, this.camera, this.renderer, this.smoothedZoom, this.labelWorldPos));
+		}
 		if (this.visualDebugEnabled && typeof window !== "undefined") {
-			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, pm = this.playerMarker.sprite;
+			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport;
 			window.__ABYSSAL_VISUAL_DEBUG__ = {
 				zoom: this.smoothedZoom,
 				cameraHeight: cameraRig.height,
@@ -42074,16 +42378,10 @@ var AbyssalThreeRenderer = class {
 					drawingBufferWidth: this.renderer.domElement.width,
 					drawingBufferHeight: this.renderer.domElement.height,
 					pixelRatio: this.renderer.getPixelRatio(),
-					cameraAspect: this.camera.aspect
+					cameraAspect: this.camera.aspect,
+					worldUnitsPerPixel: worldUnitsPerPixel(this.camera, this.renderer, this.labelWorldPos)
 				},
-				playerLabel: {
-					textureWidth: this.playerMarker.canvas.width,
-					textureHeight: this.playerMarker.canvas.height,
-					textureAspect: canvasTextureAspect(this.playerMarker.canvas),
-					spriteScaleX: pm.scale.x,
-					spriteScaleY: pm.scale.y,
-					spriteAspect: pm.scale.x / pm.scale.y
-				}
+				labels: this.labelDebugEntries
 			};
 		}
 		this.resize();
@@ -42139,7 +42437,9 @@ var AbyssalThreeRenderer = class {
 			}
 			this.layoutObserver?.disconnect();
 		}
-		for (const marker of this.entityBars.values()) marker.texture.dispose();
+		disposePlayerWorldLabel(this.playerLabel);
+		for (const marker of this.entityLabels.values()) disposeNpcWorldLabel(marker);
+		for (const poi of this.poiLabels) disposePoiWorldLabel(poi.label);
 		this.renderer.dispose();
 		this.scene.traverse((o) => {
 			if (o instanceof Mesh) {

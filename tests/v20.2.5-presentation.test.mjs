@@ -18,8 +18,9 @@ test("wake patch avoids tube and ring geometry fan", async () => {
 
 test("player label maps player name not ship class", async () => {
   const renderer = await readFile(join(root, "app/threeRenderer.ts"), "utf8");
-  assert.match(renderer, /frame\.playerName\.toUpperCase\(\)/);
-  assert.match(renderer, /LV \$\{frame\.playerLevel\}/);
+  const labels = await readFile(join(root, "app/game/visuals/worldLabels.ts"), "utf8");
+  assert.match(labels, /frame\.playerName\.toUpperCase\(\)/);
+  assert.match(labels, /LV \$\{frame\.playerLevel\}/);
   assert.match(renderer, /KRAKEN_PLAYER_DISPLAY_NAME/);
   assert.doesNotMatch(renderer, /SHIPS\[frame\.shipId\]\.name\.split/);
 });
@@ -57,10 +58,10 @@ test("player aura no large additive ring", async () => {
   assert.match(source, /auraLight\.userData\.visualEffectType="aura"/);
 });
 
-test("kraken scale calibrated to 65", async () => {
+test("kraken scale calibrated to 66", async () => {
   const source = await readFile(
     join(root, "app/game/visuals/shipVisuals.ts"),
     "utf8",
   );
-  assert.match(source, /scale: 65/);
+  assert.match(source, /scale: 66/);
 });

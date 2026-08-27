@@ -878,7 +878,7 @@ var KRAKEN_PLAYER_DISPLAY_NAME = "Kraken's Fury";
 var KRAKEN_PLAYER_VISUAL = {
 	id: "kraken-player-30k",
 	assetPath: "/assets/3d/ships/player/kraken/Kraken_ship_player_30k.glb",
-	scale: 65,
+	scale: 66,
 	rotationOffsetY: KRAKEN_MODEL_YAW_OFFSET,
 	waterlineOffset: 22,
 	wakeOffset: {
