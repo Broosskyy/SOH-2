@@ -63,7 +63,7 @@ export type RendererFrame = {
   deckLevel: number;
   weaponSlots: number;
   expansionSlots: number;
-  player: Vec2 & { angle: number; speed: number; hp: number; maxHp: number };
+  player: Vec2 & { angle: number; speed: number; hp: number; maxHp: number; shield: number; maxShield: number };
   entities: Entity[];
   shots: Shot[];
   loot: Loot[];

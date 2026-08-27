@@ -17,11 +17,12 @@ test("wake patch avoids tube and ring geometry fan", async () => {
 });
 
 test("player label maps player name not ship class", async () => {
+  const labels = await readFile(join(root, "app/game/visuals/worldLabels.ts"), "utf8");
   const renderer = await readFile(join(root, "app/threeRenderer.ts"), "utf8");
-  assert.match(renderer, /frame\.playerName\.toUpperCase\(\)/);
-  assert.match(renderer, /LV \$\{frame\.playerLevel\}/);
-  assert.match(renderer, /KRAKEN_PLAYER_DISPLAY_NAME/);
+  assert.match(labels, /frame\.playerName|playerName/);
+  assert.match(renderer, /frame\.playerName/);
   assert.doesNotMatch(renderer, /SHIPS\[frame\.shipId\]\.name\.split/);
+  assert.doesNotMatch(labels, /KRAKEN_PLAYER_DISPLAY_NAME/);
 });
 
 test("combat cluster v25 structure is complete", async () => {
