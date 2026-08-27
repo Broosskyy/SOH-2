@@ -28,7 +28,7 @@ export const KRAKEN_PLAYER_DISPLAY_NAME = "Kraken's Fury";
 export const KRAKEN_PLAYER_VISUAL: ShipVisualDefinition = {
   id: "kraken-player-30k",
   assetPath: "/assets/3d/ships/player/kraken/Kraken_ship_player_30k.glb",
-  scale: 66,
+  scale: 65,
   rotationOffsetY: KRAKEN_MODEL_YAW_OFFSET,
   waterlineOffset: 22,
   wakeOffset: { forward: -62, lateral: 0 },
