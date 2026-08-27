@@ -152,7 +152,7 @@ test("V20.1 integrates the exact Kraken player GLB with visual-only configuratio
   assert.equal((await stat(webAsset)).size, (await stat(godotAsset)).size);
 
   assert.match(visualConfig, /Kraken_ship_player_30k\.glb/);
-  assert.match(visualConfig, /scale: 64/);
+  assert.match(visualConfig, /scale: 65/);
   assert.match(visualConfig, /rotationOffsetY: KRAKEN_MODEL_YAW_OFFSET/);
   assert.match(visualConfig, /waterlineOffset: 22/);
   assert.match(visualConfig, /wakeOffset: \{ forward: -62, lateral: 0 \}/);

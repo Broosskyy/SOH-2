@@ -195,7 +195,7 @@ export const createRuntimeState = (): RuntimeGameState => ({
   monsterKills: 0,
   lootCount: 0,
   wave: 1,
-  zoom: 1,
+  zoom: 0.96,
   cameraPan: { x: 0, y: 0 },
   joystick: { x: 0, y: 0 },
   surgeUntil: 0,

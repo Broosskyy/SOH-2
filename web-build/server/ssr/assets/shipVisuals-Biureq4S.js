@@ -837,12 +837,12 @@ var GAMEPLAY_CAMERA_POLICY = {
 	fieldOfViewDegrees: 35,
 	minZoom: .55,
 	maxZoom: 1.38,
-	baseHeight: 720,
-	minHeight: 520,
-	maxHeight: 1220,
-	baseBackDistance: 400,
-	minBackDistance: 260,
-	maxBackDistance: 720,
+	baseHeight: 660,
+	minHeight: 500,
+	maxHeight: 1180,
+	baseBackDistance: 360,
+	minBackDistance: 240,
+	maxBackDistance: 680,
 	fixedLateralRatio: -.16,
 	targetOffsetX: 24,
 	targetOffsetZ: -72,
@@ -865,11 +865,21 @@ function resolveCameraPresentation(situation) {
 		backDistance: clamp(policy.baseBackDistance / zoom, policy.minBackDistance, policy.maxBackDistance) * overview
 	};
 }
+//#endregion
+//#region app/game/visuals/shipVisuals.ts
+/**
+* Meshy source axis: +Z bow, +Y up.
+* MODEL_YAW_OFFSET = Math.PI / 2 maps GLB +Z bow to gameplay +X forward
+* without rotating physics, navigation or heading.
+*/
+var KRAKEN_MODEL_YAW_OFFSET = Math.PI / 2;
+/** Player-facing hero name shown under the ship label (not gameplay stats). */
+var KRAKEN_PLAYER_DISPLAY_NAME = "Kraken's Fury";
 var KRAKEN_PLAYER_VISUAL = {
 	id: "kraken-player-30k",
 	assetPath: "/assets/3d/ships/player/kraken/Kraken_ship_player_30k.glb",
-	scale: 64,
-	rotationOffsetY: Math.PI / 2,
+	scale: 65,
+	rotationOffsetY: KRAKEN_MODEL_YAW_OFFSET,
 	waterlineOffset: 22,
 	wakeOffset: {
 		forward: -62,
@@ -943,4 +953,4 @@ function worldOffset(origin, heading, offset) {
 	};
 }
 //#endregion
-export { resolveCameraPresentation as a, saveQualityPreference as c, DECK_LEVELS as d, ENTITY_DATA as f, SHIPS as h, GAMEPLAY_CAMERA_POLICY as i, AMMO as l, QUESTS as m, validateShipVisualDefinition as n, loadQualityPreference as o, MAPS as p, worldOffset as r, resolveQuality as s, PLAYER_SHIP_VISUALS as t, CANNONS as u };
+export { GAMEPLAY_CAMERA_POLICY as a, resolveQuality as c, CANNONS as d, DECK_LEVELS as f, SHIPS as g, QUESTS as h, worldOffset as i, saveQualityPreference as l, MAPS as m, PLAYER_SHIP_VISUALS as n, resolveCameraPresentation as o, ENTITY_DATA as p, validateShipVisualDefinition as r, loadQualityPreference as s, KRAKEN_PLAYER_DISPLAY_NAME as t, AMMO as u };

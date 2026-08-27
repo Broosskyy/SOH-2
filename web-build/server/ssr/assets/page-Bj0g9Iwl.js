@@ -1,5 +1,5 @@
 import { a as require_react, o as __commonJSMin, s as __toESM, t as require_jsx_runtime } from "../index.js";
-import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-CY9cVFAo.js";
+import { a as GAMEPLAY_CAMERA_POLICY, d as CANNONS, f as DECK_LEVELS, g as SHIPS, h as QUESTS, i as worldOffset, l as saveQualityPreference, m as MAPS, n as PLAYER_SHIP_VISUALS, p as ENTITY_DATA, s as loadQualityPreference, u as AMMO } from "./shipVisuals-Biureq4S.js";
 //#region node_modules/ipaddr.js/lib/ipaddr.js
 var require_ipaddr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(root) {
@@ -3393,7 +3393,7 @@ var createRuntimeState = () => ({
 	monsterKills: 0,
 	lootCount: 0,
 	wave: 1,
-	zoom: 1,
+	zoom: .96,
 	cameraPan: {
 		x: 0,
 		y: 0
@@ -3721,6 +3721,12 @@ function Home() {
 			if (settings?.zoomSensitivity) setZoomSensitivity(settings.zoomSensitivity);
 			setReady(true);
 			setAmmo("iron");
+			if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("autoStart") === "1") window.setTimeout(() => {
+				gameRef.current.running = true;
+				gameRef.current.lastTime = performance.now();
+				window.__ABYSSAL_GAME__ = gameRef.current;
+				setStarted(true);
+			}, 300);
 		});
 	}, [applySave]);
 	(0, import_react.useEffect)(() => {
@@ -4133,6 +4139,7 @@ function Home() {
 		gameRef.current.running = true;
 		gameRef.current.lastTime = performance.now();
 		setStarted(true);
+		if (typeof window !== "undefined") window.__ABYSSAL_GAME__ = gameRef.current;
 		toast("Tippe auf das Meer oder nutze WASD zum Segeln", "gold");
 	};
 	const exportSave = () => {
@@ -4396,7 +4403,7 @@ function Home() {
 				g.player.speed = movement.player.speed;
 				g.destination = movement.destination;
 				g.navigation = movement.navigation;
-				if (Math.abs(g.player.speed) > 32 && Math.random() < clamp(Math.abs(g.player.speed) / 350, .16, .55)) {
+				if (Math.abs(g.player.speed) > 40 && Math.random() < clamp(Math.abs(g.player.speed) / 520, .07, .24)) {
 					const wakeOffset = PLAYER_SHIP_VISUALS[g.shipId]?.wakeOffset ?? {
 						forward: -43,
 						lateral: 0
@@ -4404,10 +4411,11 @@ function Home() {
 					g.wake.push({
 						x: wakeOrigin.x,
 						y: wakeOrigin.y,
-						ttl: 1.35,
+						ttl: .92,
 						angle: g.player.angle,
-						strength: clamp(Math.abs(g.player.speed) / shipStats.speed, .18, 1)
+						strength: clamp(Math.abs(g.player.speed) / shipStats.speed, .14, .82)
 					});
+					if (g.wake.length > 14) g.wake = g.wake.slice(-14);
 				}
 				if (g.autoFire) fire();
 				g.entities.forEach((e) => {
@@ -4652,7 +4660,7 @@ function Home() {
 		const canvas = threeCanvasRef.current;
 		if (!canvas || !ready) return;
 		let renderer = null, raf = 0, disposed = false;
-		import("./threeRenderer-C6t9L0Wf.js").then(({ AbyssalThreeRenderer }) => {
+		import("./threeRenderer-DTI_Re3Z.js").then(({ AbyssalThreeRenderer }) => {
 			if (disposed) return;
 			renderer = new AbyssalThreeRenderer(canvas, qualityPreference);
 			renderer3DRef.current = renderer;
@@ -4876,12 +4884,7 @@ function Home() {
 							children: "AD"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
 							className: "captain-copy",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: saveRef.current.playerName.toUpperCase() }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: [
-								"LV ",
-								hud.level,
-								" · ",
-								SHIPS[hud.shipId].name
-							] })]
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: saveRef.current.playerName.toUpperCase() }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["LV ", hud.level] })]
 						})]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
@@ -5071,43 +5074,48 @@ function Home() {
 				]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "joystick camera-stick",
-				"aria-label": "Kartenkamera verschieben",
-				title: "Kamera verschieben",
-				onPointerDown: joystickMove,
-				onPointerMove: (e) => e.buttons && joystickMove(e),
-				onPointerUp: joystickEnd,
-				onPointerCancel: joystickEnd,
+				className: "camera-control-group",
 				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "‹　›" }),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", {}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "KAMERA" })
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "zoom-controls glass",
+						"aria-label": "Zoom",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => adjustZoom(.12),
+							"aria-label": "Heranzoomen",
+							title: "Heranzoomen",
+							children: "+"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: () => adjustZoom(-.12),
+							"aria-label": "Herauszoomen",
+							title: "Herauszoomen",
+							children: "−"
+						})]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						type: "button",
+						className: "recenter-ship-btn glass",
+						"aria-label": "Zurück zum Schiff",
+						title: "Zurück zum Schiff",
+						onClick: recenterCamera,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⚓" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "SCHIFF" })]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "joystick camera-stick",
+						"aria-label": "Kartenkamera verschieben",
+						title: "Kamera verschieben",
+						onPointerDown: joystickMove,
+						onPointerMove: (e) => e.buttons && joystickMove(e),
+						onPointerUp: joystickEnd,
+						onPointerCancel: joystickEnd,
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "‹　›" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("i", {}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "KAMERA" })
+						]
+					})
 				]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-				type: "button",
-				className: "recenter-ship-btn glass",
-				"aria-label": "Zurück zum Schiff",
-				title: "Zurück zum Schiff",
-				onClick: recenterCamera,
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⚓" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "SCHIFF" })]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "zoom-controls glass",
-				"aria-label": "Zoom",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					type: "button",
-					onClick: () => adjustZoom(.08),
-					"aria-label": "Heranzoomen",
-					title: "Heranzoomen",
-					children: "+"
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-					type: "button",
-					onClick: () => adjustZoom(-.08),
-					"aria-label": "Herauszoomen",
-					title: "Herauszoomen",
-					children: "−"
-				})]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 				type: "button",
@@ -5118,99 +5126,102 @@ function Home() {
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⚙" })
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-				className: "combat-cluster",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "ability-controls glass",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							onClick: () => activateAbility("surge"),
-							className: abilityHud.surge > 0 ? "cooling" : "",
-							"aria-label": "Sturmsegel",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "≋" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STURMSEGEL" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.surge > 0 ? `${Math.ceil(abilityHud.surge)} S` : "TEMPOSCHUB" })
-							]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							onClick: () => activateAbility("volley"),
-							className: abilityHud.volley > 0 ? "cooling" : "",
-							"aria-label": "Streusalve",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "✺" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STREUSALVE" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.volley > 0 ? `${Math.ceil(abilityHud.volley)} S` : "4 KUGELN" })
-							]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							onClick: () => activateAbility("aegis"),
-							className: abilityHud.aegis > 0 ? "cooling" : "",
-							"aria-label": "Reliktschild",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⬡" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "RELIKTSCHILD" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.aegis > 0 ? `${Math.ceil(abilityHud.aegis)} S` : "6 PERLEN" })
-							]
-						})
-					]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "battle-controls",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "ammo-select glass",
-							children: Object.keys(AMMO).map((a) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-								className: ammo === a ? "active" : "",
-								onClick: () => selectAmmo(a),
-								title: AMMO[a].effect,
+				className: "combat-cluster combat-cluster-v25",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "combat-skill-row glass ability-controls",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								onClick: () => activateAbility("surge"),
+								className: abilityHud.surge > 0 ? "cooling" : "",
+								"aria-label": "Sturmsegel",
 								children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										style: { color: AMMO[a].color },
-										children: a === "harpoon" ? "↯" : a === "fire" ? "✹" : "●"
-									}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: AMMO[a].short }),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: hud.ammo[a] >= 999 ? "∞" : hud.ammo[a] })
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "≋" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STURMSEGEL" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.surge > 0 ? `${Math.ceil(abilityHud.surge)} S` : "TEMPOSCHUB" })
 								]
-							}, a))
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							className: "target-button",
-							onClick: cycleTarget,
-							"aria-label": "Ziel wechseln",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⌖" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "ZIEL" })]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							className: `auto-button ${autoFire ? "active" : ""}`,
-							onClick: () => {
-								const n = !autoFire;
-								setAutoFire(n);
-								gameRef.current.autoFire = n;
-							},
-							"aria-label": "Automatisches Feuer",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "◎" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "AUTO" })]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							className: `fire-button ${activeMonster ? "harpoon" : ""} ${targetInRange ? "ready" : ""}`,
-							onPointerDown: fire,
-							"aria-label": "Feuer",
-							style: { "--cooldown": `${cooldown * 360}deg` },
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								onClick: () => activateAbility("volley"),
+								className: abilityHud.volley > 0 ? "cooling" : "",
+								"aria-label": "Streusalve",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "✺" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "STREUSALVE" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.volley > 0 ? `${Math.ceil(abilityHud.volley)} S` : "4 KUGELN" })
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								onClick: () => activateAbility("aegis"),
+								className: abilityHud.aegis > 0 ? "cooling" : "",
+								"aria-label": "Reliktschild",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⬡" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: "RELIKTSCHILD" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: abilityHud.aegis > 0 ? `${Math.ceil(abilityHud.aegis)} S` : "6 PERLEN" })
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "combat-primary-row battle-controls",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: "target-button",
+								onClick: cycleTarget,
+								"aria-label": "Ziel wechseln",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⌖" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "ZIEL" })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: `auto-button ${autoFire ? "active" : ""}`,
+								onClick: () => {
+									const n = !autoFire;
+									setAutoFire(n);
+									gameRef.current.autoFire = n;
+								},
+								"aria-label": "Automatisches Feuer",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "◎" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "AUTO" })]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: `fire-button ${activeMonster ? "harpoon" : ""} ${targetInRange ? "ready" : ""}`,
+								onPointerDown: fire,
+								"aria-label": "Feuer",
+								style: { "--cooldown": `${cooldown * 360}deg` },
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: activeMonster ? "↯" : "☄" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: activeMonster ? "HARPUNE" : "FEUER" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: !hud.selected ? "ZIEL WÄHLEN" : targetInRange ? "BEREIT" : `${hud.selected.range} M` })
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: "repair-button",
+								onClick: repair,
+								"aria-label": "Reparatur",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "✚" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: hud.repairKits }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "REPARATUR" })
+								]
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "combat-ammo-row ammo-select glass",
+						children: Object.keys(AMMO).map((a) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							className: ammo === a ? "active" : "",
+							onClick: () => selectAmmo(a),
+							title: AMMO[a].effect,
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: activeMonster ? "↯" : "☄" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: activeMonster ? "HARPUNE" : "FEUER" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: !hud.selected ? "ZIEL WÄHLEN" : targetInRange ? "BEREIT" : `${hud.selected.range} M` })
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									style: { color: AMMO[a].color },
+									children: a === "harpoon" ? "↯" : a === "fire" ? "✹" : "●"
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: AMMO[a].short }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: hud.ammo[a] >= 999 ? "∞" : hud.ammo[a] })
 							]
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
-							className: "repair-button",
-							onClick: repair,
-							"aria-label": "Reparatur",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "✚" }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("b", { children: hud.repairKits }),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "REPARATUR" })
-							]
-						})
-					]
-				})]
+						}, a))
+					})
+				]
 			}),
 			!started && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
 				className: "start-screen",
