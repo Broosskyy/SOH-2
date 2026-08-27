@@ -1,5 +1,5 @@
 import { a as require_react, o as __commonJSMin, s as __toESM, t as require_jsx_runtime } from "../index.js";
-import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-hcsXMVyF.js";
+import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-DnwkB_-k.js";
 //#region node_modules/ipaddr.js/lib/ipaddr.js
 var require_ipaddr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(root) {
@@ -4652,7 +4652,7 @@ function Home() {
 		const canvas = threeCanvasRef.current;
 		if (!canvas || !ready) return;
 		let renderer = null, raf = 0, disposed = false;
-		import("./threeRenderer-CXiYKJC_.js").then(({ AbyssalThreeRenderer }) => {
+		import("./threeRenderer-CkuOaAhw.js").then(({ AbyssalThreeRenderer }) => {
 			if (disposed) return;
 			renderer = new AbyssalThreeRenderer(canvas, qualityPreference);
 			renderer3DRef.current = renderer;

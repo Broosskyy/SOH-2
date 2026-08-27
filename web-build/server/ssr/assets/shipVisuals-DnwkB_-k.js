@@ -864,7 +864,7 @@ function resolveCameraPresentation(situation) {
 var KRAKEN_PLAYER_VISUAL = {
 	id: "kraken-player-30k",
 	assetPath: "/assets/3d/ships/player/kraken/Kraken_ship_player_30k.glb",
-	scale: 60,
+	scale: 63,
 	rotationOffsetY: Math.PI / 2,
 	waterlineOffset: 22,
 	wakeOffset: {
