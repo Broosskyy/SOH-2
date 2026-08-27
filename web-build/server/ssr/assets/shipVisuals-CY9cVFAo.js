@@ -751,7 +751,8 @@ var QUALITY_PROFILES = {
 		viewDistance: .7,
 		lodBias: 1.8,
 		effectComplexity: .4,
-		textureQuality: .5
+		textureQuality: .5,
+		worldPropDensity: .55
 	},
 	MEDIUM: {
 		id: "MEDIUM",
@@ -765,7 +766,8 @@ var QUALITY_PROFILES = {
 		viewDistance: .85,
 		lodBias: 1.25,
 		effectComplexity: .7,
-		textureQuality: .75
+		textureQuality: .75,
+		worldPropDensity: .82
 	},
 	HIGH: {
 		id: "HIGH",
@@ -779,7 +781,8 @@ var QUALITY_PROFILES = {
 		viewDistance: 1,
 		lodBias: 1,
 		effectComplexity: 1,
-		textureQuality: 1
+		textureQuality: 1,
+		worldPropDensity: 1
 	},
 	ULTRA: {
 		id: "ULTRA",
@@ -793,7 +796,8 @@ var QUALITY_PROFILES = {
 		viewDistance: 1.2,
 		lodBias: .7,
 		effectComplexity: 1.25,
-		textureQuality: 1
+		textureQuality: 1,
+		worldPropDensity: 1.18
 	}
 };
 var STORAGE_KEY = "abyssal-quality-profile";
@@ -864,7 +868,7 @@ function resolveCameraPresentation(situation) {
 var KRAKEN_PLAYER_VISUAL = {
 	id: "kraken-player-30k",
 	assetPath: "/assets/3d/ships/player/kraken/Kraken_ship_player_30k.glb",
-	scale: 63,
+	scale: 64,
 	rotationOffsetY: Math.PI / 2,
 	waterlineOffset: 22,
 	wakeOffset: {

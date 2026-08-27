@@ -1,5 +1,5 @@
 import { a as require_react, o as __commonJSMin, s as __toESM, t as require_jsx_runtime } from "../index.js";
-import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-DnwkB_-k.js";
+import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-CY9cVFAo.js";
 //#region node_modules/ipaddr.js/lib/ipaddr.js
 var require_ipaddr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(root) {
@@ -4652,7 +4652,7 @@ function Home() {
 		const canvas = threeCanvasRef.current;
 		if (!canvas || !ready) return;
 		let renderer = null, raf = 0, disposed = false;
-		import("./threeRenderer-CkuOaAhw.js").then(({ AbyssalThreeRenderer }) => {
+		import("./threeRenderer-C6t9L0Wf.js").then(({ AbyssalThreeRenderer }) => {
 			if (disposed) return;
 			renderer = new AbyssalThreeRenderer(canvas, qualityPreference);
 			renderer3DRef.current = renderer;
@@ -4702,6 +4702,9 @@ function Home() {
 			x: 0,
 			y: 0
 		};
+	};
+	const adjustZoom = (delta) => {
+		gameRef.current.zoom = clamp(gameRef.current.zoom + delta, GAMEPLAY_CAMERA_POLICY.minZoom, GAMEPLAY_CAMERA_POLICY.maxZoom);
 	};
 	const onCanvasDown = (e) => {
 		if (!started || panel || death) return;
@@ -5088,6 +5091,23 @@ function Home() {
 				title: "Zurück zum Schiff",
 				onClick: recenterCamera,
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "⚓" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("small", { children: "SCHIFF" })]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "zoom-controls glass",
+				"aria-label": "Zoom",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					onClick: () => adjustZoom(.08),
+					"aria-label": "Heranzoomen",
+					title: "Heranzoomen",
+					children: "+"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+					type: "button",
+					onClick: () => adjustZoom(-.08),
+					"aria-label": "Herauszoomen",
+					title: "Herauszoomen",
+					children: "−"
+				})]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
 				type: "button",
@@ -5842,7 +5862,7 @@ function Home() {
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "hint",
-				children: "TOUCH: KURS SETZEN & ZIEL WÄHLEN · LINKER STICK: KARTE VERSCHIEBEN · FEUER: AUSGEWÄHLTES ZIEL"
+				children: "TOUCH: KURS SETZEN · LINKER STICK: KARTE · +/−: ZOOM · PINCH: ZOOM"
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "rotate-device",

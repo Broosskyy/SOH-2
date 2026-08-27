@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, f as ENTITY_DATA, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, n as validateShipVisualDefinition, p as MAPS, s as resolveQuality, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-DnwkB_-k.js";
+import { a as resolveCameraPresentation, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, n as validateShipVisualDefinition, p as MAPS, s as resolveQuality, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-CY9cVFAo.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -40146,6 +40146,47 @@ function finalizeBufferGeometry(geometry, label = "geometry") {
 	return geometry;
 }
 //#endregion
+//#region app/game/visuals/worldDensity.ts
+var DENSITY_TIERS = {
+	LOW: {
+		island: 4,
+		open: 9,
+		rocks: 8,
+		shoreline: 2
+	},
+	MEDIUM: {
+		island: 6,
+		open: 14,
+		rocks: 10,
+		shoreline: 3
+	},
+	HIGH: {
+		island: 7,
+		open: 18,
+		rocks: 12,
+		shoreline: 4
+	},
+	ULTRA: {
+		island: 8,
+		open: 22,
+		rocks: 14,
+		shoreline: 5
+	}
+};
+/** Map-area reference: Azurwacht (aster) baseline. */
+var REFERENCE_MAP_AREA = 3e3 * 1900;
+function resolveWorldDensityCounts(quality, mapWidth, mapHeight) {
+	const tier = DENSITY_TIERS[quality.id] ?? DENSITY_TIERS.HIGH;
+	const density = quality.worldPropDensity;
+	const areaFactor = Math.min(1.35, Math.max(.85, Math.sqrt(mapWidth * mapHeight / REFERENCE_MAP_AREA)));
+	return {
+		islandPropsPerIsland: Math.max(3, Math.round(tier.island * density)),
+		openOceanProps: Math.max(6, Math.round(tier.open * areaFactor * density)),
+		islandRockCount: Math.max(6, Math.round(tier.rocks * Math.max(.75, density))),
+		shorelinePropsPerIsland: Math.max(1, Math.round(tier.shoreline * Math.max(.8, density)))
+	};
+}
+//#endregion
 //#region app/threeRenderer.ts
 var PLAYER_SHIP_IDS = [
 	"sovereign",
@@ -40188,7 +40229,7 @@ Object.values(islandArtTextures).forEach((texture) => {
 	texture.magFilter = LinearFilter;
 	texture.anisotropy = 8;
 });
-var SHIP_MAP_SCALE = .78;
+var SHIP_MAP_SCALE = .88;
 function shadows(object) {
 	object.traverse((o) => {
 		if (o instanceof Mesh) {
@@ -40274,11 +40315,11 @@ function sail(width, height, color, ghost = false, lateen = false) {
 		color,
 		map: sailTexture,
 		side: 2,
-		roughness: .9,
+		roughness: .86,
 		transparent: ghost,
 		opacity: ghost ? .68 : 1,
 		emissive: color,
-		emissiveIntensity: color === 11111904 ? .12 : 0
+		emissiveIntensity: ghost ? .14 : color === 11111904 ? .16 : .08
 	}));
 }
 function createHullWaterInteraction(length, width, subtle = false) {
@@ -40331,6 +40372,7 @@ function createShip(kind, playerClass = "sovereign", deckLevel = 1) {
 	const group = new Group();
 	group.userData.entityRoot = true;
 	group.userData.baseScale = baseScale * SHIP_MAP_SCALE;
+	group.userData.proceduralShip = true;
 	group.scale.setScalar(baseScale * SHIP_MAP_SCALE);
 	const palette = player ? playerClass === "tempest" ? {
 		hull: 1195849,
@@ -40553,12 +40595,24 @@ function createShip(kind, playerClass = "sovereign", deckLevel = 1) {
 		]), riggingMaterial);
 		group.add(rigging);
 	}
-	const lantern = new PointLight(player ? palette.accent : boss ? 16733230 : 14723405, 2.8, 125);
+	const lantern = new PointLight(player ? palette.accent : boss ? 16733230 : 14723405, player ? 2.8 : 2.1, 125);
 	lantern.position.set(-length * .43, 31, 0);
 	group.add(lantern);
 	const glow = new Mesh(new OctahedronGeometry(3.2), new MeshBasicMaterial({ color: palette.accent }));
 	glow.position.copy(lantern.position);
 	group.add(glow);
+	if (!player && !ghost) {
+		const hostileRing = new Mesh(new RingGeometry(length * .34, length * .37, 36), new MeshBasicMaterial({
+			color: 14175301,
+			transparent: true,
+			opacity: .07,
+			side: 2,
+			depthWrite: false
+		}));
+		hostileRing.rotation.x = -Math.PI / 2;
+		hostileRing.position.y = 1.2;
+		group.add(hostileRing);
+	}
 	const waterInteraction = createHullWaterInteraction(length, width);
 	group.add(waterInteraction);
 	group.userData.waterInteraction = waterInteraction;
@@ -40712,7 +40766,7 @@ function createPlayerMarker() {
 	};
 }
 function paintPlayerMarker(marker, frame) {
-	const hp = Math.max(0, Math.round(frame.player.hp)), ratio = clamp(hp / Math.max(1, frame.player.maxHp), 0, 1), key = `${frame.playerName}|${frame.playerLevel}|${hp}`;
+	const hp = Math.max(0, Math.round(frame.player.hp)), ratio = clamp(hp / Math.max(1, frame.player.maxHp), 0, 1), shipLabel = SHIPS[frame.shipId].name.split("-")[0].trim().toUpperCase(), key = `${frame.playerName}|${frame.shipId}|${frame.playerLevel}|${hp}`;
 	if (marker.lastKey === key) return;
 	marker.lastKey = key;
 	const ctx = marker.canvas.getContext("2d");
@@ -40720,21 +40774,24 @@ function paintPlayerMarker(marker, frame) {
 	ctx.clearRect(0, 0, 320, 56);
 	ctx.textAlign = "center";
 	ctx.fillStyle = "#f4ead8";
-	ctx.font = "700 17px Georgia,serif";
-	ctx.fillText(frame.playerName.toUpperCase(), 160, 17);
+	ctx.font = "700 16px Georgia,serif";
+	ctx.fillText(frame.playerName.toUpperCase(), 160, 15);
+	ctx.fillStyle = "rgba(188,210,205,.88)";
+	ctx.font = "600 9px system-ui";
+	ctx.fillText(shipLabel, 160, 27);
 	ctx.fillStyle = "rgba(2,12,18,.9)";
-	ctx.fillRect(48, 24, 224, 11);
+	ctx.fillRect(48, 30, 224, 11);
 	ctx.strokeStyle = "rgba(214,188,120,.7)";
 	ctx.lineWidth = 1;
-	ctx.strokeRect(48, 24, 224, 11);
+	ctx.strokeRect(48, 30, 224, 11);
 	const hpGradient = ctx.createLinearGradient(50, 0, 270, 0);
 	hpGradient.addColorStop(0, "#2f9d49");
 	hpGradient.addColorStop(1, "#6fdc62");
 	ctx.fillStyle = hpGradient;
-	ctx.fillRect(50, 26, 220 * ratio, 7);
+	ctx.fillRect(50, 32, 220 * ratio, 7);
 	ctx.fillStyle = "rgba(188,210,205,.88)";
 	ctx.font = "600 10px system-ui";
-	ctx.fillText(`LV ${frame.playerLevel}`, 160, 44);
+	ctx.fillText(`LV ${frame.playerLevel}`, 160, 48);
 	marker.texture.needsUpdate = true;
 }
 function createIslandMarker() {
@@ -40813,7 +40870,7 @@ function islandContour(rx, ry, seed, scale = 1) {
 	}
 	return points;
 }
-function createIslandPresentation(isle, texture, seed, kind) {
+function createIslandPresentation(isle, texture, seed, kind, rockCount = 10) {
 	const root = new Group();
 	const foamPoints = islandContour(isle.rx, isle.ry, seed, 1.015).map((p) => new Vector3(p.x, .4, p.y)), foam = new LineLoop(new BufferGeometry().setFromPoints(foamPoints), new LineBasicMaterial({
 		color: 14221311,
@@ -40822,6 +40879,17 @@ function createIslandPresentation(isle, texture, seed, kind) {
 		depthWrite: false
 	}));
 	root.add(foam);
+	const shallowColor = kind === "abyss" ? 3824248 : kind === "storm" ? 4885144 : 5417144;
+	const shallowDisc = new Mesh(new CircleGeometry(isle.rx * 1.12, 40), new MeshBasicMaterial({
+		color: shallowColor,
+		transparent: true,
+		opacity: .11,
+		depthWrite: false,
+		side: 2
+	}));
+	shallowDisc.rotation.x = -Math.PI / 2;
+	shallowDisc.position.y = -1.6;
+	root.add(shallowDisc);
 	const reefMaterial = new MeshBasicMaterial({
 		color: kind === "abyss" ? 6707594 : kind === "storm" ? 4225660 : 7779484,
 		transparent: true,
@@ -40863,8 +40931,8 @@ function createIslandPresentation(isle, texture, seed, kind) {
 	islandBillboard.renderOrder = 6;
 	root.add(islandBillboard);
 	const rockMaterial = mat(kind === "abyss" ? 3224139 : kind === "storm" ? 3689037 : 5857359, .92, .02);
-	for (let i = 0; i < 10; i++) {
-		const a = i / 10 * Math.PI * 2 + seed * .37, r = isle.rx * (.82 + i % 3 * .07), rock = new Mesh(new DodecahedronGeometry(8 + i % 4 * 2.3, 0), rockMaterial);
+	for (let i = 0; i < rockCount; i++) {
+		const a = i / Math.max(1, rockCount) * Math.PI * 2 + seed * .37, r = isle.rx * (.82 + i % 3 * .07), rock = new Mesh(new DodecahedronGeometry(8 + i % 4 * 2.3, 0), rockMaterial);
 		rock.scale.set(1, .65 + i % 2 * .2, .8);
 		rock.position.set(Math.cos(a) * r, 2, Math.sin(a) * isle.ry / isle.rx * r);
 		rock.rotation.set(i * .17, a, i * .11);
@@ -40894,13 +40962,13 @@ function createLootChest() {
 	const lock = new Mesh(new BoxGeometry(5, 7, 2.5), metal);
 	lock.position.set(0, 10, 10);
 	root.add(lock);
-	const aura = new PointLight(16761926, 3.2, 110);
+	const aura = new PointLight(16761926, 2.1, 95);
 	aura.position.y = 24;
 	root.add(aura);
 	const halo = new Mesh(new RingGeometry(18, 22, 30), new MeshBasicMaterial({
 		color: 16764757,
 		transparent: true,
-		opacity: .32,
+		opacity: .22,
 		side: 2,
 		depthWrite: false
 	}));
@@ -40985,7 +41053,20 @@ function createWorldProp(kind, seed) {
 			root.add(post);
 		}
 	}
-	else {
+	else if (kind === "lighthouse") {
+		const tower = new Mesh(new CylinderGeometry(5.5, 7.2, 38, 10), stone);
+		tower.position.y = 19;
+		root.add(tower);
+		const lampRoom = new Mesh(new CylinderGeometry(7.5, 6.2, 8, 10), mat(13161688, .42, .22));
+		lampRoom.position.y = 42;
+		root.add(lampRoom);
+		const roof = new Mesh(new ConeGeometry(8.5, 12, 8), mat(9058862, .72, .12));
+		roof.position.y = 50;
+		root.add(roof);
+		const beacon = new PointLight(16767370, 1.4, 85);
+		beacon.position.y = 44;
+		root.add(beacon);
+	} else {
 		for (let i = 0; i < 3; i++) {
 			const column = new Mesh(new CylinderGeometry(4.2, 5.2, 18 + i * 5, 7), stone);
 			column.position.set((i - 1) * 11, (18 + i * 5) / 2, 0);
@@ -41205,6 +41286,8 @@ var AbyssalThreeRenderer = class {
 		this.islandMarkers = [];
 		this.islandMarkerLevel = 1;
 		this.lastKrakenPlacementProof = "";
+		this.visualDebugEnabled = false;
+		this.worldPropCount = 0;
 		this.quality = resolveQuality(qualityPreference);
 		this.renderer = new WebGLRenderer({
 			canvas,
@@ -41268,6 +41351,7 @@ var AbyssalThreeRenderer = class {
 		this.world.add(this.destinationRing);
 		this.setMap("aster");
 		this.loadPlayerShipVisuals();
+		this.visualDebugEnabled = typeof location !== "undefined" && (location.hostname === "localhost" || location.hostname === "127.0.0.1") && new URLSearchParams(location.search).get("visualDebug") === "1";
 	}
 	publishPlayerVisualState(state) {
 		this.player.userData.visualRuntimeState = state;
@@ -41353,9 +41437,9 @@ var AbyssalThreeRenderer = class {
 			}
 		});
 		root.add(visual, createHullWaterInteraction(96, 33, true));
-		const playerFill = new PointLight(16767144, .58, 240);
+		const playerFill = new PointLight(16767144, .65, 260);
 		playerFill.position.set(-36, 48, 28);
-		const playerRim = new PointLight(7262207, .38, 200);
+		const playerRim = new PointLight(7262207, .44, 220);
 		playerRim.position.set(48, 62, -40);
 		root.add(playerFill, playerRim);
 		root.userData.entityRoot = true;
@@ -41462,7 +41546,7 @@ var AbyssalThreeRenderer = class {
 		const material = new ShaderMaterial({
 			uniforms: this.waterUniforms,
 			vertexShader: `uniform float uTime;varying float vWave;varying vec3 vWorld;void main(){vec3 p=position;float a=sin(p.x*.009+uTime*.55)*.72;float b=sin(p.y*.013-uTime*.42)*.48;float c=sin((p.x*.7+p.y)*.026+uTime*.83)*.22;p.z+=(a+b+c)*1.25;vWave=a+b+c;vec4 wp=modelMatrix*vec4(p,1.);vWorld=wp.xyz;gl_Position=projectionMatrix*viewMatrix*wp;}`,
-			fragmentShader: `uniform float uTime;uniform vec3 uDeep;uniform vec3 uShallow;uniform int uIslandCount;uniform vec4 uIslands[8];varying float vWave;varying vec3 vWorld;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}float fbm(vec2 p){float v=0.;v+=noise(p)*.58;p=p*2.07+4.1;v+=noise(p)*.28;p=p*2.03-2.4;v+=noise(p)*.14;return v;}void main(){vec2 flow=vWorld.xz*.0065+vec2(uTime*.027,-uTime*.018);float body=fbm(flow),detail=fbm(flow*4.8+vec2(-uTime*.05,uTime*.035));float coast=0.;float foam=0.;for(int i=0;i<8;i++){if(i>=uIslandCount)break;vec4 q=uIslands[i];vec2 d=(vWorld.xz-q.xy)/q.zw;float edge=length(d)+(noise(vWorld.xz*.021+float(i)*7.3)-.5)*.13;coast=max(coast,1.-smoothstep(.98,1.72,edge));foam=max(foam,1.-smoothstep(.035,.13,abs(edge-1.05)));}float crest=smoothstep(1.05,1.55,vWave+detail*.3)*.13;float glint=smoothstep(.88,.985,detail+vWave*.035)*.12;vec3 col=mix(uDeep,uShallow,.14+(body-.5)*.18+coast*.52+vWave*.016+detail*.07);col=mix(col,vec3(.1,.24,.38),smoothstep(.35,.92,body)*.18);col=mix(col,vec3(.68,.9,.92),glint+crest+foam*.22);gl_FragColor=vec4(col,1.);}`,
+			fragmentShader: `uniform float uTime;uniform vec3 uDeep;uniform vec3 uShallow;uniform int uIslandCount;uniform vec4 uIslands[8];varying float vWave;varying vec3 vWorld;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}float fbm(vec2 p){float v=0.;v+=noise(p)*.58;p=p*2.07+4.1;v+=noise(p)*.28;p=p*2.03-2.4;v+=noise(p)*.14;return v;}void main(){vec2 flow=vWorld.xz*.0065+vec2(uTime*.027,-uTime*.018);float body=fbm(flow),detail=fbm(flow*4.8+vec2(-uTime*.05,uTime*.035));float streak=fbm(flow*1.6+vec2(uTime*.012,0.));float coast=0.;float foam=0.;for(int i=0;i<8;i++){if(i>=uIslandCount)break;vec4 q=uIslands[i];vec2 d=(vWorld.xz-q.xy)/q.zw;float edge=length(d)+(noise(vWorld.xz*.021+float(i)*7.3)-.5)*.13;coast=max(coast,1.-smoothstep(.98,1.72,edge));foam=max(foam,1.-smoothstep(.035,.13,abs(edge-1.05)));}float crest=smoothstep(1.05,1.55,vWave+detail*.3)*.15;float glint=smoothstep(.84,.99,detail+vWave*.04+streak*.12)*.14;vec3 col=mix(uDeep,uShallow,.16+(body-.5)*.22+coast*.5+vWave*.018+detail*.08+streak*.04);col=mix(col,vec3(.08,.2,.34),smoothstep(.3,.9,body)*.2);col=mix(col,vec3(.62,.86,.9),glint+crest+foam*.2);gl_FragColor=vec4(col,1.);}`,
 			side: 2
 		});
 		this.ocean = new Mesh(geo, material);
@@ -41513,9 +41597,29 @@ var AbyssalThreeRenderer = class {
 		this.scene.background = sky;
 		this.scene.fog = new FogExp2(sky, map.weather === "void" ? 28e-5 : map.weather === "storm" ? 2e-4 : 13e-5);
 		this.islandMarkerLevel = map.recommended;
+		const density = resolveWorldDensityCounts(this.quality, map.width, map.height);
+		const shorelineKinds = [
+			"rock",
+			"reef",
+			"buoy",
+			"driftwood",
+			"wreck",
+			"mast"
+		];
+		const openKinds = [
+			"crate",
+			"barrel",
+			"driftwood",
+			"wreck",
+			"buoy",
+			"mast",
+			"reef",
+			"lighthouse"
+		];
+		let placedProps = 0;
 		for (const [index, isle] of map.islands.entries()) {
 			const kind = id === "abyss" ? "abyss" : id === "gloam" || id === "maelstrom" ? "storm" : "tropical";
-			const root = createIslandPresentation(isle, islandArtTextures[kind], index + 1, kind);
+			const root = createIslandPresentation(isle, islandArtTextures[kind], index + 1, kind, density.islandRockCount);
 			root.position.set(isle.x, 2, isle.y);
 			if (kind !== "tropical") {
 				const light = new PointLight(kind === "abyss" ? 10706175 : 5759724, isle.port ? 3.2 : 2.1, isle.rx * 2.2);
@@ -41528,21 +41632,31 @@ var AbyssalThreeRenderer = class {
 				"buoy",
 				"crate",
 				"barrel",
-				"ruin"
+				"ruin",
+				"lighthouse"
 			] : [
 				"rock",
 				"reef",
 				"driftwood",
 				"wreck",
-				"mast"
+				"mast",
+				"buoy"
 			];
-			const propCount = this.quality.id === "LOW" ? 3 : 5;
-			for (let p = 0; p < propCount; p++) {
+			for (let p = 0; p < density.islandPropsPerIsland; p++) {
 				const propKind = propKinds[(p + index) % propKinds.length], prop = createWorldProp(propKind, index * 31 + p + 3), a = index * .83 + p * 1.91, r = isle.rx * (1.05 + .12 * (p % 3));
 				prop.position.set(isle.x + Math.cos(a) * r, propKind === "reef" ? -1 : 0, isle.y + Math.sin(a) * r * isle.ry / isle.rx);
 				prop.rotation.y = a + seeded(index * 17 + p) * .5;
-				prop.scale.setScalar(.8 + seeded(index * 13 + p) * .45);
+				prop.scale.setScalar(.85 + seeded(index * 13 + p) * .5);
 				this.world.add(prop);
+				placedProps++;
+			}
+			for (let s = 0; s < density.shorelinePropsPerIsland; s++) {
+				const propKind = shorelineKinds[(s + index) % shorelineKinds.length], prop = createWorldProp(propKind, index * 41 + s + 7), a = index * .67 + s * 1.23, r = isle.rx * (1.18 + s % 3 * .09);
+				prop.position.set(isle.x + Math.cos(a) * r, propKind === "reef" ? -1 : 0, isle.y + Math.sin(a) * r * isle.ry / isle.rx);
+				prop.rotation.y = a + seeded(index * 19 + s) * .4;
+				prop.scale.setScalar(.72 + seeded(index * 23 + s) * .38);
+				this.world.add(prop);
+				placedProps++;
 			}
 			if (isle.port || isle.rx >= 185) {
 				const marker = createIslandMarker();
@@ -41552,25 +41666,17 @@ var AbyssalThreeRenderer = class {
 				this.islandMarkers.push(marker);
 			}
 		}
-		const openKinds = [
-			"crate",
-			"barrel",
-			"driftwood",
-			"wreck",
-			"buoy",
-			"mast",
-			"reef"
-		];
-		const openCount = this.quality.id === "LOW" ? 7 : 12;
-		for (let i = 0; i < openCount; i++) {
-			const prop = createWorldProp(openKinds[i % openKinds.length], 91 + i), x = map.width * (.12 + seeded(i + 81) * .76), z = map.height * (.1 + seeded(i + 121) * .8);
-			if (map.islands.every((isle) => Math.hypot((x - isle.x) / isle.rx, (z - isle.y) / isle.ry) > 1.45)) {
+		for (let i = 0; i < density.openOceanProps; i++) {
+			const prop = createWorldProp(openKinds[i % openKinds.length], 91 + i), x = map.width * (.1 + seeded(i + 81) * .8), z = map.height * (.08 + seeded(i + 121) * .84), nearIsland = map.islands.some((isle) => Math.hypot((x - isle.x) / isle.rx, (z - isle.y) / isle.ry) < 1.38);
+			if (map.islands.every((isle) => Math.hypot((x - isle.x) / isle.rx, (z - isle.y) / isle.ry) > 1.22) || nearIsland && seeded(i + 401) > .35) {
 				prop.position.set(x, 0, z);
 				prop.rotation.y = seeded(i + 221) * Math.PI * 2;
-				prop.scale.setScalar(.6 + seeded(i + 301) * .4);
+				prop.scale.setScalar(.65 + seeded(i + 301) * .45);
 				this.world.add(prop);
+				placedProps++;
 			}
 		}
+		this.worldPropCount = placedProps;
 	}
 	ensureEntity(e) {
 		let mesh = this.entityMeshes.get(e.id);
@@ -41878,6 +41984,19 @@ var AbyssalThreeRenderer = class {
 		}
 		const islandLabelScale = clamp(1 / this.smoothedZoom, .75, 1.12);
 		for (const marker of this.islandMarkers) marker.sprite.scale.set(118 * islandLabelScale, 24 * islandLabelScale, 1);
+		if (this.visualDebugEnabled && typeof window !== "undefined") {
+			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length;
+			window.__ABYSSAL_VISUAL_DEBUG__ = {
+				zoom: this.smoothedZoom,
+				playerScale: PLAYER_SHIP_VISUALS[frame.shipId].scale,
+				worldPropCount: this.worldPropCount,
+				visibleNpcCount: npcCount,
+				islandCount: MAPS[frame.mapId].islands.length,
+				quality: this.quality.id,
+				mapId: frame.mapId,
+				krakenAttached: this.player.userData.visualRuntimeState?.status === "kraken-attached"
+			};
+		}
 		this.resize();
 		this.renderer.render(this.scene, this.camera);
 	}

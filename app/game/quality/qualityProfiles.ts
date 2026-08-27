@@ -16,6 +16,8 @@ export type QualityProfile = {
   lodBias: number;
   effectComplexity: number;
   textureQuality: number;
+  /** Scales island/open-ocean prop counts (LOW reduces density). */
+  worldPropDensity: number;
 };
 
 export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
@@ -32,6 +34,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     lodBias: 1.8,
     effectComplexity: 0.4,
     textureQuality: 0.5,
+    worldPropDensity: 0.55,
   },
   MEDIUM: {
     id: "MEDIUM",
@@ -46,6 +49,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     lodBias: 1.25,
     effectComplexity: 0.7,
     textureQuality: 0.75,
+    worldPropDensity: 0.82,
   },
   HIGH: {
     id: "HIGH",
@@ -60,6 +64,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     lodBias: 1,
     effectComplexity: 1,
     textureQuality: 1,
+    worldPropDensity: 1,
   },
   ULTRA: {
     id: "ULTRA",
@@ -74,6 +79,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     lodBias: 0.7,
     effectComplexity: 1.25,
     textureQuality: 1,
+    worldPropDensity: 1.18,
   },
 };
 
