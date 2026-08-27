@@ -1,29 +1,28 @@
 /**
- * V20.2.6 label projection QA across deviceScaleFactor values.
+ * V20.2.8 label projection QA across DPR and zoom levels.
  * Usage: node scripts/visual-qa-dpr-labels.mjs
  */
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const baseUrl = process.env.VISUAL_QA_URL ?? "http://127.0.0.1:3000";
-const outDir = join(import.meta.dirname, "..", "artifacts", "v20.2.6-label-qa");
+const outDir = join(import.meta.dirname, "..", "artifacts", "v20.2.8-label-qa");
 
-const cases = [
-  { name: "1920x1080-dpr1", width: 1920, height: 1080, deviceScaleFactor: 1 },
-  { name: "1920x1080-dpr2", width: 1920, height: 1080, deviceScaleFactor: 2 },
-  { name: "2400x1080-dpr2", width: 2400, height: 1080, deviceScaleFactor: 2 },
-  { name: "2400x1080-dpr3", width: 2400, height: 1080, deviceScaleFactor: 3 },
-  { name: "1280x720-dpr2", width: 1280, height: 720, deviceScaleFactor: 2 },
+const dprs = [1, 2, 3];
+const zoomLevels = [
+  { tag: "out", zoom: 0.6 },
+  { tag: "mid", zoom: 0.96 },
+  { tag: "in", zoom: 1.3 },
 ];
 
 const { chromium } = await import("playwright");
 await mkdir(outDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 
-for (const c of cases) {
+for (const dpr of dprs) {
   const context = await browser.newContext({
-    viewport: { width: c.width, height: c.height },
-    deviceScaleFactor: c.deviceScaleFactor,
+    viewport: { width: 2400, height: 1080 },
+    deviceScaleFactor: dpr,
     isMobile: true,
     hasTouch: true,
   });
@@ -33,17 +32,22 @@ for (const c of cases) {
     timeout: 120000,
   });
   await page.waitForTimeout(3500);
-  await page.evaluate(() => {
-    const g = window.__ABYSSAL_GAME__;
-    if (g) g.zoom = 0.96;
-  });
-  await page.waitForTimeout(1200);
-  await page.screenshot({
-    path: join(outDir, `02-mobile-mid-${c.name}.png`),
-    fullPage: false,
-  });
-  const debug = await page.evaluate(() => window.__ABYSSAL_VISUAL_DEBUG__ ?? null);
-  console.log(`[label-qa] ${c.name}`, debug?.playerLabel, debug?.renderer);
+
+  for (const level of zoomLevels) {
+    await page.evaluate((zoom) => {
+      const g = window.__ABYSSAL_GAME__;
+      if (g) g.zoom = zoom;
+    }, level.zoom);
+    await page.waitForTimeout(1200);
+    const name = `mobile-landscape-dpr${dpr}-${level.tag}`;
+    await page.screenshot({
+      path: join(outDir, `${name}.png`),
+      fullPage: false,
+    });
+    const debug = await page.evaluate(() => window.__ABYSSAL_VISUAL_DEBUG__ ?? null);
+    console.log(`[label-qa] ${name}`, debug?.playerLabel, debug?.renderer);
+  }
+
   await context.close();
 }
 

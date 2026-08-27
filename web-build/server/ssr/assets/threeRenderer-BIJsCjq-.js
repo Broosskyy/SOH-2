@@ -40201,16 +40201,46 @@ var monsterKinds = new Set([
 	"boss"
 ]);
 var clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+var LABEL_CANVAS_DPR_CAP = 2;
 /** Preserve canvas texture aspect on billboard sprites — never set arbitrary scale.x/scale.y pairs. */
 function canvasTextureAspect(canvas) {
 	return canvas.width / canvas.height;
 }
-function applyLabelSpriteScale(sprite, canvas, worldHeight) {
-	const aspect = canvasTextureAspect(canvas), h = worldHeight;
+function labelCanvasDpr() {
+	return typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, LABEL_CANVAS_DPR_CAP) : 1;
+}
+function createLabelCanvas(cssWidth, cssHeight) {
+	const dpr = labelCanvasDpr(), canvas = document.createElement("canvas");
+	canvas.width = Math.round(cssWidth * dpr);
+	canvas.height = Math.round(cssHeight * dpr);
+	return {
+		canvas,
+		dpr
+	};
+}
+function configureLabelTexture(texture) {
+	texture.colorSpace = SRGBColorSpace;
+	texture.minFilter = LinearFilter;
+	texture.magFilter = LinearFilter;
+	texture.generateMipmaps = false;
+	texture.wrapS = ClampToEdgeWrapping;
+	texture.wrapT = ClampToEdgeWrapping;
+	return texture;
+}
+function beginLabelPaint(ctx, dpr) {
+	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	ctx.globalAlpha = 1;
+}
+function worldUnitsPerPixel(camera, renderer, worldPosition) {
+	const distance = camera.position.distanceTo(worldPosition), vFov = camera.fov * Math.PI / 180, units = 2 * Math.tan(vFov / 2) * distance / (renderer.domElement.clientHeight || 1);
+	return Number.isFinite(units) && units > 0 ? units : .01;
+}
+function applyLabelSpriteScreenSize(sprite, canvas, unitsPerPixel, pixelHeight) {
+	const aspect = canvasTextureAspect(canvas), h = Math.max(1, pixelHeight) * unitsPerPixel;
 	sprite.scale.set(h * aspect, h, 1);
 }
-function labelZoomScale(zoom, min = .75, max = 1.18) {
-	return clamp(1 / zoom, min, max);
+function labelScreenPixels(zoom, base, min, max) {
+	return clamp(base * clamp(.96 / zoom, .82, 1.14), min, max);
 }
 var mat = (color, rough = .72, metal = .08, emissive = 0) => new MeshStandardMaterial({
 	color,
@@ -40699,13 +40729,7 @@ function createKraken(kind) {
 	return shadows(group);
 }
 function createHealthMarker(e) {
-	const canvas = document.createElement("canvas");
-	canvas.width = 384;
-	canvas.height = 84;
-	const texture = new CanvasTexture(canvas);
-	texture.colorSpace = SRGBColorSpace;
-	texture.minFilter = LinearFilter;
-	const sprite = new Sprite(new SpriteMaterial({
+	const { canvas, dpr } = createLabelCanvas(384, 84), texture = configureLabelTexture(new CanvasTexture(canvas)), sprite = new Sprite(new SpriteMaterial({
 		map: texture,
 		transparent: true,
 		depthTest: false,
@@ -40716,6 +40740,7 @@ function createHealthMarker(e) {
 		sprite,
 		canvas,
 		texture,
+		dpr,
 		lastHp: -1,
 		lastSelected: false
 	};
@@ -40728,8 +40753,9 @@ function paintHealthMarker(marker, e, selected) {
 	marker.lastSelected = selected;
 	const ctx = marker.canvas.getContext("2d");
 	if (!ctx) return;
-	const d = ENTITY_DATA[e.kind], ratio = clamp(e.hp / e.maxHp, 0, 1);
+	beginLabelPaint(ctx, marker.dpr);
 	ctx.clearRect(0, 0, 384, 84);
+	const d = ENTITY_DATA[e.kind], ratio = clamp(e.hp / e.maxHp, 0, 1);
 	ctx.textAlign = "left";
 	ctx.shadowColor = "rgba(0,0,0,.85)";
 	ctx.shadowBlur = 5;
@@ -40755,13 +40781,7 @@ function paintHealthMarker(marker, e, selected) {
 	marker.texture.needsUpdate = true;
 }
 function createPlayerMarker() {
-	const canvas = document.createElement("canvas");
-	canvas.width = 340;
-	canvas.height = 48;
-	const texture = new CanvasTexture(canvas);
-	texture.colorSpace = SRGBColorSpace;
-	texture.minFilter = LinearFilter;
-	const sprite = new Sprite(new SpriteMaterial({
+	const { canvas, dpr } = createLabelCanvas(340, 48), texture = configureLabelTexture(new CanvasTexture(canvas)), sprite = new Sprite(new SpriteMaterial({
 		map: texture,
 		transparent: true,
 		depthTest: false,
@@ -40769,11 +40789,12 @@ function createPlayerMarker() {
 	}));
 	sprite.center.set(.5, 1);
 	sprite.renderOrder = 90;
-	applyLabelSpriteScale(sprite, canvas, 20);
+	applyLabelSpriteScreenSize(sprite, canvas, .01, 48);
 	return {
 		sprite,
 		canvas,
 		texture,
+		dpr,
 		lastKey: ""
 	};
 }
@@ -40783,6 +40804,7 @@ function paintPlayerMarker(marker, frame) {
 	marker.lastKey = key;
 	const ctx = marker.canvas.getContext("2d");
 	if (!ctx) return;
+	beginLabelPaint(ctx, marker.dpr);
 	ctx.clearRect(0, 0, 340, 48);
 	ctx.textAlign = "left";
 	ctx.shadowColor = "rgba(0,0,0,.78)";
@@ -40814,24 +40836,19 @@ function paintPlayerMarker(marker, frame) {
 	marker.texture.needsUpdate = true;
 }
 function createIslandMarker() {
-	const canvas = document.createElement("canvas");
-	canvas.width = 360;
-	canvas.height = 72;
-	const texture = new CanvasTexture(canvas);
-	texture.colorSpace = SRGBColorSpace;
-	texture.minFilter = LinearFilter;
-	const sprite = new Sprite(new SpriteMaterial({
+	const { canvas, dpr } = createLabelCanvas(360, 72), texture = configureLabelTexture(new CanvasTexture(canvas)), sprite = new Sprite(new SpriteMaterial({
 		map: texture,
 		transparent: true,
 		depthTest: false,
 		depthWrite: false
 	}));
 	sprite.renderOrder = 70;
-	applyLabelSpriteScale(sprite, canvas, 24);
+	applyLabelSpriteScreenSize(sprite, canvas, .01, 36);
 	return {
 		sprite,
 		canvas,
 		texture,
+		dpr,
 		lastKey: ""
 	};
 }
@@ -40841,6 +40858,7 @@ function paintIslandMarker(marker, name, level) {
 	marker.lastKey = key;
 	const ctx = marker.canvas.getContext("2d");
 	if (!ctx) return;
+	beginLabelPaint(ctx, marker.dpr);
 	ctx.clearRect(0, 0, 360, 72);
 	ctx.textAlign = "center";
 	ctx.shadowColor = "rgba(0,0,0,.85)";
@@ -41315,6 +41333,7 @@ var AbyssalThreeRenderer = class {
 			this.lastLayoutHeight = 0;
 			this.lastPixelRatio = 0;
 		};
+		this.labelProbe = new Vector3();
 		this.quality = resolveQuality(qualityPreference);
 		this.renderer = new WebGLRenderer({
 			canvas,
@@ -41823,9 +41842,10 @@ var AbyssalThreeRenderer = class {
 			}
 		});
 		paintPlayerMarker(this.playerMarker, frame);
-		const markerScale = labelZoomScale(this.smoothedZoom, .84, 1.16);
-		applyLabelSpriteScale(this.playerMarker.sprite, this.playerMarker.canvas, 20 * markerScale);
-		this.playerMarker.sprite.position.set(frame.player.x, 8, frame.player.y + 42);
+		this.labelProbe.set(frame.player.x, 8, frame.player.y + 42);
+		const labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), playerPixelHeight = labelScreenPixels(this.smoothedZoom, 48, 42, 54);
+		applyLabelSpriteScreenSize(this.playerMarker.sprite, this.playerMarker.canvas, labelUnitsPerPixel, playerPixelHeight);
+		this.playerMarker.sprite.position.copy(this.labelProbe);
 		this.playerAura.position.set(frame.player.x, 4, frame.player.y);
 		const speedFactor = clamp(Math.abs(frame.player.speed) / 120, 0, 1);
 		this.playerAura.visible = speedFactor > .28;
@@ -41876,9 +41896,10 @@ var AbyssalThreeRenderer = class {
 			}
 			const selected = frame.selectedId === e.id;
 			paintHealthMarker(marker, e, selected);
-			const compact = labelZoomScale(this.smoothedZoom, .78, 1.18), entityLabelHeight = (selected ? 30 : 26) * compact;
-			applyLabelSpriteScale(marker.sprite, marker.canvas, entityLabelHeight);
-			marker.sprite.position.set(e.x, 10, e.y + 34);
+			this.labelProbe.set(e.x, 10, e.y + 34);
+			const entityPixelHeight = labelScreenPixels(this.smoothedZoom, selected ? 40 : 36, 30, 44);
+			applyLabelSpriteScreenSize(marker.sprite, marker.canvas, worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), entityPixelHeight);
+			marker.sprite.position.copy(this.labelProbe);
 			marker.sprite.visible = true;
 		}
 		for (const [id, mesh] of this.entityMeshes) if (!live.has(id)) {
@@ -42041,10 +42062,10 @@ var AbyssalThreeRenderer = class {
 			this.world.remove(mesh);
 			this.lootMeshes.delete(id);
 		}
-		const islandLabelScale = labelZoomScale(this.smoothedZoom, .75, 1.12);
-		for (const marker of this.islandMarkers) applyLabelSpriteScale(marker.sprite, marker.canvas, 24 * islandLabelScale);
+		const islandPixelHeight = labelScreenPixels(this.smoothedZoom, 36, 30, 42);
+		for (const marker of this.islandMarkers) applyLabelSpriteScreenSize(marker.sprite, marker.canvas, worldUnitsPerPixel(this.camera, this.renderer, marker.sprite.position), islandPixelHeight);
 		if (this.visualDebugEnabled && typeof window !== "undefined") {
-			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, pm = this.playerMarker.sprite;
+			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, pm = this.playerMarker.sprite, projectedScreenHeight = pm.scale.y / labelUnitsPerPixel, projectedScreenWidth = pm.scale.x / labelUnitsPerPixel;
 			window.__ABYSSAL_VISUAL_DEBUG__ = {
 				zoom: this.smoothedZoom,
 				cameraHeight: cameraRig.height,
@@ -42080,9 +42101,14 @@ var AbyssalThreeRenderer = class {
 					textureWidth: this.playerMarker.canvas.width,
 					textureHeight: this.playerMarker.canvas.height,
 					textureAspect: canvasTextureAspect(this.playerMarker.canvas),
+					canvasDpr: this.playerMarker.dpr,
+					targetPixelHeight: playerPixelHeight,
+					unitsPerPixel: labelUnitsPerPixel,
 					spriteScaleX: pm.scale.x,
 					spriteScaleY: pm.scale.y,
-					spriteAspect: pm.scale.x / pm.scale.y
+					spriteAspect: pm.scale.x / pm.scale.y,
+					projectedScreenWidth,
+					projectedScreenHeight
 				}
 			};
 		}
