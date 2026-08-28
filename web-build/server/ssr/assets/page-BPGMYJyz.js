@@ -1,5 +1,5 @@
 import { a as require_react, o as __commonJSMin, s as __toESM, t as require_jsx_runtime } from "../index.js";
-import { c as saveQualityPreference, d as DECK_LEVELS, f as ENTITY_DATA, h as SHIPS, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, m as QUESTS, o as loadQualityPreference, p as MAPS, r as worldOffset, t as PLAYER_SHIP_VISUALS, u as CANNONS } from "./shipVisuals-wWtYIXnV.js";
+import { _ as SHIPS, c as saveQualityPreference, d as AMMO, f as CANNONS, g as QUESTS, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, m as ENTITY_DATA, o as loadQualityPreference, p as DECK_LEVELS, r as worldOffset, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-B1lsSRwd.js";
 //#region node_modules/ipaddr.js/lib/ipaddr.js
 var require_ipaddr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(root) {
@@ -4660,7 +4660,7 @@ function Home() {
 		const canvas = threeCanvasRef.current;
 		if (!canvas || !ready) return;
 		let renderer = null, raf = 0, disposed = false;
-		import("./threeRenderer-BUsZo-0r.js").then(({ AbyssalThreeRenderer }) => {
+		import("./threeRenderer-BmHK8RI3.js").then(({ AbyssalThreeRenderer }) => {
 			if (disposed) return;
 			renderer = new AbyssalThreeRenderer(canvas, qualityPreference);
 			renderer3DRef.current = renderer;
@@ -4825,6 +4825,7 @@ function Home() {
 	}).range : 0;
 	const targetInRange = !!hud.selected && hud.selected.range <= combatRange;
 	const showShipVisualDebug = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && new URLSearchParams(window.location.search).get("shipDebug") === "1";
+	const showVisualBuildDebug = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") && new URLSearchParams(window.location.search).get("visualDebug") === "1";
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
 		className: "game-shell",
 		children: [
@@ -4847,6 +4848,11 @@ function Home() {
 			runtimeError && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 				className: "runtime-error",
 				children: runtimeError
+			}),
+			showVisualBuildDebug && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "visual-build-debug",
+				"aria-hidden": "true",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: ["BUILD: ", "V20.2.9"] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["COMMIT: ", "86075a8"] })]
 			}),
 			showShipVisualDebug && playerVisualStatus && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: `player-visual-device-status ${playerVisualStatus.status}`,

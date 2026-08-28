@@ -715,6 +715,10 @@ var QUESTS = [
 	}
 ];
 //#endregion
+//#region app/generated/buildInfo.ts
+var BUILD_RELEASE = "V20.2.9";
+var BUILD_COMMIT = "86075a8";
+//#endregion
 //#region app/game/platform/detection.ts
 function detectPlatform() {
 	if (typeof window === "undefined") return {
@@ -943,4 +947,4 @@ function worldOffset(origin, heading, offset) {
 	};
 }
 //#endregion
-export { resolveCameraPresentation as a, saveQualityPreference as c, DECK_LEVELS as d, ENTITY_DATA as f, SHIPS as h, GAMEPLAY_CAMERA_POLICY as i, AMMO as l, QUESTS as m, validateShipVisualDefinition as n, loadQualityPreference as o, MAPS as p, worldOffset as r, resolveQuality as s, PLAYER_SHIP_VISUALS as t, CANNONS as u };
+export { SHIPS as _, resolveCameraPresentation as a, saveQualityPreference as c, AMMO as d, CANNONS as f, QUESTS as g, MAPS as h, GAMEPLAY_CAMERA_POLICY as i, BUILD_COMMIT as l, ENTITY_DATA as m, validateShipVisualDefinition as n, loadQualityPreference as o, DECK_LEVELS as p, worldOffset as r, resolveQuality as s, PLAYER_SHIP_VISUALS as t, BUILD_RELEASE as u };

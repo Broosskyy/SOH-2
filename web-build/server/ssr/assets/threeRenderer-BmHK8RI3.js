@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, f as ENTITY_DATA, i as GAMEPLAY_CAMERA_POLICY, l as AMMO, n as validateShipVisualDefinition, p as MAPS, s as resolveQuality, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-wWtYIXnV.js";
+import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-B1lsSRwd.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -42344,7 +42344,11 @@ var AbyssalThreeRenderer = class {
 				poiLabel: this.poiLabels[0] ? {
 					name: this.poiLabels[0].poiName,
 					level: this.poiLabels[0].poiLevel
-				} : null
+				} : null,
+				build: {
+					release: BUILD_RELEASE,
+					commit: BUILD_COMMIT
+				}
 			};
 		}
 		this.resize();
