@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-CfvHGmq0.js";
+import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-CdnSD1rr.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -46575,7 +46575,7 @@ new Color();
 //#region app/game/visuals/worldText.ts
 /** Chrome-safe SDF world text — no CanvasTexture. */
 var WORLD_TEXT_ENGINE = "TROIKA_SDF";
-var DEFAULT_OUTLINE = .12;
+var DEFAULT_OUTLINE = .08;
 function configureTextMaterial(text) {
 	text.material.depthTest = false;
 	text.material.depthWrite = false;
@@ -46603,12 +46603,18 @@ function updateWorldText(worldText, content, unitsPerPixel, cssFontSize, style) 
 	const mesh = worldText.mesh;
 	mesh.text = content;
 	mesh.fontSize = Math.max(.001, cssFontSize * unitsPerPixel);
+	if (style?.maxWidthCss !== void 0) mesh.maxWidth = style.maxWidthCss > 0 ? style.maxWidthCss * unitsPerPixel : void 0;
 	if (style?.color !== void 0) mesh.color = style.color;
 	if (style?.fontWeight !== void 0) mesh.fontWeight = style.fontWeight;
 	if (style?.outlineWidth !== void 0) mesh.outlineWidth = style.outlineWidth;
 	if (style?.outlineColor !== void 0) mesh.outlineColor = style.outlineColor;
 	mesh.sync();
 	worldText.cssFontSize = cssFontSize;
+}
+function worldTextBlockWidthCssPx(mesh, unitsPerPixel) {
+	const bounds = mesh.textRenderInfo?.blockBounds;
+	if (!bounds || unitsPerPixel <= 0) return 0;
+	return (bounds[2] - bounds[0]) / unitsPerPixel;
 }
 function worldTextLineHeightPx(worldText) {
 	return worldText.cssFontSize * 1.12;
@@ -46624,18 +46630,59 @@ var LABEL_RENDER_ORDER = {
 	npc: 82,
 	poi: 72
 };
+/** V20.2.11 screen-space calibration anchors (MID zoom = 1.0). */
+var PLAYER_LABEL_CALIBRATION = {
+	nameBasePx: 11.5,
+	nameMinPx: 8,
+	nameMaxPx: 14,
+	nameMaxWidthPx: 100,
+	hpBarBaseW: 87,
+	hpBarMinW: 66,
+	hpBarMaxW: 100,
+	hpBarBaseH: 4,
+	hpBarMinH: 3,
+	hpBarMaxH: 5,
+	shieldBarBaseH: 3.25,
+	shieldBarMinH: 2.5,
+	shieldBarMaxH: 4,
+	identityToHpGapPx: 3,
+	barGapPx: 1.5
+};
+var NPC_LABEL_CALIBRATION = {
+	nameBasePx: 10,
+	nameMinPx: 7,
+	nameMaxPx: 11,
+	levelBasePx: 8.5,
+	levelMinPx: 7,
+	levelMaxPx: 10,
+	nameLevelGapPx: 4,
+	barBaseW: 68,
+	barMinW: 58,
+	barMaxW: 76,
+	barBaseH: 3.5,
+	barMinH: 3,
+	barMaxH: 4
+};
+var POI_LABEL_CALIBRATION = {
+	nameBasePx: 10,
+	nameMinPx: 7,
+	nameMaxPx: 11,
+	levelBasePx: 8,
+	levelMinPx: 7,
+	levelMaxPx: 9
+};
 function worldUnitsPerPixel(camera, renderer, worldPosition) {
 	const distance = camera.position.distanceTo(worldPosition);
 	const vFov = camera.fov * Math.PI / 180;
 	const units = 2 * Math.tan(vFov / 2) * distance / (renderer.domElement.clientHeight || 1);
 	return Number.isFinite(units) && units > 0 ? units : .01;
 }
-/** MID zoom (~0.96) = 1.0 · OUT (~0.55) ≈ 0.85 · IN (~1.38) ≈ 1.06 */
+/** MID zoom (~0.96) = 1.0 · OUT (~0.55) ≈ 0.82–0.85 · IN (~1.38) ≈ 1.03–1.07 */
 function labelZoomFactor(zoom) {
 	const z = clamp$1(zoom, .55, 1.38);
 	const mid = .96;
-	if (z <= mid) return .85 + (z - .55) / (mid - .55) * .15;
-	return 1 + (z - mid) / (1.38 - mid) * .06;
+	if (z <= mid) return .82 + (z - .55) / (mid - .55) * .18;
+	return 1 + (z - mid) / (1.38 - mid) * .07;
 }
 function labelScreenPixels(zoom, base, min, max) {
 	return clamp$1(base * labelZoomFactor(zoom), min, max);
@@ -46684,8 +46731,15 @@ function stackLabelParts(parts, unitsPerPixel, anchorY, gapPx = 1) {
 		if (part.visible === false) continue;
 		const height = Math.max(1, part.pixelHeight) * unitsPerPixel;
 		part.object.position.set(0, cursor - height * .5, 0);
-		cursor -= height + gapPx * unitsPerPixel;
+		const gap = part.gapAfter ?? gapPx;
+		cursor -= height + gap * unitsPerPixel;
 	}
+}
+function layoutCompactNameLevel(nameText, levelText, unitsPerPixel, gapPx) {
+	const nameW = worldTextBlockWidthCssPx(nameText.mesh, unitsPerPixel);
+	const levelW = worldTextBlockWidthCssPx(levelText.mesh, unitsPerPixel);
+	nameText.mesh.position.set(-(levelW + gapPx) * .5 * unitsPerPixel, 0, 0);
+	levelText.mesh.position.set((nameW + gapPx) * .5 * unitsPerPixel, 0, 0);
 }
 function disposeStatusBar(bar) {
 	bar.bg.geometry.dispose();
@@ -46702,16 +46756,19 @@ function createPlayerWorldLabel() {
 	const guildTag = createWorldText(order, {
 		color: "#b8c8c4",
 		fontWeight: 500,
-		anchorX: "right"
+		anchorX: "right",
+		outlineWidth: .07
 	});
 	const playerName = createWorldText(order + 1, {
 		color: "#f4ead8",
-		fontWeight: 700
+		fontWeight: 550,
+		outlineWidth: .08
 	});
 	const pirateRank = createWorldText(order + 2, {
 		color: "#c8d8dc",
 		fontWeight: 500,
-		anchorX: "left"
+		anchorX: "left",
+		outlineWidth: .07
 	});
 	const hpBar = createStatusBar(3978836);
 	const shieldBar = createStatusBar(3837640);
@@ -46765,14 +46822,17 @@ function updatePlayerWorldLabel(label, frame, camera, renderer, zoom, worldPosit
 	}
 	const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
 	const z = labelZoomFactor(zoom);
-	const namePx = labelScreenPixels(zoom, 13.5 * z, 12, 15);
-	const hpBarW = labelScreenPixels(zoom, 102 * z, 90, 115);
-	const hpBarH = labelScreenPixels(zoom, 5 * z, 4, 6);
+	const cal = PLAYER_LABEL_CALIBRATION;
+	const namePx = labelScreenPixels(zoom, cal.nameBasePx * z, cal.nameMinPx, cal.nameMaxPx);
+	const hpBarW = labelScreenPixels(zoom, cal.hpBarBaseW * z, cal.hpBarMinW, cal.hpBarMaxW);
+	const hpBarH = labelScreenPixels(zoom, cal.hpBarBaseH * z, cal.hpBarMinH, cal.hpBarMaxH);
 	const shieldBarW = hpBarW;
-	const shieldBarH = labelScreenPixels(zoom, 4 * z, 3, 5);
+	const shieldBarH = labelScreenPixels(zoom, cal.shieldBarBaseH * z, cal.shieldBarMinH, cal.shieldBarMaxH);
 	updateWorldText(label.playerName, frame.playerName.toUpperCase(), unitsPerPixel, namePx, {
 		color: "#f4ead8",
-		fontWeight: 700
+		fontWeight: 550,
+		outlineWidth: .08,
+		maxWidthCss: cal.nameMaxWidthPx
 	});
 	setStatusBarSize(label.hpBar, unitsPerPixel, hpBarW, hpBarH, hpRatio);
 	if (showShield) {
@@ -46780,25 +46840,27 @@ function updatePlayerWorldLabel(label, frame, camera, renderer, zoom, worldPosit
 		label.shieldBar.group.visible = true;
 	} else label.shieldBar.group.visible = false;
 	billboardToCamera(label.group, camera);
-	const barGap = 1;
 	const nameLinePx = worldTextLineHeightPx(label.playerName);
-	const totalPx = nameLinePx + barGap + hpBarH + barGap + (showShield ? shieldBarH + barGap : 0);
+	const nameWidthPx = worldTextBlockWidthCssPx(label.playerName.mesh, unitsPerPixel);
+	const totalPx = nameLinePx + cal.identityToHpGapPx + hpBarH + (showShield ? cal.barGapPx + shieldBarH : 0);
 	const anchorY = totalPx * unitsPerPixel * .5;
 	stackLabelParts([
 		{
 			object: label.identityRow,
-			pixelHeight: nameLinePx
+			pixelHeight: nameLinePx,
+			gapAfter: cal.identityToHpGapPx
 		},
 		{
 			object: label.hpBar.group,
-			pixelHeight: hpBarH
+			pixelHeight: hpBarH,
+			gapAfter: showShield ? cal.barGapPx : 0
 		},
 		{
 			object: label.shieldBar.group,
 			pixelHeight: shieldBarH,
 			visible: showShield
 		}
-	], unitsPerPixel, anchorY, barGap);
+	], unitsPerPixel, anchorY, cal.barGapPx);
 	label.group.position.copy(worldPosition);
 	return {
 		type: "player",
@@ -46808,12 +46870,20 @@ function updatePlayerWorldLabel(label, frame, camera, renderer, zoom, worldPosit
 		shieldRatio: showShield ? shieldRatio : void 0,
 		screenWidth: hpBarW,
 		screenHeight: totalPx,
-		textScreenWidth: hpBarW,
+		textScreenWidth: nameWidthPx,
 		textScreenHeight: nameLinePx,
 		hpBarScreenWidth: hpBarW,
 		hpBarScreenHeight: hpBarH,
 		shieldBarScreenWidth: showShield ? shieldBarW : void 0,
-		shieldBarScreenHeight: showShield ? shieldBarH : void 0
+		shieldBarScreenHeight: showShield ? shieldBarH : void 0,
+		nameCssHeight: nameLinePx,
+		nameCssWidth: nameWidthPx,
+		hpCssWidth: hpBarW,
+		hpCssHeight: hpBarH,
+		shieldCssWidth: showShield ? shieldBarW : void 0,
+		shieldCssHeight: showShield ? shieldBarH : void 0,
+		totalLabelHeightCss: totalPx,
+		zoomFactor: z
 	};
 }
 function disposePlayerWorldLabel(label) {
@@ -46831,14 +46901,16 @@ function createNpcWorldLabel(hostile) {
 	const identityRow = new Group();
 	identityRow.name = "IdentityRow";
 	const nameLine = createWorldText(order, {
-		color: hostile ? "#f8ead1" : "#e8f4e8",
-		fontWeight: 700
+		color: hostile ? "#f0e4d4" : "#dceee0",
+		fontWeight: 500,
+		outlineWidth: .07
 	});
 	const levelTag = createWorldText(order + 1, {
-		color: "#b8ccc8",
-		fontWeight: 600
+		color: "#a8beb8",
+		fontWeight: 500,
+		outlineWidth: .06,
+		anchorX: "center"
 	});
-	levelTag.mesh.visible = false;
 	const hpBar = createStatusBar(hostile ? 14175301 : 3978836);
 	const shieldBar = createStatusBar(3837640);
 	shieldBar.group.visible = false;
@@ -46856,30 +46928,43 @@ function createNpcWorldLabel(hostile) {
 }
 function updateNpcWorldLabel(label, name, level, hp, maxHp, selected, camera, renderer, zoom, worldPosition) {
 	const ratio = clamp$1(hp / Math.max(1, maxHp), 0, 1);
-	const display = `${name}   LV ${level}`;
-	const key = `${display}|${hp}|${selected ? 1 : 0}`;
+	const levelText = `LV ${level}`;
+	const key = `${name}|${levelText}|${hp}|${selected ? 1 : 0}`;
 	if (key !== label.lastKey) {
 		label.lastKey = key;
-		updateWorldText(label.nameLine, display, 1, label.nameLine.cssFontSize);
+		updateWorldText(label.nameLine, name, 1, label.nameLine.cssFontSize);
+		updateWorldText(label.levelTag, levelText, 1, label.levelTag.cssFontSize);
 	}
 	const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
 	const z = labelZoomFactor(zoom);
-	const namePx = labelScreenPixels(zoom, (selected ? 13.5 : 12.5) * z, 11, 15);
-	const barW = labelScreenPixels(zoom, (selected ? 96 : 88) * z, 80, 110);
-	const barH = labelScreenPixels(zoom, 5 * z, 4, 6);
-	updateWorldText(label.nameLine, display, unitsPerPixel, namePx, {
-		color: selected ? "#fff4dc" : "#f8ead1",
-		fontWeight: selected ? 700 : 600
+	const cal = NPC_LABEL_CALIBRATION;
+	const namePx = labelScreenPixels(zoom, (selected ? cal.nameBasePx + .5 : cal.nameBasePx) * z, cal.nameMinPx, cal.nameMaxPx);
+	const levelPx = labelScreenPixels(zoom, cal.levelBasePx * z, cal.levelMinPx, cal.levelMaxPx);
+	const barW = labelScreenPixels(zoom, (selected ? cal.barBaseW + 4 : cal.barBaseW) * z, cal.barMinW, cal.barMaxW);
+	const barH = labelScreenPixels(zoom, cal.barBaseH * z, cal.barMinH, cal.barMaxH);
+	updateWorldText(label.nameLine, name, unitsPerPixel, namePx, {
+		color: selected ? "#fff0dc" : "#f0e4d4",
+		fontWeight: selected ? 550 : 500,
+		outlineWidth: .07
 	});
+	updateWorldText(label.levelTag, levelText, unitsPerPixel, levelPx, {
+		color: "#a8beb8",
+		fontWeight: 500,
+		outlineWidth: .06
+	});
+	label.levelTag.mesh.visible = true;
+	layoutCompactNameLevel(label.nameLine, label.levelTag, unitsPerPixel, cal.nameLevelGapPx);
 	setStatusBarSize(label.hpBar, unitsPerPixel, barW, barH, ratio);
 	billboardToCamera(label.group, camera);
 	const nameLinePx = worldTextLineHeightPx(label.nameLine);
-	const gap = 1;
+	const identityWidthPx = worldTextBlockWidthCssPx(label.nameLine.mesh, unitsPerPixel) + cal.nameLevelGapPx + worldTextBlockWidthCssPx(label.levelTag.mesh, unitsPerPixel);
+	const gap = 2;
 	const totalPx = nameLinePx + gap + barH;
 	const anchorY = totalPx * unitsPerPixel * .5;
 	stackLabelParts([{
 		object: label.identityRow,
-		pixelHeight: nameLinePx
+		pixelHeight: nameLinePx,
+		gapAfter: gap
 	}, {
 		object: label.hpBar.group,
 		pixelHeight: barH
@@ -46892,10 +46977,16 @@ function updateNpcWorldLabel(label, name, level, hp, maxHp, selected, camera, re
 		hpRatio: ratio,
 		screenWidth: barW,
 		screenHeight: totalPx,
-		textScreenWidth: barW,
+		textScreenWidth: identityWidthPx,
 		textScreenHeight: nameLinePx,
 		hpBarScreenWidth: barW,
-		hpBarScreenHeight: barH
+		hpBarScreenHeight: barH,
+		nameCssHeight: nameLinePx,
+		nameCssWidth: identityWidthPx,
+		hpCssWidth: barW,
+		hpCssHeight: barH,
+		totalLabelHeightCss: totalPx,
+		zoomFactor: z
 	};
 }
 function disposeNpcWorldLabel(label) {
@@ -46909,13 +47000,14 @@ function createPoiWorldLabel(name = "", level = 1) {
 	group.name = "PoiWorldLabelGroup";
 	const order = LABEL_RENDER_ORDER.poi;
 	const nameLine = createWorldText(order, {
-		color: "#e8f6f8",
-		fontWeight: 700
+		color: "#d8ecee",
+		fontWeight: 500,
+		outlineWidth: .07
 	});
 	const levelTag = createWorldText(order + 1, {
-		color: "#b4d0d8",
-		fontWeight: 600,
-		outlineWidth: .1
+		color: "#9ab4bc",
+		fontWeight: 450,
+		outlineWidth: .06
 	});
 	group.add(nameLine.mesh, levelTag.mesh);
 	return {
@@ -46936,19 +47028,28 @@ function updatePoiWorldLabel(label, name, level, camera, renderer, zoom, worldPo
 	}
 	const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
 	const z = labelZoomFactor(zoom);
-	const namePx = labelScreenPixels(zoom, 14 * z, 13, 17);
-	const levelPx = labelScreenPixels(zoom, 10.5 * z, 9, 12);
-	updateWorldText(label.nameLine, name.toUpperCase(), unitsPerPixel, namePx);
-	updateWorldText(label.levelTag, `LV ${level}`, unitsPerPixel, levelPx);
+	const cal = POI_LABEL_CALIBRATION;
+	const namePx = labelScreenPixels(zoom, cal.nameBasePx * z, cal.nameMinPx, cal.nameMaxPx);
+	const levelPx = labelScreenPixels(zoom, cal.levelBasePx * z, cal.levelMinPx, cal.levelMaxPx);
+	updateWorldText(label.nameLine, name.toUpperCase(), unitsPerPixel, namePx, {
+		fontWeight: 500,
+		outlineWidth: .07
+	});
+	updateWorldText(label.levelTag, `LV ${level}`, unitsPerPixel, levelPx, {
+		fontWeight: 450,
+		outlineWidth: .06
+	});
 	billboardToCamera(label.group, camera);
 	const gap = 1;
 	const nameLinePx = worldTextLineHeightPx(label.nameLine);
 	const levelLinePx = worldTextLineHeightPx(label.levelTag);
+	const nameWidthPx = worldTextBlockWidthCssPx(label.nameLine.mesh, unitsPerPixel);
 	const totalPx = nameLinePx + gap + levelLinePx;
 	const anchorY = totalPx * unitsPerPixel * .5;
 	stackLabelParts([{
 		object: label.nameLine.mesh,
-		pixelHeight: nameLinePx
+		pixelHeight: nameLinePx,
+		gapAfter: gap
 	}, {
 		object: label.levelTag.mesh,
 		pixelHeight: levelLinePx
@@ -46958,10 +47059,14 @@ function updatePoiWorldLabel(label, name, level, camera, renderer, zoom, worldPo
 		type: "poi",
 		name,
 		level,
-		screenWidth: Math.max(namePx, levelPx * 2),
+		screenWidth: Math.max(nameWidthPx, levelPx * 2),
 		screenHeight: totalPx,
-		textScreenWidth: namePx,
-		textScreenHeight: totalPx
+		textScreenWidth: nameWidthPx,
+		textScreenHeight: totalPx,
+		nameCssHeight: nameLinePx,
+		nameCssWidth: nameWidthPx,
+		totalLabelHeightCss: totalPx,
+		zoomFactor: z
 	};
 }
 function disposePoiWorldLabel(label) {
@@ -48448,7 +48553,7 @@ var AbyssalThreeRenderer = class {
 				m.opacity = .035 + clamp(Math.abs(frame.player.speed) / 180, 0, 1) * .08;
 			}
 		});
-		this.labelProbe.set(frame.player.x, 8, frame.player.y + 46);
+		this.labelProbe.set(frame.player.x, 8, frame.player.y + 50);
 		this.lastPlayerLabelDebug = updatePlayerWorldLabel(this.playerWorldLabel, {
 			playerName: frame.playerName,
 			playerLevel: frame.playerLevel,
@@ -48672,9 +48777,13 @@ var AbyssalThreeRenderer = class {
 		}
 		for (const marker of this.poiLabels) updatePoiWorldLabel(marker, marker.poiName, marker.poiLevel, this.camera, this.renderer, this.smoothedZoom, marker.group.position);
 		if (this.visualDebugEnabled && typeof window !== "undefined") {
-			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), pl = this.lastPlayerLabelDebug;
+			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), pl = this.lastPlayerLabelDebug, nl = this.lastNpcLabelDebug, zoomFactor = labelZoomFactor(this.smoothedZoom), shipBottom = new Vector3(frame.player.x, 6, frame.player.y + 26), labelTop = new Vector3(frame.player.x, 8, frame.player.y + 50 - (pl?.totalLabelHeightCss ?? 20) * labelUnitsPerPixel * .42), toScreenY = (v) => {
+				v.project(this.camera);
+				return (1 - v.y) * .5 * (this.canvas.clientHeight || 1);
+			}, shipToLabelGapCss = Math.max(0, toScreenY(labelTop) - toScreenY(shipBottom));
 			window.__ABYSSAL_VISUAL_DEBUG__ = {
 				zoom: this.smoothedZoom,
+				zoomFactor,
 				cameraHeight: cameraRig.height,
 				playerScale: PLAYER_SHIP_VISUALS[frame.shipId].scale,
 				worldPropCount: this.worldPropCount,
@@ -48684,7 +48793,7 @@ var AbyssalThreeRenderer = class {
 				activeWakeMeshes: playerWakeMeshes,
 				labelAnchor: {
 					x: frame.player.x,
-					y: frame.player.y + 46
+					y: frame.player.y + 50
 				},
 				quality: this.quality.id,
 				mapId: frame.mapId,
@@ -48706,6 +48815,14 @@ var AbyssalThreeRenderer = class {
 				},
 				playerLabel: {
 					name: pl?.name,
+					nameCssHeight: pl?.nameCssHeight,
+					nameCssWidth: pl?.nameCssWidth,
+					hpCssWidth: pl?.hpCssWidth,
+					hpCssHeight: pl?.hpCssHeight,
+					shieldCssWidth: pl?.shieldCssWidth,
+					shieldCssHeight: pl?.shieldCssHeight,
+					totalLabelHeightCss: pl?.totalLabelHeightCss,
+					shipToLabelGapCss,
 					screenWidth: pl?.screenWidth,
 					screenHeight: pl?.screenHeight,
 					hpBarScreenWidth: pl?.hpBarScreenWidth,
@@ -48715,7 +48832,18 @@ var AbyssalThreeRenderer = class {
 					unitsPerPixel: labelUnitsPerPixel,
 					anchor: this.labelProbe.clone()
 				},
-				npcLabel: this.lastNpcLabelDebug,
+				npcLabel: {
+					name: nl?.name,
+					nameCssHeight: nl?.nameCssHeight,
+					hpCssWidth: nl?.hpCssWidth,
+					hpCssHeight: nl?.hpCssHeight,
+					screenWidth: nl?.screenWidth,
+					screenHeight: nl?.screenHeight,
+					textScreenWidth: nl?.textScreenWidth,
+					textScreenHeight: nl?.textScreenHeight,
+					hpBarScreenWidth: nl?.hpBarScreenWidth,
+					hpBarScreenHeight: nl?.hpBarScreenHeight
+				},
 				poiLabel: this.poiLabels[0] ? {
 					name: this.poiLabels[0].poiName,
 					level: this.poiLabels[0].poiLevel
