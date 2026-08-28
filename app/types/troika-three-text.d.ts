@@ -4,6 +4,7 @@ declare module "troika-three-text" {
   export class Text extends Mesh {
     text: string;
     fontSize: number;
+    maxWidth?: number;
     color: string | number;
     outlineWidth: number | string;
     outlineColor: string | number;
@@ -14,6 +15,7 @@ declare module "troika-three-text" {
     curveRadius: number;
     renderOrder: number;
     material: MeshBasicMaterial;
+    textRenderInfo?: { blockBounds?: [number, number, number, number] };
     sync(callback?: () => void): void;
     dispose(): void;
   }
