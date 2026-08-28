@@ -21,7 +21,7 @@ test("V20.2.9 world label group architecture", async () => {
   assert.match(labels, /progressRow/);
   assert.match(labels, /guildTag/);
   assert.match(labels, /pirateRank/);
-  assert.match(labels, /generateMipmaps = false/);
+  assert.match(labels, /createWorldText/);
 
   assert.doesNotMatch(labels, /fillRect\(.*hp|hpGradient|strokeRect\(18,22/);
   assert.doesNotMatch(renderer, /createPlayerMarker|createHealthMarker|createIslandMarker/);
@@ -39,8 +39,7 @@ test("V20.2.9 world label group architecture", async () => {
 
 test("V20.2.9 labels avoid composite canvas HP bars", async () => {
   const labels = await readFile(join(root, "app/game/visuals/worldLabels.ts"), "utf8");
-  const paintBlock = labels.split("function paintPlayerIdentity")[0];
-  assert.doesNotMatch(paintBlock, /fillRect\(/);
+  assert.doesNotMatch(labels, /fillRect\(/);
   assert.match(labels, /setStatusBarSize\(label\.hpBar/);
   assert.match(labels, /setStatusBarSize\(label\.shieldBar/);
 });
@@ -57,6 +56,6 @@ test("V20.2.9 future rows stay hidden without fake data", async () => {
   const labels = await readFile(join(root, "app/game/visuals/worldLabels.ts"), "utf8");
   assert.match(labels, /extensionRow\.visible = false/);
   assert.match(labels, /progressRow\.visible = false/);
-  assert.match(labels, /guildTag\.sprite\.visible = false/);
-  assert.match(labels, /pirateRank\.sprite\.visible = false/);
+  assert.match(labels, /guildTag\.mesh\.visible = false/);
+  assert.match(labels, /pirateRank\.mesh\.visible = false/);
 });

@@ -6,14 +6,14 @@ import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-test("label sprites preserve canvas texture aspect ratio with screen-space sizing", async () => {
+test("label projection uses screen-space sizing and troika world text", async () => {
   const source = await readFile(join(root, "app/game/visuals/worldLabels.ts"), "utf8");
-  assert.match(source, /function setTextSpriteScreenSize/);
+  const worldText = await readFile(join(root, "app/game/visuals/worldText.ts"), "utf8");
   assert.match(source, /function worldUnitsPerPixel/);
-  assert.match(source, /sprite\.scale\.set\(h \* aspect, h, 1\)/);
-  assert.match(source, /createLabelCanvas/);
-  assert.match(source, /generateMipmaps = false/);
   assert.match(source, /labelZoomFactor/);
+  assert.match(source, /createWorldText/);
+  assert.match(worldText, /troika-three-text/);
+  assert.doesNotMatch(source, /new THREE\.CanvasTexture|createTextSprite/);
 });
 
 test("renderer resize tracks css layout and camera aspect", async () => {

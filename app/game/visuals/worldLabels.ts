@@ -1,9 +1,18 @@
 import * as THREE from "three";
+import {
+  createWorldText,
+  disposeWorldText,
+  updateWorldText,
+  WORLD_TEXT_ENGINE,
+  worldTextLineHeightPx,
+  type WorldText,
+} from "./worldText";
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
-const LABEL_CANVAS_DPR_CAP = 2;
 const LABEL_RENDER_ORDER = { player: 92, npc: 82, poi: 72 } as const;
+
+export { WORLD_TEXT_ENGINE };
 
 export type LabelDebugEntry = {
   type: "player" | "npc" | "poi";
@@ -13,19 +22,12 @@ export type LabelDebugEntry = {
   shieldRatio?: number;
   screenWidth: number;
   screenHeight: number;
+  textScreenWidth?: number;
+  textScreenHeight?: number;
   hpBarScreenWidth?: number;
   hpBarScreenHeight?: number;
   shieldBarScreenWidth?: number;
   shieldBarScreenHeight?: number;
-};
-
-type TextSprite = {
-  sprite: THREE.Sprite;
-  canvas: HTMLCanvasElement;
-  texture: THREE.CanvasTexture;
-  dpr: number;
-  cssWidth: number;
-  cssHeight: number;
 };
 
 type StatusBar = {
@@ -33,34 +35,6 @@ type StatusBar = {
   bg: THREE.Mesh;
   fill: THREE.Mesh;
 };
-
-function labelCanvasDpr() {
-  return typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, LABEL_CANVAS_DPR_CAP) : 1;
-}
-
-function createLabelCanvas(cssWidth: number, cssHeight: number) {
-  const dpr = labelCanvasDpr();
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(cssWidth * dpr));
-  canvas.height = Math.max(1, Math.round(cssHeight * dpr));
-  return { canvas, dpr };
-}
-
-function configureLabelTexture(texture: THREE.CanvasTexture) {
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = false;
-  texture.wrapS = THREE.ClampToEdgeWrapping;
-  texture.wrapT = THREE.ClampToEdgeWrapping;
-  texture.premultiplyAlpha = false;
-  return texture;
-}
-
-function beginLabelPaint(ctx: CanvasRenderingContext2D, dpr: number) {
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.globalAlpha = 1;
-}
 
 export function worldUnitsPerPixel(
   camera: THREE.PerspectiveCamera,
@@ -75,16 +49,16 @@ export function worldUnitsPerPixel(
   return Number.isFinite(units) && units > 0 ? units : 0.01;
 }
 
-/** MID zoom (~0.96) = 1.0 · OUT (~0.55) ≈ 0.82 · IN (~1.38) ≈ 1.08 */
+/** MID zoom (~0.96) = 1.0 · OUT (~0.55) ≈ 0.85 · IN (~1.38) ≈ 1.06 */
 export function labelZoomFactor(zoom: number) {
   const z = clamp(zoom, 0.55, 1.38);
   const mid = 0.96;
   if (z <= mid) {
     const t = (z - 0.55) / (mid - 0.55);
-    return 0.82 + t * 0.18;
+    return 0.85 + t * 0.15;
   }
   const t = (z - mid) / (1.38 - mid);
-  return 1 + t * 0.08;
+  return 1 + t * 0.06;
 }
 
 export function labelScreenPixels(zoom: number, base: number, min: number, max: number) {
@@ -95,119 +69,12 @@ export function billboardToCamera(object: THREE.Object3D, camera: THREE.Camera) 
   object.quaternion.copy(camera.quaternion);
 }
 
-function canvasTextureAspect(canvas: HTMLCanvasElement) {
-  return canvas.width / canvas.height;
-}
-
-function setTextSpriteScreenSize(
-  sprite: THREE.Sprite,
-  canvas: HTMLCanvasElement,
-  unitsPerPixel: number,
-  pixelHeight: number,
-) {
-  const aspect = canvasTextureAspect(canvas);
-  const h = Math.max(1, pixelHeight) * unitsPerPixel;
-  sprite.scale.set(h * aspect, h, 1);
-}
-
-function createTextSprite(cssWidth: number, cssHeight: number, renderOrder: number): TextSprite {
-  const { canvas, dpr } = createLabelCanvas(cssWidth, cssHeight);
-  const texture = configureLabelTexture(new THREE.CanvasTexture(canvas));
-  const material = new THREE.SpriteMaterial({
-    map: texture,
-    transparent: true,
-    depthTest: false,
-    depthWrite: false,
-  });
-  const sprite = new THREE.Sprite(material);
-  sprite.center.set(0.5, 0.5);
-  sprite.renderOrder = renderOrder;
-  return { sprite, canvas, texture, dpr, cssWidth, cssHeight };
-}
-
-function paintOutlinedText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  x: number,
-  y: number,
-  fill: string,
-  font: string,
-  align: CanvasTextAlign = "center",
-) {
-  ctx.textAlign = align;
-  ctx.textBaseline = "middle";
-  ctx.font = font;
-  ctx.strokeStyle = "rgba(0,0,0,.88)";
-  ctx.lineWidth = 3;
-  ctx.strokeText(text, x, y);
-  ctx.fillStyle = fill;
-  ctx.fillText(text, x, y);
-}
-
-function measureText(font: string, text: string) {
-  if (typeof document === "undefined") return text.length * 8;
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return text.length * 8;
-  ctx.font = font;
-  return ctx.measureText(text).width;
-}
-
-function paintPlayerIdentity(sprite: TextSprite, playerName: string, level: number) {
-  const nameText = playerName.toUpperCase();
-  const levelText = `LV ${level}`;
-  const nameFont = "700 14px Georgia,serif";
-  const levelFont = "600 10px system-ui,sans-serif";
-  const nameWidth = Math.ceil(measureText(nameFont, nameText));
-  const levelWidth = Math.ceil(measureText(levelFont, levelText));
-  const cssWidth = Math.max(80, nameWidth + levelWidth + 16);
-  const cssHeight = 18;
-  if (cssWidth !== sprite.cssWidth || cssHeight !== sprite.cssHeight) {
-    sprite.cssWidth = cssWidth;
-    sprite.cssHeight = cssHeight;
-    sprite.canvas.width = Math.round(cssWidth * sprite.dpr);
-    sprite.canvas.height = Math.round(cssHeight * sprite.dpr);
-  }
-  const ctx = sprite.canvas.getContext("2d");
-  if (!ctx) return;
-  beginLabelPaint(ctx, sprite.dpr);
-  ctx.clearRect(0, 0, cssWidth, cssHeight);
-  paintOutlinedText(ctx, nameText, 6, cssHeight * 0.5, "#f4ead8", nameFont, "left");
-  if (level > 0) paintOutlinedText(ctx, levelText, cssWidth - 6, cssHeight * 0.5, "rgba(188,210,205,.82)", levelFont, "right");
-  sprite.texture.needsUpdate = true;
-}
-
-function paintNpcIdentity(sprite: TextSprite, name: string, level: number, selected: boolean) {
-  const text = `${name}   LV ${level}`;
-  const font = selected ? "700 13px system-ui,sans-serif" : "700 12px system-ui,sans-serif";
-  resizeTextSprite(sprite, text, font, selected ? "#fff4dc" : "#f8ead1", 5, 2);
-}
-
-function resizeTextSprite(sprite: TextSprite, text: string, font: string, fill: string, padX = 6, padY = 3) {
-  const textWidth = Math.ceil(measureText(font, text));
-  const cssWidth = Math.max(24, textWidth + padX * 2);
-  const cssHeight = Math.max(14, Math.ceil(parseInt(font, 10) || 14) + padY * 2);
-  if (cssWidth !== sprite.cssWidth || cssHeight !== sprite.cssHeight) {
-    sprite.cssWidth = cssWidth;
-    sprite.cssHeight = cssHeight;
-    sprite.canvas.width = Math.round(cssWidth * sprite.dpr);
-    sprite.canvas.height = Math.round(cssHeight * sprite.dpr);
-    sprite.texture.needsUpdate = true;
-  }
-  const ctx = sprite.canvas.getContext("2d");
-  if (!ctx) return;
-  beginLabelPaint(ctx, sprite.dpr);
-  ctx.clearRect(0, 0, cssWidth, cssHeight);
-  paintOutlinedText(ctx, text, cssWidth * 0.5, cssHeight * 0.5, fill, font);
-  sprite.texture.needsUpdate = true;
-}
-
-function createStatusBar(fillColor: number, borderColor: number): StatusBar {
+function createStatusBar(fillColor: number): StatusBar {
   const group = new THREE.Group();
   const geometry = new THREE.PlaneGeometry(1, 1);
   const bg = new THREE.Mesh(
     geometry,
-    new THREE.MeshBasicMaterial({ color: 0x02120c, transparent: true, opacity: 0.92, depthTest: false, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ color: 0x02120c, transparent: true, opacity: 0.88, depthTest: false, depthWrite: false }),
   );
   const fill = new THREE.Mesh(
     geometry,
@@ -222,7 +89,7 @@ function setStatusBarSize(bar: StatusBar, unitsPerPixel: number, pixelWidth: num
   const safeRatio = clamp(ratio, 0, 1);
   const width = Math.max(4, pixelWidth) * unitsPerPixel;
   const height = Math.max(2, pixelHeight) * unitsPerPixel;
-  const inset = Math.max(0.5, 1 * unitsPerPixel);
+  const inset = Math.max(0.4, 0.8 * unitsPerPixel);
   bar.bg.scale.set(width, height, 1);
   const fillWidth = Math.max(inset, (width - inset * 2) * safeRatio);
   bar.fill.scale.set(fillWidth, Math.max(inset, height - inset * 2), 1);
@@ -233,7 +100,7 @@ function stackLabelParts(
   parts: Array<{ object: THREE.Object3D; pixelHeight: number; visible?: boolean }>,
   unitsPerPixel: number,
   anchorY: number,
-  gapPx = 2,
+  gapPx = 1,
 ) {
   let cursor = anchorY;
   for (const part of parts) {
@@ -242,11 +109,6 @@ function stackLabelParts(
     part.object.position.set(0, cursor - height * 0.5, 0);
     cursor -= height + gapPx * unitsPerPixel;
   }
-}
-
-function disposeTextSprite(sprite: TextSprite) {
-  sprite.texture.dispose();
-  sprite.sprite.material.dispose();
 }
 
 function disposeStatusBar(bar: StatusBar) {
@@ -260,14 +122,16 @@ function disposeStatusBar(bar: StatusBar) {
 
 export type PlayerWorldLabel = {
   group: THREE.Group;
-  guildTag: TextSprite;
-  playerName: TextSprite;
-  pirateRank: TextSprite;
-  levelTag: TextSprite;
+  identityRow: THREE.Group;
+  guildTag: WorldText;
+  playerName: WorldText;
+  pirateRank: WorldText;
   hpBar: StatusBar;
   shieldBar: StatusBar;
   progressRow: THREE.Group;
   extensionRow: THREE.Group;
+  qualityRow: THREE.Group;
+  qualityTag: WorldText;
   lastKey: string;
 };
 
@@ -275,40 +139,41 @@ export function createPlayerWorldLabel(): PlayerWorldLabel {
   const group = new THREE.Group();
   group.name = "PlayerWorldLabelGroup";
   const order = LABEL_RENDER_ORDER.player;
-  const guildTag = createTextSprite(32, 14, order);
-  const playerName = createTextSprite(120, 18, order + 1);
-  const pirateRank = createTextSprite(32, 14, order + 2);
-  const levelTag = createTextSprite(40, 12, order + 3);
-  const hpBar = createStatusBar(0x3cb654, 0xd6bc78);
-  const shieldBar = createStatusBar(0x3a8ec8, 0x8ad4e8);
+  const identityRow = new THREE.Group();
+  identityRow.name = "IdentityRow";
+  const guildTag = createWorldText(order, { color: "#b8c8c4", fontWeight: 500, anchorX: "right" });
+  const playerName = createWorldText(order + 1, { color: "#f4ead8", fontWeight: 700 });
+  const pirateRank = createWorldText(order + 2, { color: "#c8d8dc", fontWeight: 500, anchorX: "left" });
+  const hpBar = createStatusBar(0x3cb654);
+  const shieldBar = createStatusBar(0x3a8ec8);
   const progressRow = new THREE.Group();
   progressRow.name = "ProgressStatus";
   progressRow.visible = false;
   const extensionRow = new THREE.Group();
   extensionRow.name = "ExtensionRow";
   extensionRow.visible = false;
-  guildTag.sprite.visible = false;
-  pirateRank.sprite.visible = false;
-  group.add(
-    guildTag.sprite,
-    playerName.sprite,
-    pirateRank.sprite,
-    levelTag.sprite,
-    hpBar.group,
-    shieldBar.group,
-    progressRow,
-    extensionRow,
-  );
+  const qualityRow = new THREE.Group();
+  qualityRow.name = "QualityRow";
+  qualityRow.visible = false;
+  const qualityTag = createWorldText(order + 5, { color: "#9ab4b8", fontWeight: 500, outlineWidth: 0.08 });
+  qualityTag.mesh.visible = false;
+  guildTag.mesh.visible = false;
+  pirateRank.mesh.visible = false;
+  identityRow.add(guildTag.mesh, playerName.mesh, pirateRank.mesh);
+  qualityRow.add(qualityTag.mesh);
+  group.add(identityRow, hpBar.group, shieldBar.group, progressRow, extensionRow, qualityRow);
   return {
     group,
+    identityRow,
     guildTag,
     playerName,
     pirateRank,
-    levelTag,
     hpBar,
     shieldBar,
     progressRow,
     extensionRow,
+    qualityRow,
+    qualityTag,
     lastKey: "",
   };
 }
@@ -337,22 +202,24 @@ export function updatePlayerWorldLabel(
   const hpRatio = clamp(hp / maxHp, 0, 1);
   const shieldRatio = maxShield > 0 ? clamp(shield / maxShield, 0, 1) : 0;
   const showShield = maxShield > 0;
-  const key = `${frame.playerName}|${frame.playerLevel}|${hp}|${shield}|${showShield ? 1 : 0}`;
+  const key = `${frame.playerName}|${hp}|${shield}|${showShield ? 1 : 0}`;
   if (key !== label.lastKey) {
     label.lastKey = key;
-    paintPlayerIdentity(label.playerName, frame.playerName, frame.playerLevel);
+    updateWorldText(label.playerName, frame.playerName.toUpperCase(), 1, label.playerName.cssFontSize);
   }
 
   const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
   const z = labelZoomFactor(zoom);
-  const namePx = labelScreenPixels(zoom, 14 * z, 12, 16);
-  const hpBarW = labelScreenPixels(zoom, 118 * z, 90, 140);
-  const hpBarH = labelScreenPixels(zoom, 7 * z, 5, 9);
+  const namePx = labelScreenPixels(zoom, 13.5 * z, 12, 15);
+  const hpBarW = labelScreenPixels(zoom, 102 * z, 90, 115);
+  const hpBarH = labelScreenPixels(zoom, 5 * z, 4, 6);
   const shieldBarW = hpBarW;
-  const shieldBarH = labelScreenPixels(zoom, 6 * z, 4, 8);
+  const shieldBarH = labelScreenPixels(zoom, 4 * z, 3, 5);
 
-  setTextSpriteScreenSize(label.playerName.sprite, label.playerName.canvas, unitsPerPixel, namePx);
-  label.levelTag.sprite.visible = false;
+  updateWorldText(label.playerName, frame.playerName.toUpperCase(), unitsPerPixel, namePx, {
+    color: "#f4ead8",
+    fontWeight: 700,
+  });
 
   setStatusBarSize(label.hpBar, unitsPerPixel, hpBarW, hpBarH, hpRatio);
   if (showShield) {
@@ -364,24 +231,22 @@ export function updatePlayerWorldLabel(
 
   billboardToCamera(label.group, camera);
 
-  const gap = 2;
-  const totalPx = namePx + gap + hpBarH + gap + (showShield ? shieldBarH + gap : 0);
+  const barGap = 1;
+  const nameLinePx = worldTextLineHeightPx(label.playerName);
+  const totalPx = nameLinePx + barGap + hpBarH + barGap + (showShield ? shieldBarH + barGap : 0);
   const anchorY = totalPx * unitsPerPixel * 0.5;
   stackLabelParts(
     [
-      { object: label.playerName.sprite, pixelHeight: namePx },
+      { object: label.identityRow, pixelHeight: nameLinePx },
       { object: label.hpBar.group, pixelHeight: hpBarH },
       { object: label.shieldBar.group, pixelHeight: shieldBarH, visible: showShield },
     ],
     unitsPerPixel,
     anchorY,
-    gap,
+    barGap,
   );
 
   label.group.position.copy(worldPosition);
-
-  const screenHeight = totalPx;
-  const screenWidth = Math.max(hpBarW, label.playerName.cssWidth);
 
   return {
     type: "player",
@@ -389,8 +254,10 @@ export function updatePlayerWorldLabel(
     level: frame.playerLevel,
     hpRatio,
     shieldRatio: showShield ? shieldRatio : undefined,
-    screenWidth,
-    screenHeight,
+    screenWidth: hpBarW,
+    screenHeight: totalPx,
+    textScreenWidth: hpBarW,
+    textScreenHeight: nameLinePx,
     hpBarScreenWidth: hpBarW,
     hpBarScreenHeight: hpBarH,
     shieldBarScreenWidth: showShield ? shieldBarW : undefined,
@@ -399,10 +266,10 @@ export function updatePlayerWorldLabel(
 }
 
 export function disposePlayerWorldLabel(label: PlayerWorldLabel) {
-  disposeTextSprite(label.guildTag);
-  disposeTextSprite(label.playerName);
-  disposeTextSprite(label.pirateRank);
-  disposeTextSprite(label.levelTag);
+  disposeWorldText(label.guildTag);
+  disposeWorldText(label.playerName);
+  disposeWorldText(label.pirateRank);
+  disposeWorldText(label.qualityTag);
   disposeStatusBar(label.hpBar);
   disposeStatusBar(label.shieldBar);
 }
@@ -411,8 +278,9 @@ export function disposePlayerWorldLabel(label: PlayerWorldLabel) {
 
 export type NpcWorldLabel = {
   group: THREE.Group;
-  nameLine: TextSprite;
-  levelTag: TextSprite;
+  identityRow: THREE.Group;
+  nameLine: WorldText;
+  levelTag: WorldText;
   hpBar: StatusBar;
   shieldBar: StatusBar;
   lastKey: string;
@@ -422,13 +290,17 @@ export function createNpcWorldLabel(hostile: boolean): NpcWorldLabel {
   const group = new THREE.Group();
   group.name = "NpcWorldLabelGroup";
   const order = LABEL_RENDER_ORDER.npc;
-  const nameLine = createTextSprite(100, 16, order);
-  const levelTag = createTextSprite(36, 12, order + 1);
-  const hpBar = createStatusBar(hostile ? 0xd84c45 : 0x3cb654, hostile ? 0xff9a58 : 0xc1dead);
-  const shieldBar = createStatusBar(0x3a8ec8, 0x8ad4e8);
+  const identityRow = new THREE.Group();
+  identityRow.name = "IdentityRow";
+  const nameLine = createWorldText(order, { color: hostile ? "#f8ead1" : "#e8f4e8", fontWeight: 700 });
+  const levelTag = createWorldText(order + 1, { color: "#b8ccc8", fontWeight: 600 });
+  levelTag.mesh.visible = false;
+  const hpBar = createStatusBar(hostile ? 0xd84c45 : 0x3cb654);
+  const shieldBar = createStatusBar(0x3a8ec8);
   shieldBar.group.visible = false;
-  group.add(nameLine.sprite, levelTag.sprite, hpBar.group, shieldBar.group);
-  return { group, nameLine, levelTag, hpBar, shieldBar, lastKey: "" };
+  identityRow.add(nameLine.mesh, levelTag.mesh);
+  group.add(identityRow, hpBar.group, shieldBar.group);
+  return { group, identityRow, nameLine, levelTag, hpBar, shieldBar, lastKey: "" };
 }
 
 export function updateNpcWorldLabel(
@@ -444,29 +316,34 @@ export function updateNpcWorldLabel(
   worldPosition: THREE.Vector3,
 ): LabelDebugEntry {
   const ratio = clamp(hp / Math.max(1, maxHp), 0, 1);
-  const key = `${name}|${level}|${hp}|${selected ? 1 : 0}`;
+  const display = `${name}   LV ${level}`;
+  const key = `${display}|${hp}|${selected ? 1 : 0}`;
   if (key !== label.lastKey) {
     label.lastKey = key;
-    paintNpcIdentity(label.nameLine, name, level, selected);
+    updateWorldText(label.nameLine, display, 1, label.nameLine.cssFontSize);
   }
 
   const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
   const z = labelZoomFactor(zoom);
-  const namePx = labelScreenPixels(zoom, (selected ? 14 : 13) * z, 11, 16);
-  const barW = labelScreenPixels(zoom, (selected ? 100 : 92) * z, 80, 110);
-  const barH = labelScreenPixels(zoom, 6 * z, 5, 7);
+  const namePx = labelScreenPixels(zoom, (selected ? 13.5 : 12.5) * z, 11, 15);
+  const barW = labelScreenPixels(zoom, (selected ? 96 : 88) * z, 80, 110);
+  const barH = labelScreenPixels(zoom, 5 * z, 4, 6);
 
-  setTextSpriteScreenSize(label.nameLine.sprite, label.nameLine.canvas, unitsPerPixel, namePx);
-  label.levelTag.sprite.visible = false;
+  updateWorldText(label.nameLine, display, unitsPerPixel, namePx, {
+    color: selected ? "#fff4dc" : "#f8ead1",
+    fontWeight: selected ? 700 : 600,
+  });
+
   setStatusBarSize(label.hpBar, unitsPerPixel, barW, barH, ratio);
   billboardToCamera(label.group, camera);
 
-  const gap = 2;
-  const totalPx = namePx + gap + barH;
+  const nameLinePx = worldTextLineHeightPx(label.nameLine);
+  const gap = 1;
+  const totalPx = nameLinePx + gap + barH;
   const anchorY = totalPx * unitsPerPixel * 0.5;
   stackLabelParts(
     [
-      { object: label.nameLine.sprite, pixelHeight: namePx },
+      { object: label.identityRow, pixelHeight: nameLinePx },
       { object: label.hpBar.group, pixelHeight: barH },
     ],
     unitsPerPixel,
@@ -483,14 +360,16 @@ export function updateNpcWorldLabel(
     hpRatio: ratio,
     screenWidth: barW,
     screenHeight: totalPx,
+    textScreenWidth: barW,
+    textScreenHeight: nameLinePx,
     hpBarScreenWidth: barW,
     hpBarScreenHeight: barH,
   };
 }
 
 export function disposeNpcWorldLabel(label: NpcWorldLabel) {
-  disposeTextSprite(label.nameLine);
-  disposeTextSprite(label.levelTag);
+  disposeWorldText(label.nameLine);
+  disposeWorldText(label.levelTag);
   disposeStatusBar(label.hpBar);
   disposeStatusBar(label.shieldBar);
 }
@@ -499,8 +378,8 @@ export function disposeNpcWorldLabel(label: NpcWorldLabel) {
 
 export type PoiWorldLabel = {
   group: THREE.Group;
-  nameLine: TextSprite;
-  levelTag: TextSprite;
+  nameLine: WorldText;
+  levelTag: WorldText;
   poiName: string;
   poiLevel: number;
   lastKey: string;
@@ -510,9 +389,9 @@ export function createPoiWorldLabel(name = "", level = 1): PoiWorldLabel {
   const group = new THREE.Group();
   group.name = "PoiWorldLabelGroup";
   const order = LABEL_RENDER_ORDER.poi;
-  const nameLine = createTextSprite(100, 18, order);
-  const levelTag = createTextSprite(48, 12, order + 1);
-  group.add(nameLine.sprite, levelTag.sprite);
+  const nameLine = createWorldText(order, { color: "#e8f6f8", fontWeight: 700 });
+  const levelTag = createWorldText(order + 1, { color: "#b4d0d8", fontWeight: 600, outlineWidth: 0.1 });
+  group.add(nameLine.mesh, levelTag.mesh);
   return { group, nameLine, levelTag, poiName: name, poiLevel: level, lastKey: "" };
 }
 
@@ -528,26 +407,29 @@ export function updatePoiWorldLabel(
   const key = `${name}|${level}`;
   if (key !== label.lastKey) {
     label.lastKey = key;
-    resizeTextSprite(label.nameLine, name.toUpperCase(), "700 14px system-ui,sans-serif", "#e8f6f8", 6, 3);
-    resizeTextSprite(label.levelTag, `LV ${level}`, "600 11px system-ui,sans-serif", "rgba(180,220,228,.9)", 4, 2);
+    updateWorldText(label.nameLine, name.toUpperCase(), 1, label.nameLine.cssFontSize);
+    updateWorldText(label.levelTag, `LV ${level}`, 1, label.levelTag.cssFontSize);
   }
 
   const unitsPerPixel = worldUnitsPerPixel(camera, renderer, worldPosition);
   const z = labelZoomFactor(zoom);
-  const namePx = labelScreenPixels(zoom, 15 * z, 13, 17);
-  const levelPx = labelScreenPixels(zoom, 11 * z, 10, 13);
+  const namePx = labelScreenPixels(zoom, 14 * z, 13, 17);
+  const levelPx = labelScreenPixels(zoom, 10.5 * z, 9, 12);
 
-  setTextSpriteScreenSize(label.nameLine.sprite, label.nameLine.canvas, unitsPerPixel, namePx);
-  setTextSpriteScreenSize(label.levelTag.sprite, label.levelTag.canvas, unitsPerPixel, levelPx);
+  updateWorldText(label.nameLine, name.toUpperCase(), unitsPerPixel, namePx);
+  updateWorldText(label.levelTag, `LV ${level}`, unitsPerPixel, levelPx);
+
   billboardToCamera(label.group, camera);
 
-  const gap = 2;
-  const totalPx = namePx + gap + levelPx;
+  const gap = 1;
+  const nameLinePx = worldTextLineHeightPx(label.nameLine);
+  const levelLinePx = worldTextLineHeightPx(label.levelTag);
+  const totalPx = nameLinePx + gap + levelLinePx;
   const anchorY = totalPx * unitsPerPixel * 0.5;
   stackLabelParts(
     [
-      { object: label.nameLine.sprite, pixelHeight: namePx },
-      { object: label.levelTag.sprite, pixelHeight: levelPx },
+      { object: label.nameLine.mesh, pixelHeight: nameLinePx },
+      { object: label.levelTag.mesh, pixelHeight: levelLinePx },
     ],
     unitsPerPixel,
     anchorY,
@@ -560,12 +442,26 @@ export function updatePoiWorldLabel(
     type: "poi",
     name,
     level,
-    screenWidth: Math.max(label.nameLine.cssWidth, label.levelTag.cssWidth),
+    screenWidth: Math.max(namePx, levelPx * 2),
     screenHeight: totalPx,
+    textScreenWidth: namePx,
+    textScreenHeight: totalPx,
   };
 }
 
 export function disposePoiWorldLabel(label: PoiWorldLabel) {
-  disposeTextSprite(label.nameLine);
-  disposeTextSprite(label.levelTag);
+  disposeWorldText(label.nameLine);
+  disposeWorldText(label.levelTag);
+}
+
+/** Count CanvasTexture-based world label sprites — must stay 0. */
+export function countCanvasWorldTextSprites(root: THREE.Object3D) {
+  let count = 0;
+  root.traverse((object) => {
+    if (object instanceof THREE.Sprite) {
+      const map = (object.material as THREE.SpriteMaterial).map;
+      if (map instanceof THREE.CanvasTexture) count += 1;
+    }
+  });
+  return count;
 }

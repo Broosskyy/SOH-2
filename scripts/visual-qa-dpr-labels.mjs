@@ -6,7 +6,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const baseUrl = process.env.VISUAL_QA_URL ?? "http://127.0.0.1:8787";
-const outDir = join(import.meta.dirname, "..", "artifacts", "v20.2.9-label-qa");
+const outDir = join(import.meta.dirname, "..", "artifacts", "v20.2.10-world-status");
 
 const CHROME_UA =
   "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36";
@@ -20,6 +20,7 @@ const cases = [
   { file: "06-small-landscape.png", width: 1280, height: 720, dpr: 2, zoom: 0.96 },
   { file: "07-wide-landscape.png", width: 2340, height: 1080, dpr: 2, zoom: 0.96 },
   { file: "08-moving-player.png", width: 1920, height: 1080, dpr: 2, zoom: 0.96, move: true },
+  { file: "09-player-npc-poi.png", width: 2400, height: 1080, dpr: 2, zoom: 0.96 },
 ];
 
 const { chromium } = await import("playwright");
