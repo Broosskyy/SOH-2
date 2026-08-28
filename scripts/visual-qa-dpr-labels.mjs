@@ -12,11 +12,11 @@ const CHROME_UA =
   "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36";
 
 const cases = [
-  { file: "01-mobile-mid-dpr1.png", width: 2400, height: 1080, dpr: 1, zoom: 0.96 },
-  { file: "02-mobile-mid-dpr2.png", width: 2400, height: 1080, dpr: 2, zoom: 0.96 },
-  { file: "03-mobile-mid-dpr3.png", width: 2400, height: 1080, dpr: 3, zoom: 0.96 },
-  { file: "04-mobile-out-dpr2.png", width: 2400, height: 1080, dpr: 2, zoom: 0.6 },
-  { file: "05-mobile-in-dpr2.png", width: 2400, height: 1080, dpr: 2, zoom: 1.3 },
+  { file: "01-mid-dpr1.png", width: 2400, height: 1080, dpr: 1, zoom: 0.96 },
+  { file: "02-mid-dpr2.png", width: 2400, height: 1080, dpr: 2, zoom: 0.96 },
+  { file: "03-mid-dpr3.png", width: 2400, height: 1080, dpr: 3, zoom: 0.96 },
+  { file: "04-out-dpr2.png", width: 2400, height: 1080, dpr: 2, zoom: 0.6 },
+  { file: "05-in-dpr2.png", width: 2400, height: 1080, dpr: 2, zoom: 1.3 },
   { file: "06-small-landscape.png", width: 1280, height: 720, dpr: 2, zoom: 0.96 },
   { file: "07-wide-landscape.png", width: 2340, height: 1080, dpr: 2, zoom: 0.96 },
   { file: "08-moving-player.png", width: 1920, height: 1080, dpr: 2, zoom: 0.96, move: true },
@@ -37,7 +37,7 @@ for (const c of cases) {
   });
   const page = await context.newPage();
   await page.goto(`${baseUrl}/?autoStart=1&visualDebug=1`, {
-    waitUntil: "networkidle",
+    waitUntil: "domcontentloaded",
     timeout: 120000,
   });
   await page.waitForSelector("main.game-shell", { timeout: 120000 });
