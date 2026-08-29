@@ -6,7 +6,7 @@ extends RefCounted
 enum Profile { DESKTOP, MOBILE_LANDSCAPE, MOBILE_PORTRAIT }
 
 const BUILD_LABEL := "G0.4.1-VISUAL-PARITY"
-const GIT_SHA := "G0.4.1"
+const GIT_SHA := "21b570d"
 
 const RATIO_TOP_BAR_H := 0.072
 const RATIO_PROFILE_W := 0.12
