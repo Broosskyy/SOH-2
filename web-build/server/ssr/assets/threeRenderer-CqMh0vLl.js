@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-CdnSD1rr.js";
+import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-DVhY7PQK.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -40188,25 +40188,25 @@ function finalizeBufferGeometry(geometry, label = "geometry") {
 var DENSITY_TIERS = {
 	LOW: {
 		island: 4,
-		open: 9,
+		open: 8,
 		rocks: 8,
 		shoreline: 2
 	},
 	MEDIUM: {
-		island: 6,
-		open: 14,
+		island: 5,
+		open: 10,
 		rocks: 10,
 		shoreline: 3
 	},
 	HIGH: {
-		island: 7,
-		open: 18,
+		island: 6,
+		open: 12,
 		rocks: 12,
 		shoreline: 4
 	},
 	ULTRA: {
-		island: 8,
-		open: 22,
+		island: 7,
+		open: 14,
 		rocks: 14,
 		shoreline: 5
 	}
@@ -40222,6 +40222,332 @@ function resolveWorldDensityCounts(quality, mapWidth, mapHeight) {
 		openOceanProps: Math.max(6, Math.round(tier.open * areaFactor * density)),
 		islandRockCount: Math.max(6, Math.round(tier.rocks * Math.max(.75, density))),
 		shorelinePropsPerIsland: Math.max(1, Math.round(tier.shoreline * Math.max(.8, density)))
+	};
+}
+//#endregion
+//#region app/game/visuals/worldComposition.ts
+var seeded$1 = (seed) => {
+	const x = Math.sin(seed * 91.731) * 43758.5453;
+	return x - Math.floor(x);
+};
+function islandNormDistance(x, z, isle) {
+	return Math.hypot((x - isle.x) / isle.rx, (z - isle.y) / isle.ry);
+}
+function nearestIslandDistance(x, z, islands) {
+	if (!islands.length) return Number.POSITIVE_INFINITY;
+	return Math.min(...islands.map((isle) => islandNormDistance(x, z, isle)));
+}
+function pointOnIslandRing(isle, angle, radiusScale) {
+	return {
+		x: isle.x + Math.cos(angle) * isle.rx * radiusScale,
+		z: isle.y + Math.sin(angle) * isle.ry * radiusScale
+	};
+}
+function buildMapCompositionPlan(map, density) {
+	const props = [];
+	let seedCursor = map.id.length * 97;
+	for (const [index, isle] of map.islands.entries()) {
+		if (isle.port) {
+			const pierAngle = index * .55 + .2;
+			const pier = pointOnIslandRing(isle, pierAngle, .92);
+			props.push({
+				kind: "pier",
+				x: pier.x,
+				z: pier.z,
+				rotationY: pierAngle + Math.PI * .5,
+				scale: 1,
+				zone: "portCluster",
+				seed: seedCursor++
+			});
+			const clusterKinds = [
+				"crate",
+				"barrel",
+				"buoy",
+				"crate",
+				"barrel",
+				"lighthouse"
+			];
+			const clusterCount = Math.min(6, density.islandPropsPerIsland + 1);
+			for (let c = 0; c < clusterCount; c++) {
+				const a = pierAngle + (c - clusterCount * .5) * .22;
+				const p = pointOnIslandRing(isle, a, isle.rx * (1.02 + c % 2 * .05) / isle.rx);
+				props.push({
+					kind: clusterKinds[c % clusterKinds.length],
+					x: p.x + (seeded$1(seedCursor) - .5) * 18,
+					z: p.z + (seeded$1(seedCursor + 1) - .5) * 18,
+					rotationY: a + seeded$1(seedCursor + 2) * .4,
+					scale: .82 + seeded$1(seedCursor + 3) * .28,
+					zone: "portCluster",
+					seed: seedCursor
+				});
+				seedCursor += 4;
+			}
+		}
+		const ringKinds = isle.port ? [
+			"buoy",
+			"rock",
+			"reef",
+			"driftwood",
+			"wreck",
+			"mast"
+		] : [
+			"rock",
+			"reef",
+			"driftwood",
+			"wreck",
+			"mast",
+			"buoy"
+		];
+		for (let p = 0; p < density.islandPropsPerIsland; p++) {
+			const a = index * .83 + p * (Math.PI * 2 / Math.max(4, density.islandPropsPerIsland));
+			const point = pointOnIslandRing(isle, a, 1.04 + p % 3 * .06);
+			props.push({
+				kind: ringKinds[p % ringKinds.length],
+				x: point.x,
+				z: point.z,
+				rotationY: a + seeded$1(seedCursor) * .45,
+				scale: .78 + seeded$1(seedCursor + 1) * .34,
+				zone: "islandRing",
+				y: ringKinds[p % ringKinds.length] === "reef" ? -1 : 0,
+				seed: seedCursor
+			});
+			seedCursor += 2;
+		}
+		for (let s = 0; s < density.shorelinePropsPerIsland; s++) {
+			const a = index * .67 + s * 1.23;
+			const point = pointOnIslandRing(isle, a, 1.16 + s % 2 * .05);
+			const kind = [
+				"rock",
+				"reef",
+				"buoy",
+				"driftwood",
+				"wreck",
+				"mast"
+			][(s + index) % 6];
+			props.push({
+				kind,
+				x: point.x,
+				z: point.z,
+				rotationY: a + seeded$1(seedCursor) * .35,
+				scale: .7 + seeded$1(seedCursor + 1) * .28,
+				zone: "shoreline",
+				y: kind === "reef" ? -1 : 0,
+				seed: seedCursor
+			});
+			seedCursor += 2;
+		}
+	}
+	const lanes = [];
+	for (let t = 0; t < Math.min(4, map.islands.length - 1); t++) {
+		const a = map.islands[t];
+		const b = map.islands[(t + 1) % map.islands.length];
+		lanes.push({
+			x: (a.x + b.x) * .5,
+			z: (a.y + b.y) * .5
+		});
+		for (let c = 0; c < 2; c++) {
+			const angle = seeded$1(t * 11 + c) * Math.PI * 2;
+			const radius = 34 + seeded$1(t * 13 + c) * 48;
+			props.push({
+				kind: [
+					"wreck",
+					"driftwood",
+					"crate",
+					"barrel"
+				][(t + c) % 4],
+				x: lanes[lanes.length - 1].x + Math.cos(angle) * radius,
+				z: lanes[lanes.length - 1].z + Math.sin(angle) * radius,
+				rotationY: angle,
+				scale: .66 + seeded$1(t * 15 + c) * .24,
+				zone: "coastalTransition",
+				seed: seedCursor++
+			});
+		}
+	}
+	const openKinds = [
+		"crate",
+		"barrel",
+		"driftwood",
+		"wreck",
+		"buoy",
+		"mast",
+		"reef"
+	];
+	const clusterCenters = [];
+	for (let i = 0; i < Math.max(4, Math.round(density.openOceanProps / 4)); i++) {
+		const lane = lanes[i % Math.max(1, lanes.length)];
+		const x = lane ? lane.x + (seeded$1(i + 81) - .5) * map.width * .18 : map.width * (.14 + seeded$1(i + 81) * .72);
+		const z = lane ? lane.z + (seeded$1(i + 121) - .5) * map.height * .18 : map.height * (.12 + seeded$1(i + 121) * .76);
+		const dist = nearestIslandDistance(x, z, map.islands);
+		if (dist < 1.18 || dist > 2.4) continue;
+		clusterCenters.push({
+			x,
+			z
+		});
+		const clusterSize = 2 + Math.floor(seeded$1(i + 201) * 2);
+		for (let c = 0; c < clusterSize; c++) {
+			const angle = seeded$1(i * 17 + c) * Math.PI * 2;
+			const radius = 16 + seeded$1(i * 19 + c) * 34;
+			props.push({
+				kind: openKinds[(i + c) % openKinds.length],
+				x: x + Math.cos(angle) * radius,
+				z: z + Math.sin(angle) * radius,
+				rotationY: seeded$1(i * 221 + c) * Math.PI * 2,
+				scale: .62 + seeded$1(i * 301 + c) * .34,
+				zone: "openSeaCluster",
+				seed: seedCursor++
+			});
+		}
+	}
+	const encounterKinds = [
+		"wreck",
+		"crate",
+		"barrel",
+		"rock",
+		"reef",
+		"driftwood",
+		"buoy"
+	];
+	for (const [idx, spawn] of map.enemies.entries()) {
+		for (let c = 0; c < 4; c++) {
+			const angle = seeded$1(idx * 13 + c) * Math.PI * 2;
+			const radius = 24 + seeded$1(idx * 17 + c) * 58;
+			props.push({
+				kind: encounterKinds[(idx + c) % encounterKinds.length],
+				x: spawn.x + Math.cos(angle) * radius,
+				z: spawn.y + Math.sin(angle) * radius,
+				rotationY: angle + seeded$1(idx * 29 + c) * .5,
+				scale: .68 + seeded$1(idx * 31 + c) * .3,
+				zone: "encounter",
+				y: encounterKinds[(idx + c) % encounterKinds.length] === "reef" ? -1 : 0,
+				seed: seedCursor++
+			});
+		}
+		if (idx % 2 === 0) {
+			const salvageAngle = seeded$1(idx * 41) * Math.PI * 2;
+			for (let s = 0; s < 3; s++) {
+				const a = salvageAngle + s * .55;
+				const r = 42 + s * 11;
+				props.push({
+					kind: [
+						"wreck",
+						"crate",
+						"barrel"
+					][s],
+					x: spawn.x + Math.cos(a) * r,
+					z: spawn.y + Math.sin(a) * r,
+					rotationY: a,
+					scale: .72 + seeded$1(idx * 51 + s) * .22,
+					zone: "lootSalvage",
+					seed: seedCursor++
+				});
+			}
+		}
+	}
+	return { props };
+}
+//#endregion
+//#region app/game/visuals/playerLabelAnchor.ts
+var EXCLUDED_ANCESTOR_NAMES = new Set(["HullWaterInteraction", "ShipVisualDebug"]);
+function isHullMesh(object) {
+	if (!(object instanceof Mesh)) return false;
+	if (object.userData.visualFallback) return false;
+	if (object.userData.visualEffectType) return false;
+	let node = object;
+	while (node) {
+		if (EXCLUDED_ANCESTOR_NAMES.has(node.name)) return false;
+		node = node.parent;
+	}
+	return true;
+}
+function boxCorners(box, target) {
+	const { min, max } = box;
+	target[0].set(min.x, min.y, min.z);
+	target[1].set(max.x, min.y, min.z);
+	target[2].set(min.x, max.y, min.z);
+	target[3].set(max.x, max.y, min.z);
+	target[4].set(min.x, min.y, max.z);
+	target[5].set(max.x, min.y, max.z);
+	target[6].set(min.x, max.y, max.z);
+	target[7].set(max.x, max.y, max.z);
+}
+function projectScreenY(point, camera, canvasHeight) {
+	return (1 - point.clone().project(camera).y) * .5 * canvasHeight;
+}
+function unprojectScreenToGround(camera, screenX, screenY, canvasWidth, canvasHeight, groundY) {
+	const world = new Vector3(screenX / canvasWidth * 2 - 1, 1 - screenY / canvasHeight * 2, .5).unproject(camera);
+	const origin = camera.position.clone();
+	const dir = world.sub(origin).normalize();
+	const denom = dir.y;
+	if (Math.abs(denom) < 1e-5) return new Vector3(origin.x, groundY, origin.z);
+	const t = (groundY - origin.y) / denom;
+	return origin.add(dir.multiplyScalar(Math.max(0, t)));
+}
+function fallbackFootprintCorners(player, definition, corners) {
+	const halfForward = definition.scale * .42;
+	const halfLateral = definition.scale * .22;
+	const local = [
+		new Vector3(halfForward, 0, halfLateral),
+		new Vector3(halfForward, 0, -halfLateral),
+		new Vector3(-halfForward, 0, halfLateral),
+		new Vector3(-halfForward, 0, -halfLateral),
+		new Vector3(halfForward, definition.waterlineOffset * .35, 0),
+		new Vector3(-halfForward, definition.waterlineOffset * .35, 0)
+	];
+	player.updateMatrixWorld(true);
+	for (let i = 0; i < local.length; i++) corners[i].copy(local[i]).applyMatrix4(player.matrixWorld);
+	return local.length;
+}
+function computeRotationSafePlayerLabelAnchor(options) {
+	const { player, playerVisualRoot, shipId, heading, camera, canvasWidth, canvasHeight, labelTotalHeightCss, gapCss = 5, groundY = 8 } = options;
+	const cornerPool = Array.from({ length: 8 }, () => new Vector3());
+	const hullWorld = [];
+	const hullBox = new Box3();
+	let hasHull = false;
+	player.updateMatrixWorld(true);
+	playerVisualRoot.updateMatrixWorld(true);
+	playerVisualRoot.traverse((object) => {
+		if (!isHullMesh(object)) return;
+		const meshBox = new Box3().setFromObject(object);
+		if (meshBox.isEmpty()) return;
+		hullBox.union(meshBox);
+		hasHull = true;
+	});
+	if (hasHull && !hullBox.isEmpty()) {
+		boxCorners(hullBox, cornerPool);
+		for (const corner of cornerPool) hullWorld.push(corner.clone());
+	} else {
+		const definition = PLAYER_SHIP_VISUALS[shipId];
+		const count = fallbackFootprintCorners(player, definition, cornerPool);
+		for (let i = 0; i < count; i++) hullWorld.push(cornerPool[i].clone());
+	}
+	let best = hullWorld[0];
+	let bestScreenY = projectScreenY(best, camera, canvasHeight);
+	for (let i = 1; i < hullWorld.length; i++) {
+		const screenY = projectScreenY(hullWorld[i], camera, canvasHeight);
+		if (screenY > bestScreenY) {
+			bestScreenY = screenY;
+			best = hullWorld[i];
+		}
+	}
+	const bestScreenX = (best.clone().project(camera).x + 1) * .5 * canvasWidth || canvasWidth * .5;
+	const labelCenterScreenY = bestScreenY + gapCss + labelTotalHeightCss * .5;
+	const position = unprojectScreenToGround(camera, bestScreenX, labelCenterScreenY, canvasWidth, canvasHeight, groundY);
+	return {
+		position,
+		debug: {
+			anchor: {
+				x: position.x,
+				y: position.y,
+				z: position.z
+			},
+			shipScreenBottomY: bestScreenY,
+			labelCenterScreenY,
+			gapCss,
+			headingDeg: Math.round(heading * 180 / Math.PI) % 360,
+			usedProjectedBounds: hasHull,
+			hullCornerCount: hullWorld.length
+		}
 	};
 }
 //#endregion
@@ -46630,46 +46956,46 @@ var LABEL_RENDER_ORDER = {
 	npc: 82,
 	poi: 72
 };
-/** V20.2.11 screen-space calibration anchors (MID zoom = 1.0). */
+/** V20.3 screen-space calibration anchors (MID zoom = 1.0). */
 var PLAYER_LABEL_CALIBRATION = {
-	nameBasePx: 11.5,
-	nameMinPx: 8,
-	nameMaxPx: 14,
-	nameMaxWidthPx: 100,
-	hpBarBaseW: 87,
-	hpBarMinW: 66,
-	hpBarMaxW: 100,
-	hpBarBaseH: 4,
-	hpBarMinH: 3,
-	hpBarMaxH: 5,
-	shieldBarBaseH: 3.25,
-	shieldBarMinH: 2.5,
-	shieldBarMaxH: 4,
-	identityToHpGapPx: 3,
-	barGapPx: 1.5
+	nameBasePx: 10.5,
+	nameMinPx: 7.5,
+	nameMaxPx: 13,
+	nameMaxWidthPx: 92,
+	hpBarBaseW: 80,
+	hpBarMinW: 62,
+	hpBarMaxW: 94,
+	hpBarBaseH: 3.75,
+	hpBarMinH: 2.75,
+	hpBarMaxH: 4.75,
+	shieldBarBaseH: 3,
+	shieldBarMinH: 2.25,
+	shieldBarMaxH: 3.75,
+	identityToHpGapPx: 2.5,
+	barGapPx: 1.25
 };
 var NPC_LABEL_CALIBRATION = {
-	nameBasePx: 10,
-	nameMinPx: 7,
-	nameMaxPx: 11,
-	levelBasePx: 8.5,
-	levelMinPx: 7,
-	levelMaxPx: 10,
-	nameLevelGapPx: 4,
-	barBaseW: 68,
-	barMinW: 58,
-	barMaxW: 76,
-	barBaseH: 3.5,
-	barMinH: 3,
-	barMaxH: 4
+	nameBasePx: 9,
+	nameMinPx: 6.5,
+	nameMaxPx: 10,
+	levelBasePx: 7.5,
+	levelMinPx: 6.5,
+	levelMaxPx: 9,
+	nameLevelGapPx: 3.5,
+	barBaseW: 62,
+	barMinW: 54,
+	barMaxW: 70,
+	barBaseH: 3.25,
+	barMinH: 2.75,
+	barMaxH: 3.75
 };
 var POI_LABEL_CALIBRATION = {
-	nameBasePx: 10,
-	nameMinPx: 7,
-	nameMaxPx: 11,
-	levelBasePx: 8,
-	levelMinPx: 7,
-	levelMaxPx: 9
+	nameBasePx: 9,
+	nameMinPx: 6.5,
+	nameMaxPx: 10,
+	levelBasePx: 7.25,
+	levelMinPx: 6.5,
+	levelMaxPx: 8.5
 };
 function worldUnitsPerPixel(camera, renderer, worldPosition) {
 	const distance = camera.position.distanceTo(worldPosition);
@@ -46861,7 +47187,6 @@ function updatePlayerWorldLabel(label, frame, camera, renderer, zoom, worldPosit
 			visible: showShield
 		}
 	], unitsPerPixel, anchorY, cal.barGapPx);
-	label.group.position.copy(worldPosition);
 	return {
 		type: "player",
 		name: frame.playerName,
@@ -47628,17 +47953,32 @@ function createIslandPresentation(isle, texture, seed, kind, rockCount = 10) {
 		depthWrite: false
 	}));
 	root.add(foam);
-	const shallowColor = kind === "abyss" ? 3824248 : kind === "storm" ? 4885144 : 5417144;
-	const shallowDisc = new Mesh(new CircleGeometry(isle.rx * 1.12, 40), new MeshBasicMaterial({
-		color: shallowColor,
-		transparent: true,
-		opacity: .11,
-		depthWrite: false,
-		side: 2
-	}));
-	shallowDisc.rotation.x = -Math.PI / 2;
-	shallowDisc.position.y = -1.6;
-	root.add(shallowDisc);
+	const shallowColor = kind === "abyss" ? 3824248 : kind === "storm" ? 4885144 : 4759722;
+	for (const ring of [
+		{
+			r: 1.02,
+			o: .045
+		},
+		{
+			r: 1.08,
+			o: .028
+		},
+		{
+			r: 1.14,
+			o: .016
+		}
+	]) {
+		const shallowRing = new Mesh(new RingGeometry(isle.rx * ring.r * .92, isle.rx * ring.r, 36), new MeshBasicMaterial({
+			color: shallowColor,
+			transparent: true,
+			opacity: ring.o,
+			depthWrite: false,
+			side: 2
+		}));
+		shallowRing.rotation.x = -Math.PI / 2;
+		shallowRing.position.y = -1.6;
+		root.add(shallowRing);
+	}
 	const reefMaterial = new MeshBasicMaterial({
 		color: kind === "abyss" ? 6707594 : kind === "storm" ? 4225660 : 7779484,
 		transparent: true,
@@ -48048,6 +48388,7 @@ var AbyssalThreeRenderer = class {
 		this.labelProbe = new Vector3();
 		this.lastPlayerLabelDebug = null;
 		this.lastNpcLabelDebug = null;
+		this.lastPlayerLabelAnchorDebug = null;
 		this.quality = resolveQuality(qualityPreference);
 		this.renderer = new WebGLRenderer({
 			canvas,
@@ -48311,7 +48652,7 @@ var AbyssalThreeRenderer = class {
 		const material = new ShaderMaterial({
 			uniforms: this.waterUniforms,
 			vertexShader: `uniform float uTime;varying float vWave;varying vec3 vWorld;void main(){vec3 p=position;float a=sin(p.x*.009+uTime*.55)*.72;float b=sin(p.y*.013-uTime*.42)*.48;float c=sin((p.x*.7+p.y)*.026+uTime*.83)*.22;p.z+=(a+b+c)*1.25;vWave=a+b+c;vec4 wp=modelMatrix*vec4(p,1.);vWorld=wp.xyz;gl_Position=projectionMatrix*viewMatrix*wp;}`,
-			fragmentShader: `uniform float uTime;uniform vec3 uDeep;uniform vec3 uShallow;uniform int uIslandCount;uniform vec4 uIslands[8];varying float vWave;varying vec3 vWorld;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}float fbm(vec2 p){float v=0.;v+=noise(p)*.58;p=p*2.07+4.1;v+=noise(p)*.28;p=p*2.03-2.4;v+=noise(p)*.14;return v;}void main(){vec2 flow=vWorld.xz*.0065+vec2(uTime*.027,-uTime*.018);float body=fbm(flow),detail=fbm(flow*4.8+vec2(-uTime*.05,uTime*.035));float streak=fbm(flow*1.6+vec2(uTime*.012,0.));float coast=0.;float foam=0.;for(int i=0;i<8;i++){if(i>=uIslandCount)break;vec4 q=uIslands[i];vec2 d=(vWorld.xz-q.xy)/q.zw;float edge=length(d)+(noise(vWorld.xz*.021+float(i)*7.3)-.5)*.13;coast=max(coast,1.-smoothstep(.98,1.72,edge));foam=max(foam,1.-smoothstep(.035,.13,abs(edge-1.05)));}float crest=smoothstep(1.05,1.55,vWave+detail*.3)*.15;float glint=smoothstep(.84,.99,detail+vWave*.04+streak*.12)*.14;vec3 col=mix(uDeep,uShallow,.16+(body-.5)*.22+coast*.5+vWave*.018+detail*.08+streak*.04);col=mix(col,vec3(.08,.2,.34),smoothstep(.3,.9,body)*.2);col=mix(col,vec3(.62,.86,.9),glint+crest+foam*.2);gl_FragColor=vec4(col,1.);}`,
+			fragmentShader: `uniform float uTime;uniform vec3 uDeep;uniform vec3 uShallow;uniform int uIslandCount;uniform vec4 uIslands[8];varying float vWave;varying vec3 vWorld;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}float fbm(vec2 p){float v=0.;v+=noise(p)*.58;p=p*2.07+4.1;v+=noise(p)*.28;p=p*2.03-2.4;v+=noise(p)*.14;return v;}void main(){vec2 flow=vWorld.xz*.0065+vec2(uTime*.027,-uTime*.018);float body=fbm(flow),detail=fbm(flow*4.8+vec2(-uTime*.05,uTime*.035));float streak=fbm(flow*1.6+vec2(uTime*.012,0.));float coast=0.;float foam=0.;for(int i=0;i<8;i++){if(i>=uIslandCount)break;vec4 q=uIslands[i];vec2 d=(vWorld.xz-q.xy)/q.zw;float edge=length(d)+(noise(vWorld.xz*.021+float(i)*7.3)-.5)*.13;coast=max(coast,1.-smoothstep(1.02,1.62,edge));foam=max(foam,1.-smoothstep(.035,.13,abs(edge-1.05)));}float crest=smoothstep(1.05,1.55,vWave+detail*.3)*.15;float glint=smoothstep(.84,.99,detail+vWave*.04+streak*.12)*.14;vec3 col=mix(uDeep,uShallow,.16+(body-.5)*.22+coast*.28+vWave*.018+detail*.08+streak*.04);col=mix(col,vec3(.08,.2,.34),smoothstep(.3,.9,body)*.2);col=mix(col,vec3(.62,.86,.9),glint+crest+foam*.2);gl_FragColor=vec4(col,1.);}`,
 			side: 2
 		});
 		this.ocean = new Mesh(geo, material);
@@ -48349,7 +48690,7 @@ var AbyssalThreeRenderer = class {
 		this.impactMeshes = [];
 		this.lastHitSeen.clear();
 		this.createOcean();
-		const map = MAPS[id], colors = map.color, shallow = new Color(colors[0]).offsetHSL(0, .08, .14), deep = new Color(colors[1]).offsetHSL(0, .04, .02);
+		const map = MAPS[id], colors = map.color, shallow = new Color(colors[0]).offsetHSL(0, .06, .1), deep = new Color(colors[1]).offsetHSL(0, .04, .02);
 		this.waterUniforms.uShallow.value.copy(shallow);
 		this.waterUniforms.uDeep.value.copy(deep);
 		this.waterUniforms.uIslandCount.value = Math.min(8, map.islands.length);
@@ -48362,24 +48703,6 @@ var AbyssalThreeRenderer = class {
 		this.scene.fog = new FogExp2(sky, map.weather === "void" ? 28e-5 : map.weather === "storm" ? 2e-4 : 13e-5);
 		this.islandMarkerLevel = map.recommended;
 		const density = resolveWorldDensityCounts(this.quality, map.width, map.height);
-		const shorelineKinds = [
-			"rock",
-			"reef",
-			"buoy",
-			"driftwood",
-			"wreck",
-			"mast"
-		];
-		const openKinds = [
-			"crate",
-			"barrel",
-			"driftwood",
-			"wreck",
-			"buoy",
-			"mast",
-			"reef",
-			"lighthouse"
-		];
 		let placedProps = 0;
 		for (const [index, isle] of map.islands.entries()) {
 			const kind = id === "abyss" ? "abyss" : id === "gloam" || id === "maelstrom" ? "storm" : "tropical";
@@ -48391,84 +48714,22 @@ var AbyssalThreeRenderer = class {
 				root.add(light);
 			}
 			this.world.add(root);
-			const propKinds = isle.port ? [
-				"pier",
-				"buoy",
-				"crate",
-				"barrel",
-				"ruin",
-				"lighthouse"
-			] : [
-				"rock",
-				"reef",
-				"driftwood",
-				"wreck",
-				"mast",
-				"buoy"
-			];
-			for (let p = 0; p < density.islandPropsPerIsland; p++) {
-				const propKind = propKinds[(p + index) % propKinds.length], prop = createWorldProp(propKind, index * 31 + p + 3), a = index * .83 + p * 1.91, r = isle.rx * (1.05 + .12 * (p % 3));
-				prop.position.set(isle.x + Math.cos(a) * r, propKind === "reef" ? -1 : 0, isle.y + Math.sin(a) * r * isle.ry / isle.rx);
-				prop.rotation.y = a + seeded(index * 17 + p) * .5;
-				prop.scale.setScalar(.85 + seeded(index * 13 + p) * .5);
-				this.world.add(prop);
-				placedProps++;
-			}
-			for (let s = 0; s < density.shorelinePropsPerIsland; s++) {
-				const propKind = shorelineKinds[(s + index) % shorelineKinds.length], prop = createWorldProp(propKind, index * 41 + s + 7), a = index * .67 + s * 1.23, r = isle.rx * (1.18 + s % 3 * .09);
-				prop.position.set(isle.x + Math.cos(a) * r, propKind === "reef" ? -1 : 0, isle.y + Math.sin(a) * r * isle.ry / isle.rx);
-				prop.rotation.y = a + seeded(index * 19 + s) * .4;
-				prop.scale.setScalar(.72 + seeded(index * 23 + s) * .38);
-				this.world.add(prop);
-				placedProps++;
-			}
 			if (isle.port || isle.rx >= 185) {
 				const marker = createPoiWorldLabel(isle.name, this.islandMarkerLevel);
-				marker.group.position.set(isle.x, 18, isle.y + isle.ry * .42);
+				marker.group.position.set(isle.x, 16, isle.y + isle.ry * .38);
 				this.world.add(marker.group);
 				this.poiLabels.push(marker);
 			}
 		}
-		for (let i = 0; i < density.openOceanProps; i++) {
-			const prop = createWorldProp(openKinds[i % openKinds.length], 91 + i), x = map.width * (.1 + seeded(i + 81) * .8), z = map.height * (.08 + seeded(i + 121) * .84), nearIsland = map.islands.some((isle) => Math.hypot((x - isle.x) / isle.rx, (z - isle.y) / isle.ry) < 1.38);
-			if (map.islands.every((isle) => Math.hypot((x - isle.x) / isle.rx, (z - isle.y) / isle.ry) > 1.22) || nearIsland && seeded(i + 401) > .35) {
-				prop.position.set(x, 0, z);
-				prop.rotation.y = seeded(i + 221) * Math.PI * 2;
-				prop.scale.setScalar(.65 + seeded(i + 301) * .45);
-				prop.userData.compositionZone = "openSea";
-				this.world.add(prop);
-				placedProps++;
-			}
-		}
-		const encounterKinds = [
-			"wreck",
-			"crate",
-			"barrel",
-			"rock",
-			"reef",
-			"driftwood",
-			"buoy"
-		];
-		for (const [idx, spawn] of map.enemies.entries()) for (let c = 0; c < 3; c++) {
-			const propKind = encounterKinds[(idx + c) % encounterKinds.length], angle = seeded(idx * 13 + c) * Math.PI * 2, radius = 28 + seeded(idx * 17 + c) * 72, prop = createWorldProp(propKind, idx * 53 + c + 240);
-			prop.position.set(spawn.x + Math.cos(angle) * radius, propKind === "reef" ? -1 : 0, spawn.y + Math.sin(angle) * radius);
-			prop.rotation.y = angle + seeded(idx * 29 + c) * .6;
-			prop.scale.setScalar(.7 + seeded(idx * 31 + c) * .35);
-			prop.userData.compositionZone = "encounter";
+		const composition = buildMapCompositionPlan(map, density);
+		for (const entry of composition.props) {
+			const prop = createWorldProp(entry.kind, entry.seed);
+			prop.position.set(entry.x, entry.y ?? 0, entry.z);
+			prop.rotation.y = entry.rotationY;
+			prop.scale.setScalar(entry.scale);
+			prop.userData.compositionZone = entry.zone;
 			this.world.add(prop);
 			placedProps++;
-		}
-		for (let t = 0; t < Math.min(4, map.islands.length - 1); t++) {
-			const a = map.islands[t], b = map.islands[(t + 1) % map.islands.length], mx = (a.x + b.x) * .5, my = (a.y + b.y) * .5;
-			for (let c = 0; c < 2; c++) {
-				const propKind = encounterKinds[(t + c + 2) % encounterKinds.length], prop = createWorldProp(propKind, t * 19 + c + 320), angle = seeded(t * 11 + c) * Math.PI * 2, radius = 40 + seeded(t * 13 + c) * 60;
-				prop.position.set(mx + Math.cos(angle) * radius, propKind === "reef" ? -1 : 0, my + Math.sin(angle) * radius);
-				prop.rotation.y = angle;
-				prop.scale.setScalar(.68 + seeded(t * 15 + c) * .3);
-				prop.userData.compositionZone = "transition";
-				this.world.add(prop);
-				placedProps++;
-			}
 		}
 		this.worldPropCount = placedProps;
 	}
@@ -48553,7 +48814,7 @@ var AbyssalThreeRenderer = class {
 				m.opacity = .035 + clamp(Math.abs(frame.player.speed) / 180, 0, 1) * .08;
 			}
 		});
-		this.labelProbe.set(frame.player.x, 8, frame.player.y + 50);
+		this.labelProbe.set(frame.player.x, 8, frame.player.y);
 		this.lastPlayerLabelDebug = updatePlayerWorldLabel(this.playerWorldLabel, {
 			playerName: frame.playerName,
 			playerLevel: frame.playerLevel,
@@ -48562,6 +48823,20 @@ var AbyssalThreeRenderer = class {
 			shield: frame.player.shield,
 			maxShield: frame.player.maxShield
 		}, this.camera, this.renderer, this.smoothedZoom, this.labelProbe);
+		const labelAnchor = computeRotationSafePlayerLabelAnchor({
+			player: this.player,
+			playerVisualRoot: this.playerVisualRoot,
+			shipId: frame.shipId,
+			heading: frame.player.angle,
+			camera: this.camera,
+			canvasWidth: this.canvas.clientWidth || 1,
+			canvasHeight: this.canvas.clientHeight || 1,
+			labelTotalHeightCss: this.lastPlayerLabelDebug?.totalLabelHeightCss ?? 18,
+			gapCss: 5
+		});
+		this.playerWorldLabel.group.position.copy(labelAnchor.position);
+		this.labelProbe.copy(labelAnchor.position);
+		this.lastPlayerLabelAnchorDebug = labelAnchor.debug;
 		this.playerAura.position.set(frame.player.x, 4, frame.player.y);
 		const speedFactor = clamp(Math.abs(frame.player.speed) / 120, 0, 1);
 		this.playerAura.visible = speedFactor > .28;
@@ -48612,7 +48887,7 @@ var AbyssalThreeRenderer = class {
 			}
 			const selected = frame.selectedId === e.id, d = ENTITY_DATA[e.kind];
 			if (monsterKinds.has(e.kind)) continue;
-			this.labelProbe.set(e.x, 10, e.y + 30);
+			this.labelProbe.set(e.x, 10, e.y + 24);
 			this.lastNpcLabelDebug = updateNpcWorldLabel(label, d.name, d.level, e.hp, e.maxHp, selected, this.camera, this.renderer, this.smoothedZoom, this.labelProbe);
 			label.group.visible = true;
 		}
@@ -48777,10 +49052,7 @@ var AbyssalThreeRenderer = class {
 		}
 		for (const marker of this.poiLabels) updatePoiWorldLabel(marker, marker.poiName, marker.poiLevel, this.camera, this.renderer, this.smoothedZoom, marker.group.position);
 		if (this.visualDebugEnabled && typeof window !== "undefined") {
-			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), pl = this.lastPlayerLabelDebug, nl = this.lastNpcLabelDebug, zoomFactor = labelZoomFactor(this.smoothedZoom), shipBottom = new Vector3(frame.player.x, 6, frame.player.y + 26), labelTop = new Vector3(frame.player.x, 8, frame.player.y + 50 - (pl?.totalLabelHeightCss ?? 20) * labelUnitsPerPixel * .42), toScreenY = (v) => {
-				v.project(this.camera);
-				return (1 - v.y) * .5 * (this.canvas.clientHeight || 1);
-			}, shipToLabelGapCss = Math.max(0, toScreenY(labelTop) - toScreenY(shipBottom));
+			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), pl = this.lastPlayerLabelDebug, nl = this.lastNpcLabelDebug, zoomFactor = labelZoomFactor(this.smoothedZoom), pal = this.lastPlayerLabelAnchorDebug, shipToLabelGapCss = pal ? Math.max(0, pal.gapCss) : 0;
 			window.__ABYSSAL_VISUAL_DEBUG__ = {
 				zoom: this.smoothedZoom,
 				zoomFactor,
@@ -48791,9 +49063,14 @@ var AbyssalThreeRenderer = class {
 				islandCount: MAPS[frame.mapId].islands.length,
 				wakeSampleCount: wakeCount,
 				activeWakeMeshes: playerWakeMeshes,
-				labelAnchor: {
-					x: frame.player.x,
-					y: frame.player.y + 50
+				labelAnchor: pal ? {
+					x: pal.anchor.x,
+					y: pal.anchor.z,
+					headingDeg: pal.headingDeg,
+					usedProjectedBounds: pal.usedProjectedBounds
+				} : {
+					x: this.labelProbe.x,
+					y: this.labelProbe.z
 				},
 				quality: this.quality.id,
 				mapId: frame.mapId,
@@ -48830,7 +49107,8 @@ var AbyssalThreeRenderer = class {
 					shieldBarScreenWidth: pl?.shieldBarScreenWidth,
 					shieldBarScreenHeight: pl?.shieldBarScreenHeight,
 					unitsPerPixel: labelUnitsPerPixel,
-					anchor: this.labelProbe.clone()
+					anchor: this.labelProbe.clone(),
+					rotationAnchor: pal
 				},
 				npcLabel: {
 					name: nl?.name,

@@ -13,48 +13,48 @@ const clamp = (value: number, min: number, max: number) => Math.max(min, Math.mi
 
 const LABEL_RENDER_ORDER = { player: 92, npc: 82, poi: 72 } as const;
 
-/** V20.2.11 screen-space calibration anchors (MID zoom = 1.0). */
+/** V20.3 screen-space calibration anchors (MID zoom = 1.0). */
 export const PLAYER_LABEL_CALIBRATION = {
-  nameBasePx: 11.5,
-  nameMinPx: 8,
-  nameMaxPx: 14,
-  nameMaxWidthPx: 100,
-  hpBarBaseW: 87,
-  hpBarMinW: 66,
-  hpBarMaxW: 100,
-  hpBarBaseH: 4,
-  hpBarMinH: 3,
-  hpBarMaxH: 5,
-  shieldBarBaseH: 3.25,
-  shieldBarMinH: 2.5,
-  shieldBarMaxH: 4,
-  identityToHpGapPx: 3,
-  barGapPx: 1.5,
+  nameBasePx: 10.5,
+  nameMinPx: 7.5,
+  nameMaxPx: 13,
+  nameMaxWidthPx: 92,
+  hpBarBaseW: 80,
+  hpBarMinW: 62,
+  hpBarMaxW: 94,
+  hpBarBaseH: 3.75,
+  hpBarMinH: 2.75,
+  hpBarMaxH: 4.75,
+  shieldBarBaseH: 3,
+  shieldBarMinH: 2.25,
+  shieldBarMaxH: 3.75,
+  identityToHpGapPx: 2.5,
+  barGapPx: 1.25,
 } as const;
 
 export const NPC_LABEL_CALIBRATION = {
-  nameBasePx: 10,
-  nameMinPx: 7,
-  nameMaxPx: 11,
-  levelBasePx: 8.5,
-  levelMinPx: 7,
-  levelMaxPx: 10,
-  nameLevelGapPx: 4,
-  barBaseW: 68,
-  barMinW: 58,
-  barMaxW: 76,
-  barBaseH: 3.5,
-  barMinH: 3,
-  barMaxH: 4,
+  nameBasePx: 9,
+  nameMinPx: 6.5,
+  nameMaxPx: 10,
+  levelBasePx: 7.5,
+  levelMinPx: 6.5,
+  levelMaxPx: 9,
+  nameLevelGapPx: 3.5,
+  barBaseW: 62,
+  barMinW: 54,
+  barMaxW: 70,
+  barBaseH: 3.25,
+  barMinH: 2.75,
+  barMaxH: 3.75,
 } as const;
 
 export const POI_LABEL_CALIBRATION = {
-  nameBasePx: 10,
-  nameMinPx: 7,
-  nameMaxPx: 11,
-  levelBasePx: 8,
-  levelMinPx: 7,
-  levelMaxPx: 9,
+  nameBasePx: 9,
+  nameMinPx: 6.5,
+  nameMaxPx: 10,
+  levelBasePx: 7.25,
+  levelMinPx: 6.5,
+  levelMaxPx: 8.5,
 } as const;
 
 export { WORLD_TEXT_ENGINE };
@@ -318,8 +318,6 @@ export function updatePlayerWorldLabel(
     anchorY,
     cal.barGapPx,
   );
-
-  label.group.position.copy(worldPosition);
 
   return {
     type: "player",

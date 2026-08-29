@@ -20,10 +20,10 @@ test("V20.2.11 player calibration is smaller than V20.2.10 baseline", async () =
   const labels = await readFile(join(root, "app/game/visuals/worldLabels.ts"), "utf8");
 
   assert.match(labels, /PLAYER_LABEL_CALIBRATION/);
-  assert.match(labels, /nameBasePx: 11\.5/);
-  assert.match(labels, /hpBarBaseW: 87/);
-  assert.match(labels, /hpBarBaseH: 4/);
-  assert.match(labels, /shieldBarBaseH: 3\.25/);
+  assert.match(labels, /nameBasePx: 10\.5/);
+  assert.match(labels, /hpBarBaseW: 80/);
+  assert.match(labels, /hpBarBaseH: 3\.75/);
+  assert.match(labels, /shieldBarBaseH: 3/);
   assert.doesNotMatch(labels, /13\.5 \* z, 12, 15/);
   assert.doesNotMatch(labels, /102 \* z, 90, 115/);
   assert.match(labels, /fontWeight: 550/);
@@ -68,7 +68,6 @@ test("V20.2.11 label zoom factor and debug metrics", async () => {
   assert.match(labels, /return 0\.82 \+ t \* 0\.18/);
   assert.match(labels, /nameCssHeight/);
   assert.match(labels, /totalLabelHeightCss/);
+  assert.match(renderer, /computeRotationSafePlayerLabelAnchor/);
   assert.match(renderer, /shipToLabelGapCss/);
-  assert.match(renderer, /zoomFactor/);
-  assert.match(renderer, /frame\.player\.y\+50/);
 });

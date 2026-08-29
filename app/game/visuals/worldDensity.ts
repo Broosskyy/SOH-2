@@ -11,10 +11,10 @@ const DENSITY_TIERS: Record<
   QualityProfile["id"],
   { island: number; open: number; rocks: number; shoreline: number }
 > = {
-  LOW: { island: 4, open: 9, rocks: 8, shoreline: 2 },
-  MEDIUM: { island: 6, open: 14, rocks: 10, shoreline: 3 },
-  HIGH: { island: 7, open: 18, rocks: 12, shoreline: 4 },
-  ULTRA: { island: 8, open: 22, rocks: 14, shoreline: 5 },
+  LOW: { island: 4, open: 8, rocks: 8, shoreline: 2 },
+  MEDIUM: { island: 5, open: 10, rocks: 10, shoreline: 3 },
+  HIGH: { island: 6, open: 12, rocks: 12, shoreline: 4 },
+  ULTRA: { island: 7, open: 14, rocks: 14, shoreline: 5 },
 };
 
 /** Map-area reference: Azurwacht (aster) baseline. */
