@@ -1,0 +1,11 @@
+{
+  "build": "G0.3.1",
+  "milestone": "TARGET VISUAL FOUNDATION",
+  "generatedAt": "2026-08-29T17:40:00Z",
+  "webTotalBytes": 60283770,
+  "pckBytes": 20422340,
+  "webDeltaFromG03": 36448,
+  "pckDeltaFromG03": 36448,
+  "androidApkBytes": 48815711,
+  "captures": "pending hardware retest — run with ABYSSAL_QA_CAPTURE=1"
+}

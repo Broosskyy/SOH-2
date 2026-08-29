@@ -10,7 +10,8 @@ var _idle_timer := 0.0
 var _player: Node3D
 
 @onready var npc_controller: Node = $NpcController
-@onready var visual_hull: MeshInstance3D = $VisualRoot/ProxyHull
+@onready var visual_root_node: Node3D = $VisualRoot
+@onready var wake: ShipWake = $VFXRoot/Wake
 
 func _ready() -> void:
 	_player = get_tree().get_first_node_in_group("player_ship") as Node3D
@@ -18,12 +19,14 @@ func _ready() -> void:
 		health.max_health = npc_definition.max_health
 		health.current_health = npc_definition.max_health
 	apply_presentation_profile()
-	if visual_hull != null and npc_definition != null:
-		var material := visual_hull.get_active_material(0) as StandardMaterial3D
-		if material != null:
-			var tuned := material.duplicate() as StandardMaterial3D
-			tuned.albedo_color = npc_definition.visual_color
-			visual_hull.set_surface_override_material(0, tuned)
+	if npc_definition != null:
+		NpcShipVisualBuilder.build_into(visual_root_node, npc_definition)
+		visual_root.scale = Vector3.ONE * 0.42
+		visual_root.position.y = 2.5
+		if ui_anchor != null:
+			ui_anchor.position.y = 24.0
+	if wake != null:
+		wake.follow_target = self
 	add_to_group("npc_ships")
 	add_to_group("targetable_units")
 	call_deferred("_register_world_label")
@@ -79,14 +82,19 @@ func _patrol(delta: float) -> void:
 	if _player != null and behaviour_profile.detection_range > 0.0:
 		var distance := global_position.distance_to(_player.global_position)
 		if distance <= behaviour_profile.detection_range:
-			# Detection only in G0.3 — chase/attack deferred to G0.4.
 			pass
+
+func level_label() -> String:
+	return "LV %d" % npc_definition.level if npc_definition != null else ""
 
 func _register_world_label() -> void:
 	var service := get_tree().get_first_node_in_group("world_label_service") as Node
 	if service == null or identity == null:
 		return
 	var color := Color(0.45, 0.86, 1.0) if faction() == UnitFaction.Allegiance.FRIENDLY else Color(1.0, 0.45, 0.32)
-	service.call("register_anchor", unit_id(), ui_anchor, display_name(), color)
+	var label_text := display_name()
+	if npc_definition != null and npc_definition.level > 0:
+		label_text = "%s  LV %d" % [display_name(), npc_definition.level]
+	service.call("register_anchor", unit_id(), ui_anchor, label_text, color)
 
 const NavalNavigation = preload("res://scripts/navigation/naval_navigation.gd")

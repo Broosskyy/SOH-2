@@ -73,6 +73,7 @@ func _build_region() -> void:
 		harbors.append(harbor)
 	pois = region_definition.pois.duplicate()
 	_register_poi_labels()
+	_spawn_poi_markers()
 	if npc_spawner != null and npc_spawner.has_method("spawn_groups"):
 		active_npcs = npc_spawner.call("spawn_groups", region_definition.npc_spawn_groups, navigation_boundaries())
 
@@ -90,3 +91,20 @@ func _register_poi_labels() -> void:
 		anchor.position = poi.world_position + Vector3(0, 36, 0)
 		add_child(anchor)
 		service.call_deferred("register_anchor", poi.poi_id, anchor, poi.display_name, Color(0.88, 0.72, 0.95))
+
+func _spawn_poi_markers() -> void:
+	for poi in pois:
+		if poi == null or poi.poi_type != PoiDefinition.PoiType.LOOT:
+			continue
+		var marker := MeshInstance3D.new()
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(6.0, 5.0, 6.0)
+		marker.mesh = mesh
+		marker.position = poi.world_position + Vector3(0, 2.5, 0)
+		var material := StandardMaterial3D.new()
+		material.albedo_color = Color(0.92, 0.72, 0.22)
+		material.emission_enabled = true
+		material.emission = Color(0.45, 0.92, 0.38)
+		material.emission_energy_multiplier = 0.8
+		marker.material_override = material
+		add_child(marker)

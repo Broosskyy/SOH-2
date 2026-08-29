@@ -10,8 +10,6 @@ extends Node3D
 @onready var region_runtime: Node = $RegionRuntime
 @onready var input_source: PlayerInputSource = $PlayerShip/InputSource
 
-var elapsed := 0.0
-
 func _ready() -> void:
 	sun.add_to_group("directional_lights")
 	region_runtime.load_from_definition(AsterRegionFactory.create())
@@ -29,16 +27,10 @@ func _ready() -> void:
 			"current=%s pos=%s" % [camera.current, _format_vec3(camera.global_position)]
 		)
 
-func _process(delta: float) -> void:
-	elapsed += delta
-	ocean.position.y = sin(elapsed * 0.8) * 0.12
-
 func set_debug_island_bounds_visible(enabled: bool) -> void:
 	for island in get_tree().get_nodes_in_group("island_entities"):
-		if island is IslandEntity:
-			for child in island.get_children():
-				if child.name == "DebugRoot":
-					child.visible = enabled
+		if island is IslandEntity and island.has_method("set_debug_bounds_visible"):
+			island.call("set_debug_bounds_visible", enabled)
 
 func _apply_viewport_policy() -> void:
 	if OS.get_name() != "Web":
@@ -63,13 +55,12 @@ func _apply_isolation(step: int) -> void:
 	if step >= 7:
 		return
 	player_ship.visible = step >= 3
-	floating_hud.visible = step >= 5
+	floating_hud.visible = false
 	mobile_controls.visible = step >= 5 and PlatformService.mobile
 	region_runtime.visible = step >= 2
 	if step <= 2:
 		player_ship.visible = false
 	if step == 2:
-		floating_hud.visible = false
 		mobile_controls.visible = false
 
 func _format_vec3(value: Vector3) -> String:

@@ -1,0 +1,15 @@
+{
+  "ship_id": "kraken_fury",
+  "display_name": "Kraken's Fury",
+  "role": "player",
+  "visual_scene": "res://assets/ships/player/kraken/Kraken_ship_player_30k.glb",
+  "presentation_profile": "res://data/kraken_presentation_profile.tres",
+  "scale": 52.0,
+  "waterline": 20.5,
+  "visual_yaw_degrees": 180,
+  "ui_anchor_height": 68,
+  "ui_safe_gap": 10,
+  "collision_radius": 7.0,
+  "forward_axis": "-Z",
+  "lod": ["hero", "gameplay", "impostor"]
+}

@@ -73,7 +73,7 @@ test("G0.3 region uses proxy island geometry instead of authored WebP billboards
   assert.doesNotMatch(world, /AuthoredPresentation/);
   assert.doesNotMatch(world, /storm-ruins-island-v1\.webp/);
   assert.match(world, /RegionRuntime/);
-  assert.match(islandRoot, /_build_proxy_geometry/);
+  assert.match(islandRoot, /IslandVisualBuilder\.build_into/);
   assert.match(factory, /glass_reef/);
   assert.match(factory, /harbor_aster/);
 });

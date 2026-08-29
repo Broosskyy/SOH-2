@@ -6,11 +6,13 @@ var harbor_state: HarborState
 @onready var approach_area: MeshInstance3D = $ApproachArea
 @onready var interaction_area: MeshInstance3D = $InteractionArea
 @onready var label_anchor: Marker3D = $LabelAnchor
+@onready var visual_root: Node3D = $VisualRoot
 
 func configure(definition: HarborDefinition, state: HarborState) -> void:
 	harbor_definition = definition
 	harbor_state = state
 	add_to_group("harbors")
+	HarborVisualBuilder.build_into(visual_root, harbor_definition)
 	_register_label()
 
 func _process(_delta: float) -> void:

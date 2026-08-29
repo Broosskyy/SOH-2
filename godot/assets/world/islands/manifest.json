@@ -1,0 +1,22 @@
+{
+  "contract": "G0.3.1_ISLAND_ASSET_CONTRACT",
+  "drop_in_root": "res://assets/world/islands/<island_id>/",
+  "required_profile_fields": [
+    "island_id",
+    "size_class",
+    "shape_class",
+    "biome",
+    "visual_scene",
+    "visual_scale",
+    "waterline_offset",
+    "gameplay_footprint",
+    "navigation_boundary",
+    "collision_profile",
+    "world_label_height",
+    "harbor_sockets",
+    "poi_sockets",
+    "lod_policy",
+    "quality_policy"
+  ],
+  "temporary_visual_builder": "res://scripts/islands/island_visual_builder.gd"
+}

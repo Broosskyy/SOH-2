@@ -6,6 +6,7 @@
 [ext_resource type="Resource" path="res://data/kraken_presentation_profile.tres" id="4_profile"]
 [ext_resource type="Script" path="res://scripts/units/health_component.gd" id="5_health"]
 [ext_resource type="Script" path="res://scripts/units/targetable_component.gd" id="6_targetable"]
+[ext_resource type="Script" path="res://scripts/vfx/ship_wake.gd" id="7_wake"]
 
 [sub_resource type="CapsuleShape3D" id="ShipCollision"]
 radius = 7.0
@@ -47,7 +48,8 @@ shape = SubResource("ShipCollision")
 
 [node name="VFXAnchors" type="Node3D" parent="."]
 
-[node name="Wake" type="Marker3D" parent="VFXAnchors"]
+[node name="Wake" type="Node3D" parent="VFXAnchors"]
+script = ExtResource("7_wake")
 position = Vector3(0, 0, 58)
 
 [node name="WeaponAnchors" type="Node3D" parent="."]

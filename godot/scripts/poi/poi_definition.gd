@@ -1,7 +1,7 @@
 class_name PoiDefinition
 extends Resource
 
-enum PoiType { HARBOR, OUTPOST, LANDMARK, EVENT, DANGER, QUEST }
+enum PoiType { HARBOR, OUTPOST, LANDMARK, EVENT, DANGER, QUEST, LOOT }
 
 @export var poi_id: String = ""
 @export var display_name: String = ""

@@ -10,7 +10,7 @@ var forward_speed := 0.0
 var _command := PlayerCommand.new()
 
 @onready var kraken_model: Node3D = $VisualRoot/KrakenModel
-@onready var wake_anchor: Marker3D = $VFXAnchors/Wake
+@onready var wake_anchor: ShipWake = $VFXAnchors/Wake
 @onready var debug_ui_anchor: GeometryInstance3D = $Debug/UIAnchorMarker
 @onready var debug_forward: GeometryInstance3D = $Debug/ForwardVector
 @onready var debug_collision: GeometryInstance3D = $Debug/CollisionEnvelope
@@ -29,7 +29,9 @@ func _ready() -> void:
 		MobileWebBootTelemetry.report_error("PlayerShip missing profile")
 		return
 	apply_presentation_profile()
-	wake_anchor.position.z = presentation_profile.wake_stern_offset
+	if wake_anchor != null:
+		wake_anchor.follow_target = self
+		wake_anchor.position.z = presentation_profile.wake_stern_offset
 	if health != null:
 		var ship_id := str(GameState.save_data.get("shipId", "sovereign"))
 		var ship_data: Dictionary = GameState.catalog.get("ships", {}).get(ship_id, {})

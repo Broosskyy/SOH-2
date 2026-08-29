@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/ships/PlayerShip.tscn" id="2_ship"]
@@ -13,6 +13,9 @@
 [ext_resource type="Script" path="res://scripts/npc/npc_spawner.gd" id="11_spawner"]
 [ext_resource type="Script" path="res://scripts/ui/world_label_service.gd" id="12_labels"]
 [ext_resource type="Script" path="res://scripts/ui/target_reticle.gd" id="13_reticle"]
+[ext_resource type="Script" path="res://scripts/ui/gameplay_hud.gd" id="14_gameplay_hud"]
+[ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="15_minimap"]
+[ext_resource type="Script" path="res://scripts/world/ocean_surface.gd" id="16_ocean"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
 sky_top_color = Color(0.14, 0.48, 0.62, 1)
@@ -58,6 +61,7 @@ shadow_enabled = true
 [node name="Ocean" type="MeshInstance3D" parent="."]
 mesh = SubResource("OceanMesh")
 material_override = SubResource("OceanMaterial")
+script = ExtResource("16_ocean")
 
 [node name="RegionRuntime" type="Node3D" parent="."]
 script = ExtResource("10_region")
@@ -86,9 +90,23 @@ script = ExtResource("4_mobile")
 camera_path = NodePath("../Camera")
 
 [node name="FloatingPlayerHUD" type="CanvasLayer" parent="."]
+visible = false
 script = ExtResource("5_hud")
 target_path = NodePath("../PlayerShip")
 camera_path = NodePath("../Camera")
+
+[node name="GameplayHUD" type="CanvasLayer" parent="."]
+script = ExtResource("14_gameplay_hud")
+player_path = NodePath("../PlayerShip")
+camera_path = NodePath("../Camera")
+region_runtime_path = NodePath("../RegionRuntime")
+
+[node name="Minimap" type="Control" parent="GameplayHUD"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("15_minimap")
+region_runtime_path = NodePath("../../RegionRuntime")
+player_path = NodePath("../../PlayerShip")
 
 [node name="WorldLabelService" type="CanvasLayer" parent="." groups=["world_label_service"]]
 script = ExtResource("12_labels")
@@ -112,7 +130,7 @@ camera_path = NodePath("../Camera")
 mobile_controls_path = NodePath("../MobileControls")
 small_island_path = NodePath("../RegionRuntime/IslandContainer/glass_reef")
 medium_island_path = NodePath("../RegionRuntime/IslandContainer/sun_rest")
-poi_path = NodePath("../RegionRuntime/HarborContainer/harbor_aster")
+poi_path = NodePath("../RegionRuntime/HarborContainer/harbor_aster_port")
 
 [node name="WorldPickInput" type="Node" parent="."]
 script = ExtResource("9_picker")

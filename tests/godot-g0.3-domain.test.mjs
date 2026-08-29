@@ -51,8 +51,9 @@ test("IslandEntity proxy gameplay geometry and navigation boundaries", async () 
   assert.match(entity, /gameplay_footprint/);
   assert.match(profile, /size_class/);
   assert.match(profile, /use_proxy_geometry/);
-  assert.match(root, /_build_proxy_geometry/);
+  assert.match(root, /IslandVisualBuilder\.build_into/);
   assert.match(root, /navigation_boundaries/);
+  assert.match(root, /use_proxy_geometry/);
 });
 
 test("Harbor and POI domain foundations", async () => {
@@ -122,7 +123,7 @@ test("TEMP_REFERENCE independence — production world has no required third-par
   const islandRoot = await read("godot/scripts/islands/island_root.gd");
   assert.doesNotMatch(world, /TEMP_REFERENCE/);
   assert.doesNotMatch(world, /\.webp/);
-  assert.match(islandRoot, /use_proxy_geometry|_build_proxy_geometry/);
+  assert.match(islandRoot, /IslandVisualBuilder|use_proxy_geometry/);
 });
 
 test("Web export resource policy unchanged", async () => {

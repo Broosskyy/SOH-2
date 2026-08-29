@@ -3,16 +3,11 @@
 [ext_resource type="Script" path="res://scripts/npc/npc_ship.gd" id="1_npc"]
 [ext_resource type="Script" path="res://scripts/units/health_component.gd" id="2_health"]
 [ext_resource type="Script" path="res://scripts/units/targetable_component.gd" id="3_targetable"]
+[ext_resource type="Script" path="res://scripts/vfx/ship_wake.gd" id="4_wake"]
 
 [sub_resource type="CapsuleShape3D" id="Collision"]
 radius = 5.0
 height = 28.0
-
-[sub_resource type="BoxMesh" id="HullMesh"]
-size = Vector3(16, 8, 34)
-
-[sub_resource type="StandardMaterial3D" id="HullMaterial"]
-albedo_color = Color(0.72, 0.28, 0.22, 1)
 
 [node name="NpcShip" type="CharacterBody3D"]
 script = ExtResource("1_npc")
@@ -20,10 +15,6 @@ script = ExtResource("1_npc")
 [node name="GameplayRoot" type="Node3D" parent="."]
 
 [node name="VisualRoot" type="Node3D" parent="."]
-
-[node name="ProxyHull" type="MeshInstance3D" parent="VisualRoot"]
-mesh = SubResource("HullMesh")
-surface_material_override/0 = SubResource("HullMaterial")
 
 [node name="CollisionRoot" type="Node3D" parent="."]
 
@@ -45,3 +36,6 @@ script = ExtResource("3_targetable")
 [node name="WeaponAnchors" type="Node3D" parent="."]
 
 [node name="VFXRoot" type="Node3D" parent="."]
+
+[node name="Wake" type="Node3D" parent="VFXRoot"]
+script = ExtResource("4_wake")

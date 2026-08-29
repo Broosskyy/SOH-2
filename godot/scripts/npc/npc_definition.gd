@@ -4,6 +4,7 @@ extends Resource
 @export var npc_id: String = ""
 @export var display_name: String = ""
 @export var catalog_kind: String = ""
+@export var level := 1
 @export var faction: UnitFaction.Allegiance = UnitFaction.Allegiance.HOSTILE
 @export var max_health := 520.0
 @export var max_speed := 34.0
