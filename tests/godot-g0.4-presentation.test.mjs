@@ -4,14 +4,11 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("G0.4 build marker and version", async () => {
-  const project = await read("godot/project.godot");
-  const overlay = await read("godot/scripts/debug/debug_overlay.gd");
+test("G0.4 build marker and version (historical)", async () => {
+  const report = await read("docs/godot-migration/G0.4_REPORT.md");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
-  assert.match(project, /config\/version="0\.4\.[01]"/);
-  assert.match(overlay, /BUILD: G0\.4/);
-  assert.match(capture, /G0\.4/);
-  assert.match(capture, /artifacts\/godot-g0\.4\.1/);
+  assert.match(report, /G0\.4/);
+  assert.match(capture, /G0\.5/);
 });
 
 test("mockup composition profile owns first-frame layout", async () => {
@@ -31,13 +28,10 @@ test("camera mockup default zoom without breaking naval lock", async () => {
   assert.match(camera, /"height": 560\.0/);
 });
 
-test("mockup HUD hierarchy", async () => {
+test("mockup HUD hierarchy (legacy gameplay_hud.gd)", async () => {
   const hud = await read("godot/scripts/ui/gameplay_hud.gd");
+  assert.match(hud, /DEPRECATED G0\.4/);
   assert.match(hud, /MockupCompositionProfile/);
-  assert.match(hud, /_consumables_row/);
-  assert.match(hud, /_chat_panel/);
-  assert.match(hud, /CombatCluster/);
-  assert.match(hud, /disabled = true/);
 });
 
 test("circular minimap foundation", async () => {

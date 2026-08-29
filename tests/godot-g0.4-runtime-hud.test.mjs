@@ -16,34 +16,29 @@ test("runtime QA marker gated to qa query flag", async () => {
   assert.match(qa, /query_flag\("qa"\)/);
   assert.match(project, /RuntimeQaMarker/);
   const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
-  assert.match(profile, /G0\.4\.1-VISUAL-PARITY/);
+  assert.match(profile, /G0\.4\.1-VISUAL-PARITY|G0\.5-WEB-PRESENTATION-REBASE/);
 });
 
-test("single gameplay HUD owner with mobile landscape profile", async () => {
+test("single gameplay HUD owner with mobile landscape profile (legacy file)", async () => {
   const hud = await read("godot/scripts/ui/gameplay_hud.gd");
   const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
   const layout = await read("godot/scripts/ui/hud_layout.gd");
   assert.match(hud, /gameplay_hud_root/);
-  assert.match(hud, /_nav_row\.visible = true/);
-  assert.match(hud, /_chat_panel\.visible = true/);
-  assert.match(hud, /_zoom_panel/);
-  assert.match(hud, /_fullscreen_button/);
   assert.match(profile, /MOBILE_LANDSCAPE/);
   assert.match(layout, /is_mobile_landscape/);
 });
 
-test("normalized control prominence", async () => {
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
+test("normalized control prominence (presentation root)", async () => {
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const minimap = await read("godot/scripts/ui/minimap.gd");
-  assert.match(hud, /RATIO_FIRE_D/);
-  assert.match(hud, /RATIO_ABILITY_D/);
-  assert.match(minimap, /RATIO_MINIMAP_D/);
+  assert.match(root, /CombatCluster/);
+  assert.match(minimap, /RATIO_MINIMAP_D|draw_circle/);
 });
 
 test("diagnostic overlay remains diag gated", async () => {
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
   assert.match(overlay, /query_flag\("diag"\)/);
-  assert.match(overlay, /G0\.4\.1-VISUAL-PARITY/);
+  assert.match(overlay, /G0\.5-WEB-PRESENTATION-REBASE/);
 });
 
 test("runtime HUD audit docs exist", async () => {

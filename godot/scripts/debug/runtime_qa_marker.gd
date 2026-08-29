@@ -26,14 +26,14 @@ func _refresh() -> void:
 		return
 	var viewport := get_viewport().get_visible_rect().size
 	var css := HudLayoutProfile.css_viewport()
-	var hud_owner := "GameplayHud"
-	for node in get_tree().get_nodes_in_group("gameplay_hud_root"):
+	var hud_owner := "GameplayPresentationRoot"
+	for node in get_tree().get_nodes_in_group("gameplay_presentation_root"):
 		if node != null:
 			hud_owner = str(node.get_class())
 			break
 	_label.text = "\n".join([
-		"BUILD: %s" % HudLayoutProfile.BUILD_LABEL,
-		"GIT: %s" % HudLayoutProfile.GIT_SHA,
+		"BUILD: %s" % PresentationLayout.BUILD_LABEL,
+		"GIT: %s" % PresentationLayout.GIT_SHA,
 		"LAYOUT: %s" % HudLayoutProfile.profile_name(viewport),
 		"VIEWPORT: %dx%d" % [int(viewport.x), int(viewport.y)],
 		"CSS: %dx%d" % [int(css.x), int(css.y)],

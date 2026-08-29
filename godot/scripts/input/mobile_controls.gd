@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 ## Single authoritative mobile control layer — camera pan joystick + pinch zoom only.
-## Combat controls live in GameplayHud (disabled until G0.4).
+## Combat controls live in GameplayPresentationRoot (G0.5).
 
 @export var camera_path: NodePath
 
@@ -55,7 +55,7 @@ func _layout_touch_hud() -> void:
 	joystick_style_radius(joystick_area, size * 0.5)
 	joystick_area.position = Vector2(
 		maxf(18.0, margins.x + 14.0),
-		viewport_size.y - margins.w - size - 72.0
+		viewport_size.y - margins.w - size - 18.0
 	)
 	joystick_radius = size * 0.42
 	joystick_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 10.0, HudLayout.Semantic.NAVIGATION))

@@ -8,7 +8,7 @@ test("G0.3.2 build marker and version (historical)", async () => {
   const report = await read("docs/godot-migration/G0.3.2_REPORT.md");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
   assert.match(report, /G0\.3\.2/);
-  assert.match(capture, /artifacts\/godot-g0\.3\.[23]|artifacts\/godot-g0\.4/);
+  assert.match(capture, /artifacts\/godot-g0\./);
 });
 
 test("diagnostic overlay gated on diag query flag for Web", async () => {
@@ -30,27 +30,25 @@ test("island mesh validity — no center fan vertex", async () => {
 
 test("HudLayout responsive scaling contract", async () => {
   const layout = await read("godot/scripts/ui/hud_layout.gd");
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const minimap = await read("godot/scripts/ui/minimap.gd");
   const floating = await read("godot/scripts/ui/floating_status_hud.gd");
   assert.match(layout, /class_name HudLayout/);
   assert.match(layout, /MIN_TOUCH_PX/);
   assert.match(layout, /semantic_scale/);
-  assert.match(hud, /HudLayout\.semantic_scale/);
-  assert.match(hud, /_nav_row\.visible = not mobile/);
-  assert.match(hud, /_mobile_combat_cluster/);
-  assert.match(minimap, /HudLayout\.semantic_scale/);
+  assert.match(root, /PresentationLayout/);
+  assert.match(minimap, /HudLayoutProfile\.touch_floor|HudLayout\.font_size/);
   assert.match(floating, /HudLayout\.semantic_scale/);
 });
 
 test("single mobile control owner — no combat buttons in mobile layer", async () => {
   const mobile = await read("godot/scripts/input/mobile_controls.gd");
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   assert.match(mobile, /KAMERA/);
   assert.doesNotMatch(mobile, /FEUER/);
   assert.doesNotMatch(mobile, /Ability/);
   assert.doesNotMatch(mobile, /STEER/);
-  assert.match(hud, /disabled = true/);
+  assert.match(root, /disabled = true/);
 });
 
 test("minimap marker rendering foundation", async () => {

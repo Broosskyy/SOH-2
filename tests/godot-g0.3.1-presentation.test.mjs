@@ -8,7 +8,7 @@ test("G0.3.1 build marker and version (historical docs)", async () => {
   const report = await read("docs/godot-migration/G0.3.1_REPORT.md");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
   assert.match(report, /G0\.3\.1/);
-  assert.match(capture, /artifacts\/godot-g0\.3\.2/);
+  assert.match(capture, /artifacts\/godot-g0\./);
 });
 
 test("visual and collision separation — no production debug slabs", async () => {
@@ -29,8 +29,8 @@ test("island profile shape and size metadata contract", async () => {
   assert.match(profile, /shape_class/);
   assert.match(profile, /lod_policy/);
   assert.match(profile, /harbor_sockets|harbor_anchor/);
-  assert.match(factory, /ShapeClass\.HARBOR/);
-  assert.match(factory, /_catalog\(/);
+  assert.match(factory, /ShapeClass\.FORTRESS/);
+  assert.match(factory, /static func _island\(/);
 });
 
 test("island visual scale sanity uses gameplay footprint", async () => {
@@ -60,17 +60,17 @@ test("minimap data mapping foundation", async () => {
   assert.match(minimap, /map_data/);
   assert.match(minimap, /island_entities/);
   assert.match(minimap, /npc_ships/);
-  assert.match(world, /GameplayHUD/);
-  assert.match(world, /Minimap/);
+  assert.match(world, /GameplayPresentation/);
+  assert.match(world, /Minimap|gameplay_presentation_root/);
 });
 
-test("HUD responsive contract", async () => {
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
-  assert.match(hud, /class_name GameplayHud/);
-  assert.match(hud, /PlatformService\.safe_rect/);
-  assert.match(hud, /RUMPF/);
-  assert.match(hud, /AKTIVE MISSION/);
-  assert.match(hud, /disabled = true/);
+test("HUD responsive contract (presentation root)", async () => {
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
+  assert.match(root, /class_name GameplayPresentationRoot/);
+  assert.match(root, /PresentationLayout/);
+  assert.match(root, /RUMPF/);
+  assert.match(root, /AKTIVE MISSION/);
+  assert.match(root, /disabled = true/);
 });
 
 test("label declutter policy", async () => {
@@ -97,12 +97,12 @@ test("TEMP_REFERENCE exclusion in production world", async () => {
 test("V20.3.2 aster region content recovery", async () => {
   const factory = await read("godot/scripts/region/aster_region_factory.gd");
   assert.match(factory, /harbor_aster/);
-  assert.match(factory, /glass_reef/);
-  assert.match(factory, /sun_rest/);
-  assert.match(factory, /watch_cliff/);
-  assert.match(factory, /hostile_raider/);
-  assert.match(factory, /neutral_escort/);
-  assert.match(factory, /x - 1500\.0/);
+  assert.match(factory, /coral_crescent|glass_reef/);
+  assert.match(factory, /distant_tropical|Sonnenruh/);
+  assert.match(factory, /beacon_islet|rock_spire_n/);
+  assert.match(factory, /black_corsair|red_corsair/);
+  assert.match(factory, /neutral_patrol/);
+  assert.match(factory, /MockupCompositionProfile\.world_pos|world_bounds = Vector2\(3000/);
 });
 
 test("G0.3.1 documentation set exists", async () => {

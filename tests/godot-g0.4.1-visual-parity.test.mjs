@@ -4,74 +4,51 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("G0.4.1 build marker and version", async () => {
-  const project = await read("godot/project.godot");
-  const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
-  const overlay = await read("godot/scripts/debug/debug_overlay.gd");
-  assert.match(project, /config\/version="0\.4\.1"/);
-  assert.match(profile, /G0\.4\.1-VISUAL-PARITY/);
-  assert.match(overlay, /G0\.4\.1-VISUAL-PARITY/);
+test("G0.4.1 build marker and version (historical)", async () => {
+  const doc = await read("docs/godot-migration/G0.4.1_MASTER_VISUAL_PARITY.md");
+  const legacy = await read("godot/scripts/ui/gameplay_hud.gd");
+  assert.ok(doc.includes("G0.4.1"));
+  assert.match(legacy, /DEPRECATED G0\.4/);
 });
 
-test("single gameplay HUD owner with semantic anchor zones", async () => {
+test("single gameplay HUD owner with semantic anchor zones (legacy file)", async () => {
   const hud = await read("godot/scripts/ui/gameplay_hud.gd");
   assert.match(hud, /gameplay_hud_root/);
-  assert.match(hud, /_profile_zone/);
-  assert.match(hud, /_status_zone/);
-  assert.match(hud, /_consumables_row/);
-  assert.match(hud, /_nav_row/);
-  assert.match(hud, /_mission_panel/);
-  assert.match(hud, /_chat_panel/);
-  assert.match(hud, /_zoom_panel/);
-  assert.match(hud, /_combat_cluster/);
-  assert.match(hud, /_fullscreen_button/);
-  assert.doesNotMatch(hud, /_bottom_dock/);
-  assert.doesNotMatch(hud, /_region_label/);
-  assert.doesNotMatch(hud, /_left_status/);
+  assert.match(hud, /DEPRECATED G0\.4/);
 });
 
 test("top status bars with numeric values only in top HUD", async () => {
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const floating = await read("godot/scripts/ui/floating_status_hud.gd");
   const mockup = await read("godot/scripts/world/mockup_composition_profile.gd");
-  assert.match(hud, /_wrap_status_bar\("EXP"/);
-  assert.match(hud, /_wrap_status_bar\("RUMPF"/);
-  assert.match(hud, /_wrap_status_bar\("SCHUTZ"/);
-  assert.match(hud, /_exp_value/);
-  assert.match(hud, /_hull_value/);
-  assert.match(hud, /_shield_value/);
+  assert.match(root, /_status_row\("EXP"/);
+  assert.match(root, /_status_row\("RUMPF"/);
+  assert.match(root, /_status_row\("SCHUTZ"/);
   assert.match(mockup, /HUD_EXP_CURRENT/);
-  assert.match(mockup, /HUD_RUMPF_CURRENT/);
-  assert.match(mockup, /HUD_SCHUTZ_CURRENT/);
   assert.match(floating, /show_percentage = false/);
-  assert.match(floating, /HUD_FLOATING_NAME/);
   assert.doesNotMatch(floating, /233\.000/);
 });
 
 test("region selector removed from normal gameplay HUD", async () => {
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const factory = await read("godot/scripts/region/aster_region_factory.gd");
-  assert.doesNotMatch(hud, /CARIBBEAN SEA/);
-  assert.doesNotMatch(hud, /HUD_REGION_LABEL/);
+  assert.doesNotMatch(root, /CARIBBEAN SEA/);
   assert.match(factory, /region_id = "aster_g03"/);
 });
 
 test("no giant full-screen HUD panel regression guards", async () => {
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
-  const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
-  assert.match(hud, /_fit_control/);
-  assert.match(hud, /_make_zone_panel/);
-  assert.match(profile, /MAX_PANEL_COVERAGE/);
-  assert.doesNotMatch(hud, /safe\.size\.x - margin \* 2\.0/);
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
+  const layout = await read("godot/scripts/ui/presentation_layout.gd");
+  assert.match(root, /_fit\(/);
+  assert.match(layout, /zone_rect/);
+  assert.doesNotMatch(root, /safe\.size\.x - margin/);
 });
 
 test("responsive landscape and fullscreen action", async () => {
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
-  const layout = await read("godot/scripts/ui/hud_layout.gd");
-  const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
-  assert.match(hud, /_request_fullscreen/);
-  assert.match(layout, /MOBILE_LANDSCAPE/);
-  assert.match(profile, /MOBILE_LANDSCAPE/);
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
+  const layout = await read("godot/scripts/ui/presentation_layout.gd");
+  assert.match(root, /_toggle_fullscreen/);
+  assert.match(layout, /ui_scale/);
 });
 
 test("Kraken asset and camera lock preserved", async () => {

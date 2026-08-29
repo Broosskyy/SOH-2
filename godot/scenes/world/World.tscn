@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/ships/PlayerShip.tscn" id="2_ship"]
@@ -13,8 +13,7 @@
 [ext_resource type="Script" path="res://scripts/npc/npc_spawner.gd" id="11_spawner"]
 [ext_resource type="Script" path="res://scripts/ui/world_label_service.gd" id="12_labels"]
 [ext_resource type="Script" path="res://scripts/ui/target_reticle.gd" id="13_reticle"]
-[ext_resource type="Script" path="res://scripts/ui/gameplay_hud.gd" id="14_gameplay_hud"]
-[ext_resource type="Script" path="res://scripts/ui/minimap.gd" id="15_minimap"]
+[ext_resource type="Script" path="res://scripts/ui/gameplay_presentation_root.gd" id="14_gameplay_hud"]
 [ext_resource type="Script" path="res://scripts/world/ocean_surface.gd" id="16_ocean"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
@@ -42,7 +41,7 @@ subdivide_width = 80
 subdivide_depth = 60
 
 [sub_resource type="StandardMaterial3D" id="OceanMaterial"]
-albedo_color = Color(0.008, 0.145, 0.235, 1)
+	albedo_color = Color(0.02, 0.18, 0.32, 1)
 metallic = 0.18
 roughness = 0.3
 
@@ -94,18 +93,11 @@ script = ExtResource("5_hud")
 target_path = NodePath("../PlayerShip")
 camera_path = NodePath("../Camera")
 
-[node name="GameplayHUD" type="CanvasLayer" parent="."]
+[node name="GameplayPresentation" type="CanvasLayer" parent="."]
 script = ExtResource("14_gameplay_hud")
 player_path = NodePath("../PlayerShip")
 camera_path = NodePath("../Camera")
 region_runtime_path = NodePath("../RegionRuntime")
-
-[node name="Minimap" type="Control" parent="GameplayHUD"]
-layout_mode = 3
-anchors_preset = 0
-script = ExtResource("15_minimap")
-region_runtime_path = NodePath("../../RegionRuntime")
-player_path = NodePath("../../PlayerShip")
 
 [node name="WorldLabelService" type="CanvasLayer" parent="." groups=["world_label_service"]]
 script = ExtResource("12_labels")

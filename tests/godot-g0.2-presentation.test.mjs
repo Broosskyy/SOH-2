@@ -46,13 +46,13 @@ test("mobile hybrid input separates destination navigation and camera pan", asyn
 
 test("HUD and controls share safe-area policy", async () => {
   const platform = await read("godot/scripts/platform/platform_service.gd");
-  const hud = await read("godot/scripts/ui/floating_status_hud.gd");
+  const presentation = await read("godot/scripts/ui/presentation_layout.gd");
   const mobile = await read("godot/scripts/input/mobile_controls.gd");
   assert.match(platform, /func safe_rect/);
   assert.match(platform, /func safe_margins/);
   assert.match(platform, /DisplayServer\.screen_get_size/);
   assert.match(platform, /display_to_viewport/);
-  assert.match(hud, /PlatformService\.safe_rect/);
+  assert.match(presentation, /PlatformService\.safe_rect/);
   assert.match(mobile, /PlatformService\.safe_margins/);
 });
 
@@ -86,8 +86,8 @@ test("G0.2 QA covers aspects, quality tiers, headings and performance evidence",
   assert.match(capture, /1920x1080/);
   assert.match(capture, /2400x1080/);
   assert.match(capture, /QA_QUALITIES := \["LOW", "HIGH"\]/);
-  assert.match(capture, /artifacts\/godot-g0\.[34]/);
-  assert.match(overlay, /BUILD: G0\.[34]/);
+  assert.match(capture, /artifacts\/godot-g0\./);
+  assert.match(overlay, /BUILD: G0\./);
   assert.match(overlay, /REGION:/);
   assert.match(overlay, /INPUT MODE/);
   assert.match(overlay, /SAFE AREA/);
@@ -111,7 +111,9 @@ test("quality manager disables directional light shadows when LOW profile turns 
   assert.match(quality, /apply_directional_shadows/);
   assert.match(quality, /directional_lights/);
   assert.match(world, /directional_lights/);
+  const worldScene = await read("godot/scenes/world/World.tscn");
   assert.match(world, /fog_enabled = false/);
+  assert.match(worldScene, /fog_enabled = true/);
 });
 
 test("mobile web diagnostics expose boot telemetry and isolation controls", async () => {

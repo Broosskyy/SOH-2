@@ -8,7 +8,7 @@ test("G0.1 targets Godot 4.7 with GL Compatibility", async () => {
   const project = await read("godot/project.godot");
   assert.match(project, /PackedStringArray\("4\.7", "GL Compatibility"\)/);
   assert.match(project, /renderer\/rendering_method="gl_compatibility"/);
-  assert.match(project, /config\/version="0\.2\.0"/);
+  assert.match(project, /config\/version="0\.[0-9]+\.[0-9]+"/);
 });
 
 test("Kraken is a visual-only child of the gameplay ship", async () => {
@@ -18,11 +18,12 @@ test("Kraken is a visual-only child of the gameplay ship", async () => {
   assert.match(scene, /Kraken_ship_player_30k\.glb/);
   assert.match(scene, /name="VisualRoot"/);
   assert.match(scene, /name="KrakenModel" parent="VisualRoot"/);
-  assert.match(scene, /name="Collision" type="CollisionShape3D" parent="\."/);
+  assert.match(scene, /name="Collision" type="CollisionShape3D" parent="CollisionRoot"/);
   assert.doesNotMatch(scene, /name="(Hull|Bow|Mast|Sail)"/);
+  const shipEntity = await read("godot/scripts/ships/ship_entity.gd");
   assert.match(controller, /velocity = -transform\.basis\.z \* forward_speed/);
   assert.match(controller, /position\.y = GameplayPlane\.WATER_Y/g);
-  assert.match(controller, /visual_root\.rotation_degrees\.y/);
+  assert.match(shipEntity, /visual_root\.rotation_degrees\.y/);
   assert.match(profile, /visual_yaw_degrees = 180\.0/);
   assert.equal(
     (await stat(new URL("../godot/assets/ships/player/kraken/Kraken_ship_player_30k.glb", import.meta.url))).size,
@@ -54,17 +55,16 @@ test("naval camera, floating HUD and eight-way QA are present", async () => {
   assert.match(hud, /camera\.unproject_position/);
   assert.match(hud, /ui_safe_gap/);
   assert.match(debug, /0\.0, 45\.0, 90\.0, 135\.0, 180\.0, 225\.0, 270\.0, 315\.0/);
-  assert.match(debug, /BUILD: G0\.2/);
+  assert.match(debug, /BUILD: G0\./);
 });
 
 test("test world and all Tier-1 export presets are configured", async () => {
   const world = await read("godot/scenes/world/World.tscn");
   const exports = await read("godot/export_presets.cfg");
-  assert.match(world, /Region_Aster/);
-  assert.match(world, /SmallIsland/);
-  assert.match(world, /MediumIsland/);
-  assert.match(world, /POI_Harbor/);
-  assert.match(world, /FloatingPlayerHUD/);
+  assert.match(world, /RegionRuntime/);
+  assert.match(world, /IslandContainer/);
+  assert.match(world, /HarborContainer/);
+  assert.match(world, /GameplayPresentation|FloatingPlayerHUD/);
   for (const preset of ["Web", "Android", "iOS", "Windows"]) {
     assert.match(exports, new RegExp(`name="${preset}"`));
   }

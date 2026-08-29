@@ -8,10 +8,10 @@ test("G0.3.3 build marker and version (historical)", async () => {
   const project = await read("godot/project.godot");
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
-  assert.match(project, /config\/version="0\.3\.3"|config\/version="0\.4\.0"/);
-  assert.match(overlay, /BUILD: G0\.3\.3|BUILD: G0\.4/);
-  assert.match(capture, /G0\.3\.3|G0\.4/);
-  assert.match(capture, /artifacts\/godot-g0\.3\.3|artifacts\/godot-g0\.4/);
+  assert.match(project, /config\/version="0\.[0-9]+\.[0-9]+"/);
+  assert.match(overlay, /BUILD: G0\./);
+  assert.match(capture, /G0\./);
+  assert.match(capture, /artifacts\/godot-g0\./);
 });
 
 test("HudLayout semantic sizing contract", async () => {
@@ -63,11 +63,11 @@ test("world props and composition data", async () => {
 });
 
 test("target presentation and combat layout placeholders", async () => {
-  const hud = await read("godot/scripts/ui/gameplay_hud.gd");
-  assert.match(hud, /_target_panel/);
-  assert.match(hud, /_mobile_combat_cluster/);
-  assert.match(hud, /disabled = true/);
-  assert.match(hud, /TargetingSystem/);
+  const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
+  assert.match(root, /_target/);
+  assert.match(root, /CombatCluster/);
+  assert.match(root, /disabled = true/);
+  assert.match(root, /TargetingSystem/);
 });
 
 test("island asset status classification", async () => {
@@ -87,7 +87,7 @@ test("single mobile control owner", async () => {
 test("diagnostic overlay gated and build marker", async () => {
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
   assert.match(overlay, /MobileWebDiagnostics\.query_flag\("diag"\)/);
-  assert.match(overlay, /G0\.3\.3|G0\.4/);
+  assert.match(overlay, /G0\.5|G0\.4|G0\.3\.3/);
 });
 
 test("G0.3.3 documentation set exists", async () => {

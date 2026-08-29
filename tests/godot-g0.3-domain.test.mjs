@@ -38,8 +38,8 @@ test("RegionDefinition and RegionRuntime data-driven world", async () => {
   assert.match(definition, /npc_spawn_groups/);
   assert.match(runtime, /func region_id/);
   assert.match(runtime, /navigation_boundaries/);
-  assert.match(factory, /neutral_escort/);
-  assert.match(factory, /hostile_raider/);
+  assert.match(factory, /neutral_patrol|black_corsair/);
+  assert.match(factory, /hostile_raider|red_corsair/);
   assert.match(world, /RegionRuntime/);
 });
 

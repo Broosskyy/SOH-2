@@ -1,3 +1,4 @@
+## DEPRECATED G0.4 — replaced by GameplayPresentationRoot (G0.5).
 class_name GameplayHud
 extends CanvasLayer
 

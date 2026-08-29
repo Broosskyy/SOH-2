@@ -1,8 +1,8 @@
 shader_type spatial;
 render_mode cull_disabled, diffuse_lambert;
 
-uniform vec4 u_deep : source_color = vec4(0.02, 0.18, 0.38, 1.0);
-uniform vec4 u_shallow : source_color = vec4(0.08, 0.42, 0.58, 1.0);
+uniform vec4 u_deep : source_color = vec4(0.03, 0.22, 0.45, 1.0);
+uniform vec4 u_shallow : source_color = vec4(0.12, 0.48, 0.62, 1.0);
 uniform float u_time = 0.0;
 
 void fragment() {

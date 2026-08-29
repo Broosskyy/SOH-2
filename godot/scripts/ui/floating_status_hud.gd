@@ -94,6 +94,11 @@ func _process(_delta: float) -> void:
 		clampf(desired.x, safe_rect.position.x + inset, maxf(safe_rect.position.x + inset, safe_rect.end.x - width - inset)),
 		clampf(desired.y, safe_rect.position.y + inset, maxf(safe_rect.position.y + inset, safe_rect.end.y - root.size.y - inset))
 	)
+	if Engine.get_frames_drawn() % 15 == 0 and target is ShipEntity:
+		var ship := target as ShipEntity
+		if ship.health != null:
+			hp_bar.max_value = ship.health.max_health
+			hp_bar.value = ship.health.current_health
 
 func set_status(name: String, level: int, hp: float, max_hp: float, shield: float, max_shield: float) -> void:
 	if root == null:
