@@ -37,7 +37,7 @@ func _build_touch_hud() -> void:
 	joystick_area.add_theme_stylebox_override("panel", joystick_style)
 	root.add_child(joystick_area)
 	joystick_label = Label.new()
-	joystick_label.text = "KAMERA"
+	joystick_label.text = "⚓\nKAMERA"
 	joystick_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	joystick_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	joystick_label.add_theme_color_override("font_color", Color(0.86, 0.78, 0.58))
@@ -55,7 +55,7 @@ func _layout_touch_hud() -> void:
 	joystick_style_radius(joystick_area, size * 0.5)
 	joystick_area.position = Vector2(
 		maxf(18.0, margins.x + 14.0),
-		viewport_size.y - margins.w - size - 12.0
+		viewport_size.y - margins.w - size - 72.0
 	)
 	joystick_radius = size * 0.42
 	joystick_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 10.0, HudLayout.Semantic.NAVIGATION))

@@ -127,8 +127,8 @@ script = ExtResource("7_capture")
 player_path = NodePath("../PlayerShip")
 camera_path = NodePath("../Camera")
 mobile_controls_path = NodePath("../MobileControls")
-small_island_path = NodePath("../RegionRuntime/IslandContainer/glass_reef")
-medium_island_path = NodePath("../RegionRuntime/IslandContainer/sun_rest")
+small_island_path = NodePath("../RegionRuntime/IslandContainer/coral_crescent")
+medium_island_path = NodePath("../RegionRuntime/IslandContainer/fortress_harbor")
 poi_path = NodePath("../RegionRuntime/HarborContainer/harbor_aster_port")
 
 [node name="WorldPickInput" type="Node" parent="."]

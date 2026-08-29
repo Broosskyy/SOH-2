@@ -6,6 +6,7 @@ static func build_into(visual_root: Node3D, definition: HarborDefinition) -> voi
 		return
 	_clear_children(visual_root)
 	var quality := QualityManager.current_level
+	_build_fortress_ring(visual_root)
 	_build_coast_berm(visual_root)
 	var pier := MeshInstance3D.new()
 	pier.mesh = BoxMesh.new()
@@ -70,6 +71,25 @@ static func build_into(visual_root: Node3D, definition: HarborDefinition) -> voi
 	beacon.position = Vector3(0.0, 5.5, 10.0)
 	beacon.material_override = _glow_material(Color(0.45, 0.82, 1.0))
 	visual_root.add_child(beacon)
+
+static func _build_fortress_ring(root: Node3D) -> void:
+	for index in 10:
+		var segment := MeshInstance3D.new()
+		segment.mesh = BoxMesh.new()
+		(segment.mesh as BoxMesh).size = Vector3(22.0, 14.0, 8.0)
+		var angle := TAU * float(index) / 10.0
+		segment.position = Vector3(cos(angle) * 52.0, 8.0, sin(angle) * 52.0)
+		segment.rotation.y = angle
+		segment.material_override = _stone_material(Color(0.42, 0.4, 0.38))
+		root.add_child(segment)
+	var keep := MeshInstance3D.new()
+	keep.mesh = CylinderMesh.new()
+	(keep.mesh as CylinderMesh).top_radius = 10.0
+	(keep.mesh as CylinderMesh).bottom_radius = 12.0
+	(keep.mesh as CylinderMesh).height = 36.0
+	keep.position = Vector3(0.0, 19.0, -18.0)
+	keep.material_override = _stone_material(Color(0.46, 0.44, 0.4))
+	root.add_child(keep)
 
 static func _build_coast_berm(root: Node3D) -> void:
 	var berm := MeshInstance3D.new()

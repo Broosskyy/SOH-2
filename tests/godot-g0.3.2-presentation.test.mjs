@@ -8,7 +8,7 @@ test("G0.3.2 build marker and version (historical)", async () => {
   const report = await read("docs/godot-migration/G0.3.2_REPORT.md");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
   assert.match(report, /G0\.3\.2/);
-  assert.match(capture, /artifacts\/godot-g0\.3\.3/);
+  assert.match(capture, /artifacts\/godot-g0\.3\.[23]|artifacts\/godot-g0\.4/);
 });
 
 test("diagnostic overlay gated on diag query flag for Web", async () => {

@@ -1,95 +1,84 @@
 class_name AsterRegionFactory
 extends RefCounted
 
-## Azurwacht — V20.3.2 catalog positions with G0.3.3 composition calibration.
+## Azurwacht — G0.4 mockup-first authored composition (Reference Group C).
 
 static func create() -> RegionDefinition:
 	var region := RegionDefinition.new()
 	region.region_id = "aster_g03"
 	region.display_name = "Azurwacht"
 	region.world_bounds = Vector2(3000, 2200)
-	region.player_spawn = WorldScaleProfile.gameplay_spawn_corridor()
+	region.player_spawn = MockupCompositionProfile.PLAYER_SPAWN
 
 	region.islands = [
 		_island(
-			"harbor_aster",
+			"fortress_harbor",
 			"Hafen Aster",
-			IslandPresentationProfile.SizeClass.LARGE,
-			IslandPresentationProfile.ShapeClass.HARBOR,
-			_catalog(410, 900),
-			210,
-			135,
-			"tropical",
-			62.0
-		),
-		_island(
-			"glass_reef",
-			"Glasriff",
-			IslandPresentationProfile.SizeClass.MEDIUM,
-			IslandPresentationProfile.ShapeClass.CRESCENT_COVE,
-			_catalog(1200, 370),
-			170,
-			95,
-			"tropical",
-			52.0
-		),
-		_island(
-			"sun_rest",
-			"Sonnenruh",
-			IslandPresentationProfile.SizeClass.LARGE,
-			IslandPresentationProfile.ShapeClass.HUGE_TROPICAL,
-			_catalog(2050, 1260),
-			230,
-			135,
-			"jungle",
-			58.0
-		),
-		_island(
-			"watch_cliff",
-			"Wachtklippe",
-			IslandPresentationProfile.SizeClass.MEDIUM,
-			IslandPresentationProfile.ShapeClass.TALL_CLIFF,
-			_catalog(2580, 480),
-			145,
-			90,
+			IslandPresentationProfile.SizeClass.LANDMARK,
+			IslandPresentationProfile.ShapeClass.FORTRESS,
+			MockupCompositionProfile.world_pos(460.0, -50.0),
+			168.0,
+			112.0,
 			"rocky",
-			54.0
+			68.0
 		),
 		_island(
-			"reef_spire_a",
-			"",
-			IslandPresentationProfile.SizeClass.XS,
-			IslandPresentationProfile.ShapeClass.MINI_ROCK_SPIRE,
-			_catalog(860, 620),
-			38,
-			28,
-			"rocky",
-			22.0,
-			false
-		),
-		_island(
-			"reef_spire_b",
-			"",
-			IslandPresentationProfile.SizeClass.XS,
-			IslandPresentationProfile.ShapeClass.MINI_ROCK_SPIRE,
-			_catalog(1780, 980),
-			42,
-			30,
-			"rocky",
-			22.0,
-			false
-		),
-		_island(
-			"palm_islet",
+			"palm_islet_sw",
 			"",
 			IslandPresentationProfile.SizeClass.SMALL,
 			IslandPresentationProfile.ShapeClass.TINY_PALM_ISLET,
-			_catalog(1320, 1120),
-			58,
-			44,
+			MockupCompositionProfile.world_pos(-390.0, 330.0),
+			62.0,
+			48.0,
 			"tropical",
-			28.0,
+			26.0,
 			false
+		),
+		_island(
+			"rock_spire_n",
+			"",
+			IslandPresentationProfile.SizeClass.XS,
+			IslandPresentationProfile.ShapeClass.MINI_ROCK_SPIRE,
+			MockupCompositionProfile.world_pos(25.0, -410.0),
+			36.0,
+			28.0,
+			"rocky",
+			20.0,
+			false
+		),
+		_island(
+			"coral_crescent",
+			"Glasriff",
+			IslandPresentationProfile.SizeClass.MEDIUM,
+			IslandPresentationProfile.ShapeClass.CRESCENT_COVE,
+			MockupCompositionProfile.world_pos(-200.0, -140.0),
+			118.0,
+			72.0,
+			"tropical",
+			44.0
+		),
+		_island(
+			"beacon_islet",
+			"",
+			IslandPresentationProfile.SizeClass.XS,
+			IslandPresentationProfile.ShapeClass.MINI_ROCK_SPIRE,
+			MockupCompositionProfile.world_pos(210.0, -360.0),
+			34.0,
+			26.0,
+			"rocky",
+			18.0,
+			false
+		),
+		_island(
+			"distant_tropical",
+			"Sonnenruh",
+			IslandPresentationProfile.SizeClass.MEDIUM,
+			IslandPresentationProfile.ShapeClass.HUGE_TROPICAL,
+			MockupCompositionProfile.world_pos(-620.0, -520.0),
+			145.0,
+			88.0,
+			"jungle",
+			48.0
 		),
 	]
 
@@ -97,37 +86,71 @@ static func create() -> RegionDefinition:
 		_harbor(
 			"harbor_aster_port",
 			"Hafen Aster",
-			"harbor_aster",
-			_catalog(410, 900) + Vector3(55, 0, 72)
+			"fortress_harbor",
+			MockupCompositionProfile.world_pos(420.0, 10.0)
 		),
 	]
 	region.pois = [
-		_poi("storm_beacon", "Sturmwacht", PoiDefinition.PoiType.LANDMARK, _catalog(1480, 780)),
-		_poi("loot_crate_a", "Treibgut", PoiDefinition.PoiType.LOOT, _catalog(680, 480)),
-		_poi("loot_crate_b", "Treibgut", PoiDefinition.PoiType.LOOT, _catalog(1920, 820)),
-		_poi("wreck_field", "Wrack", PoiDefinition.PoiType.LANDMARK, _catalog(1120, 520)),
-		_poi("nav_buoy_lane", "Leuchtfeuer", PoiDefinition.PoiType.LANDMARK, _catalog(920, 760)),
+		_poi("loot_chest_gold", "Schatzkiste", PoiDefinition.PoiType.LOOT, MockupCompositionProfile.world_pos(75.0, -72.0)),
+		_poi("loot_chest_green", "Schatzkiste", PoiDefinition.PoiType.LOOT, MockupCompositionProfile.world_pos(-38.0, 92.0)),
+		_poi("loot_chest_wood", "Schatzkiste", PoiDefinition.PoiType.LOOT, MockupCompositionProfile.world_pos(118.0, 48.0)),
+		_poi("storm_beacon", "Sturmwacht", PoiDefinition.PoiType.LANDMARK, MockupCompositionProfile.world_pos(210.0, -360.0)),
+		_poi("wreck_field", "Wrack", PoiDefinition.PoiType.LANDMARK, MockupCompositionProfile.world_pos(-520.0, 120.0)),
 	]
 	region.npc_spawn_groups = [
-		_npc_group("hostile_raider_a", "raider", "Scherben-Plünderer", 1, UnitFaction.Allegiance.HOSTILE, _catalog(1180, 920), Color(0.82, 0.24, 0.18)),
-		_npc_group("hostile_scout", "scout", "Nox-Kundschafter", 2, UnitFaction.Allegiance.HOSTILE, _catalog(1380, 720), Color(0.72, 0.22, 0.2)),
-		_npc_group("neutral_escort", "escort", "Kupfer-Eskorte", 3, UnitFaction.Allegiance.FRIENDLY, _catalog(1720, 680), Color(0.35, 0.78, 0.92)),
-		_npc_group("hostile_raider_b", "raider", "Scherben-Plünderer", 1, UnitFaction.Allegiance.HOSTILE, _catalog(2450, 1450), Color(0.78, 0.2, 0.16)),
+		_npc_group(
+			"black_corsair",
+			"raider",
+			"Black Corsair",
+			24,
+			UnitFaction.Allegiance.HOSTILE,
+			MockupCompositionProfile.world_pos(305.0, -255.0),
+			Color(0.12, 0.1, 0.12),
+			0.0
+		),
+		_npc_group(
+			"shadow_reaper",
+			"scout",
+			"Shadow Reaper",
+			23,
+			UnitFaction.Allegiance.HOSTILE,
+			MockupCompositionProfile.world_pos(-235.0, 195.0),
+			Color(0.28, 0.12, 0.42),
+			0.0
+		),
+		_npc_group(
+			"red_corsair",
+			"raider",
+			"Red Corsair",
+			24,
+			UnitFaction.Allegiance.HOSTILE,
+			MockupCompositionProfile.world_pos(335.0, 35.0),
+			Color(0.78, 0.16, 0.12),
+			0.0
+		),
+		_npc_group(
+			"neutral_patrol",
+			"escort",
+			"Handelskonvoi",
+			12,
+			UnitFaction.Allegiance.FRIENDLY,
+			MockupCompositionProfile.world_pos(-480.0, -280.0),
+			Color(0.35, 0.78, 0.92),
+			36.0
+		),
 	]
 	region.set_meta("world_props", _world_props())
 	return region
 
-static func _catalog(x: float, y: float) -> Vector3:
-	return Vector3(x - 1500.0, 0.0, y - 1100.0)
-
 static func _world_props() -> Array:
 	return [
-		{"kind": WorldPropBuilder.PropKind.BUOY, "position": _catalog(760, 820), "seed": 1},
-		{"kind": WorldPropBuilder.PropKind.BUOY, "position": _catalog(540, 640), "seed": 2},
-		{"kind": WorldPropBuilder.PropKind.WRECK, "position": _catalog(1120, 520), "seed": 3},
-		{"kind": WorldPropBuilder.PropKind.BARREL, "position": _catalog(980, 610), "seed": 4},
-		{"kind": WorldPropBuilder.PropKind.CRATE, "position": _catalog(680, 480), "seed": 5},
-		{"kind": WorldPropBuilder.PropKind.BEACON, "position": _catalog(920, 760), "seed": 6},
+		{"kind": WorldPropBuilder.PropKind.CHEST_GOLD, "position": MockupCompositionProfile.world_pos(75.0, -72.0), "seed": 1},
+		{"kind": WorldPropBuilder.PropKind.CHEST_GREEN, "position": MockupCompositionProfile.world_pos(-38.0, 92.0), "seed": 2},
+		{"kind": WorldPropBuilder.PropKind.CHEST_WOOD, "position": MockupCompositionProfile.world_pos(118.0, 48.0), "seed": 3},
+		{"kind": WorldPropBuilder.PropKind.BUOY, "position": MockupCompositionProfile.world_pos(180.0, 160.0), "seed": 4},
+		{"kind": WorldPropBuilder.PropKind.BUOY, "position": MockupCompositionProfile.world_pos(-120.0, 240.0), "seed": 5},
+		{"kind": WorldPropBuilder.PropKind.WRECK, "position": MockupCompositionProfile.world_pos(-520.0, 120.0), "seed": 6},
+		{"kind": WorldPropBuilder.PropKind.BEACON, "position": MockupCompositionProfile.world_pos(210.0, -360.0), "seed": 7},
 	]
 
 static func _island(
@@ -156,7 +179,10 @@ static func _island(
 	profile.visual_scale = WorldScaleProfile.island_visual_scale(size_class)
 	profile.use_proxy_geometry = true
 	profile.asset_status = IslandPresentationProfile.AssetStatus.PROCEDURAL_FALLBACK
-	profile.harbor_anchor = Vector3(0, 0, radius_z * 0.42) if shape_class == IslandPresentationProfile.ShapeClass.HARBOR else Vector3.ZERO
+	profile.harbor_anchor = Vector3(0, 0, radius_z * 0.42) if shape_class in [
+		IslandPresentationProfile.ShapeClass.HARBOR,
+		IslandPresentationProfile.ShapeClass.FORTRESS,
+	] else Vector3.ZERO
 	return profile
 
 static func _harbor(id: String, name: String, island_id: String, position: Vector3) -> HarborDefinition:
@@ -165,7 +191,7 @@ static func _harbor(id: String, name: String, island_id: String, position: Vecto
 	harbor.display_name = name
 	harbor.associated_island = island_id
 	harbor.world_position = position
-	harbor.port_exit_position = position + Vector3(95, 0, 55)
+	harbor.port_exit_position = position + Vector3(-85.0, 0.0, 40.0)
 	return harbor
 
 static func _poi(id: String, name: String, poi_type: PoiDefinition.PoiType, position: Vector3) -> PoiDefinition:
@@ -184,7 +210,8 @@ static func _npc_group(
 		level: int,
 		faction: UnitFaction.Allegiance,
 		spawn_center: Vector3,
-		color: Color
+		color: Color,
+		spawn_radius: float
 	) -> NpcSpawnGroup:
 	var definition := NpcDefinition.new()
 	definition.npc_id = group_id
@@ -192,23 +219,19 @@ static func _npc_group(
 	definition.catalog_kind = catalog_kind
 	definition.level = level
 	definition.faction = faction
-	definition.max_health = 300.0 + level * 110.0
-	definition.max_speed = 34.0 + level * 4.0
+	definition.max_health = 8000.0 + level * 450.0
+	definition.max_speed = 28.0 + level * 3.0
 	definition.visual_color = color
-	definition.behaviour = _patrol_profile(_patrol_ring(spawn_center, WorldScaleProfile.patrol_radius_for_npc(), 3))
+	definition.behaviour = _patrol_profile(
+		MockupCompositionProfile.patrol_ring(spawn_center, WorldScaleProfile.patrol_radius_for_npc(), 3)
+	)
 	var group := NpcSpawnGroup.new()
 	group.group_id = group_id
 	group.npc_definition = definition
 	group.spawn_center = spawn_center
+	group.spawn_radius = spawn_radius
 	group.count = 1
 	return group
-
-static func _patrol_ring(center: Vector3, radius: float, count: int) -> Array[Vector3]:
-	var points: Array[Vector3] = []
-	for index in count:
-		var angle := TAU * float(index) / float(count)
-		points.append(center + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius))
-	return points
 
 static func _patrol_profile(points: Array[Vector3]) -> NpcBehaviourProfile:
 	var behaviour := NpcBehaviourProfile.new()
@@ -216,4 +239,5 @@ static func _patrol_profile(points: Array[Vector3]) -> NpcBehaviourProfile:
 	behaviour.mode = NpcBehaviourProfile.Mode.PATROL
 	behaviour.patrol_points = points
 	behaviour.detection_range = 520.0
+	behaviour.patrol_speed = 0.35
 	return behaviour

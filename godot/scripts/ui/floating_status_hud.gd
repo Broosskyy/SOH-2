@@ -23,15 +23,13 @@ func _ready() -> void:
 		push_error("FloatingStatusHud target requires a ShipPresentationProfile")
 		return
 	_build_hud()
-	var ship_id := str(GameState.save_data.get("shipId", "sovereign"))
-	var ship_data: Dictionary = GameState.catalog.get("ships", {}).get(ship_id, {})
 	set_status(
-		str(GameState.save_data.get("playerName", "Captain Rowan")),
-		int(GameState.save_data.get("level", 1)),
-		float(ship_data.get("hp", 1250.0)),
-		float(ship_data.get("hp", 1250.0)),
-		float(ship_data.get("shield", 350.0)),
-		float(ship_data.get("shield", 350.0))
+		MockupCompositionProfile.HUD_PLAYER_NAME,
+		MockupCompositionProfile.HUD_PLAYER_LEVEL,
+		14250.0,
+		15000.0,
+		50000.0,
+		50000.0
 	)
 
 func _build_hud() -> void:

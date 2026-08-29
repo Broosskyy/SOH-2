@@ -4,14 +4,14 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("G0.3.3 build marker and version", async () => {
+test("G0.3.3 build marker and version (historical)", async () => {
   const project = await read("godot/project.godot");
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
-  assert.match(project, /config\/version="0\.3\.3"/);
-  assert.match(overlay, /BUILD: G0\.3\.3/);
-  assert.match(capture, /G0\.3\.3/);
-  assert.match(capture, /artifacts\/godot-g0\.3\.3/);
+  assert.match(project, /config\/version="0\.3\.3"|config\/version="0\.4\.0"/);
+  assert.match(overlay, /BUILD: G0\.3\.3|BUILD: G0\.4/);
+  assert.match(capture, /G0\.3\.3|G0\.4/);
+  assert.match(capture, /artifacts\/godot-g0\.3\.3|artifacts\/godot-g0\.4/);
 });
 
 test("HudLayout semantic sizing contract", async () => {
@@ -38,7 +38,7 @@ test("world scale profile canonical relationships", async () => {
   assert.match(profile, /NPC_VISUAL_ROOT_SCALE/);
   assert.match(profile, /gameplay_spawn_corridor/);
   assert.match(factory, /WorldScaleProfile\.island_visual_scale/);
-  assert.match(factory, /player_spawn = WorldScaleProfile\.gameplay_spawn_corridor/);
+  assert.match(factory, /MockupCompositionProfile|WorldScaleProfile\.gameplay_spawn_corridor/);
 });
 
 test("NPC floating label with HP bar", async () => {
@@ -87,7 +87,7 @@ test("single mobile control owner", async () => {
 test("diagnostic overlay gated and build marker", async () => {
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
   assert.match(overlay, /MobileWebDiagnostics\.query_flag\("diag"\)/);
-  assert.match(overlay, /G0\.3\.3/);
+  assert.match(overlay, /G0\.3\.3|G0\.4/);
 });
 
 test("G0.3.3 documentation set exists", async () => {

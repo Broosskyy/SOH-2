@@ -3,7 +3,7 @@ extends Control
 
 @export var region_runtime_path: NodePath
 @export var player_path: NodePath
-@export var map_radius := 520.0
+@export var map_radius := 680.0
 
 @onready var region_runtime: Node = get_node(region_runtime_path)
 @onready var player: Node3D = get_node(player_path)
@@ -29,7 +29,7 @@ func _build_ui() -> void:
 	style.bg_color = Color(0.02, 0.07, 0.09, 0.88)
 	style.border_color = Color(0.72, 0.57, 0.27, 0.82)
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(8)
+	style.set_corner_radius_all(90)
 	style.content_margin_left = 6
 	style.content_margin_right = 6
 	style.content_margin_top = 5
@@ -45,6 +45,7 @@ func _build_ui() -> void:
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	heading.add_theme_color_override("font_color", Color(0.92, 0.76, 0.42))
 	stack.add_child(heading)
+	heading.visible = false
 	_canvas = MinimapCanvas.new()
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.region_runtime = region_runtime
@@ -59,25 +60,23 @@ func _build_ui() -> void:
 func _apply_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
 	var scale := HudLayout.semantic_scale(viewport, HudLayout.Semantic.MINIMAP)
-	var width := 196.0 * scale
-	var height := 132.0 * scale
-	custom_minimum_size = Vector2(width, height)
+	var diameter := 168.0 * scale
+	custom_minimum_size = Vector2(diameter, diameter)
 	size = custom_minimum_size
 	anchor_left = 1.0
 	anchor_right = 1.0
 	anchor_top = 0.0
-	offset_left = -width - HudLayout.panel_margin(viewport)
+	offset_left = -diameter - HudLayout.panel_margin(viewport)
 	offset_right = -HudLayout.panel_margin(viewport)
-	offset_top = 58.0 * HudLayout.semantic_scale(viewport, HudLayout.Semantic.PLAYER_STATUS)
-	offset_bottom = offset_top + height
+	offset_top = 64.0 * HudLayout.semantic_scale(viewport, HudLayout.Semantic.PLAYER_STATUS)
+	offset_bottom = offset_top + diameter
 	if _canvas != null:
-		_canvas.custom_minimum_size = Vector2(width - 12.0, height - 34.0)
+		_canvas.custom_minimum_size = Vector2(diameter - 14.0, diameter - 14.0)
 	var heading := _panel.get_child(0).get_child(0) as Label
 	if heading != null:
 		heading.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.MINIMAP))
-	if _region_label != null and region_runtime != null and region_runtime.region_definition != null:
-		_region_label.text = region_runtime.region_definition.display_name
-		_region_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 8.0, HudLayout.Semantic.MINIMAP))
+	if _region_label != null:
+		_region_label.visible = false
 
 func map_data() -> Dictionary:
 	return {

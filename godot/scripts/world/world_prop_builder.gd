@@ -1,7 +1,7 @@
 class_name WorldPropBuilder
 extends RefCounted
 
-enum PropKind { BUOY, WRECK, BARREL, CRATE, BEACON }
+enum PropKind { BUOY, WRECK, BARREL, CRATE, BEACON, CHEST_GOLD, CHEST_GREEN, CHEST_WOOD }
 
 static func build_into(root: Node3D, kind: PropKind, seed: int = 0) -> void:
 	if root == null:
@@ -16,6 +16,12 @@ static func build_into(root: Node3D, kind: PropKind, seed: int = 0) -> void:
 			_build_barrel(root)
 		PropKind.CRATE:
 			_build_crate(root, true)
+		PropKind.CHEST_GOLD:
+			_build_chest(root, Color(0.95, 0.78, 0.22))
+		PropKind.CHEST_GREEN:
+			_build_chest(root, Color(0.35, 0.92, 0.42))
+		PropKind.CHEST_WOOD:
+			_build_chest(root, Color(0.55, 0.38, 0.18), false)
 		PropKind.BEACON:
 			_build_beacon(root)
 
@@ -65,6 +71,26 @@ static func _build_barrel(root: Node3D) -> void:
 	barrel.position.y = 1.2
 	barrel.material_override = _wood()
 	root.add_child(barrel)
+
+static func _build_chest(root: Node3D, glow_color: Color, glow: bool = true) -> void:
+	var chest := MeshInstance3D.new()
+	chest.mesh = BoxMesh.new()
+	(chest.mesh as BoxMesh).size = Vector3(5.0, 3.8, 4.2)
+	chest.position.y = 1.9
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.48, 0.32, 0.16)
+	if glow:
+		mat.emission_enabled = true
+		mat.emission = glow_color
+		mat.emission_energy_multiplier = 0.85
+	chest.material_override = mat
+	root.add_child(chest)
+	var lid := MeshInstance3D.new()
+	lid.mesh = BoxMesh.new()
+	(lid.mesh as BoxMesh).size = Vector3(5.2, 1.2, 4.4)
+	lid.position = Vector3(0.0, 4.2, 0.0)
+	lid.material_override = _wood()
+	root.add_child(lid)
 
 static func _build_crate(root: Node3D, glow: bool) -> void:
 	var crate := MeshInstance3D.new()

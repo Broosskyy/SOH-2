@@ -50,8 +50,8 @@ func _process(_delta: float) -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	var safe := PlatformService.safe_rect(viewport_size)
 	var lines := [
-		"BUILD: G0.3.3",
-		"MILESTONE: FULL PRESENTATION PARITY",
+		"BUILD: G0.4",
+		"MILESTONE: MOCKUP-FIRST GAMEPLAY",
 		"REFERENCE: V20.3.2",
 		"ENGINE: Godot %s" % Engine.get_version_info().get("string", "unknown"),
 		"RENDERER: %s" % renderer,

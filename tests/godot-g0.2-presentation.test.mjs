@@ -74,8 +74,8 @@ test("G0.3 region uses proxy island geometry instead of authored WebP billboards
   assert.doesNotMatch(world, /storm-ruins-island-v1\.webp/);
   assert.match(world, /RegionRuntime/);
   assert.match(islandRoot, /IslandVisualBuilder\.build_into/);
-  assert.match(factory, /glass_reef/);
-  assert.match(factory, /harbor_aster/);
+  assert.match(factory, /coral_crescent|glass_reef/);
+  assert.match(factory, /fortress_harbor|harbor_aster/);
 });
 
 test("G0.2 QA covers aspects, quality tiers, headings and performance evidence", async () => {
@@ -86,8 +86,8 @@ test("G0.2 QA covers aspects, quality tiers, headings and performance evidence",
   assert.match(capture, /1920x1080/);
   assert.match(capture, /2400x1080/);
   assert.match(capture, /QA_QUALITIES := \["LOW", "HIGH"\]/);
-  assert.match(capture, /artifacts\/godot-g0\.3/);
-  assert.match(overlay, /BUILD: G0\.3/);
+  assert.match(capture, /artifacts\/godot-g0\.[34]/);
+  assert.match(overlay, /BUILD: G0\.[34]/);
   assert.match(overlay, /REGION:/);
   assert.match(overlay, /INPUT MODE/);
   assert.match(overlay, /SAFE AREA/);
