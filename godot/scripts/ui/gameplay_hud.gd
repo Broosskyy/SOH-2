@@ -39,8 +39,13 @@ var _target_name: Label
 var _target_level: Label
 var _target_hp: ProgressBar
 var _chat_preview: Label
+var _chat_tabs: HBoxContainer
+var _zoom_panel: PanelContainer
+var _fullscreen_button: Button
+var _combat_cluster: Control
 
 func _ready() -> void:
+	add_to_group("gameplay_hud_root")
 	layer = 5
 	_build_layout()
 	_refresh_status()
@@ -159,15 +164,76 @@ func _build_layout() -> void:
 	dock_row.add_child(_make_utility_button("🔧"))
 	_chat_panel = _make_panel()
 	_root.add_child(_chat_panel)
+	var chat_stack := VBoxContainer.new()
+	chat_stack.add_theme_constant_override("separation", 3)
+	_chat_panel.add_child(chat_stack)
+	_chat_tabs = HBoxContainer.new()
+	_chat_tabs.add_theme_constant_override("separation", 4)
+	for tab in ["Global", "Guild", "System"]:
+		var tab_label := Label.new()
+		tab_label.text = tab
+		tab_label.add_theme_color_override("font_color", Color(0.72, 0.78, 0.82) if tab != "Guild" else Color(0.92, 0.82, 0.48))
+		_chat_tabs.add_child(tab_label)
+	chat_stack.add_child(_chat_tabs)
 	_chat_preview = Label.new()
 	_chat_preview.text = "[Guild] CaptainX: Forming raid on Kraken!"
 	_chat_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_chat_preview.add_theme_color_override("font_color", Color(0.72, 0.78, 0.82))
-	_chat_panel.add_child(_chat_preview)
-	_action_cluster = _build_action_cluster("Desktop")
-	_root.add_child(_action_cluster)
-	_mobile_combat_cluster = _build_action_cluster("Mobile")
-	_root.add_child(_mobile_combat_cluster)
+	chat_stack.add_child(_chat_preview)
+	var chat_input := Label.new()
+	chat_input.text = "Tap to chat..."
+	chat_input.add_theme_color_override("font_color", Color(0.55, 0.58, 0.62))
+	chat_stack.add_child(chat_input)
+	_zoom_panel = _make_panel()
+	_root.add_child(_zoom_panel)
+	var zoom_col := VBoxContainer.new()
+	zoom_col.add_theme_constant_override("separation", 4)
+	_zoom_panel.add_child(zoom_col)
+	zoom_col.add_child(_make_zoom_button("+", 0.08))
+	zoom_col.add_child(_make_zoom_button("MID", 0.0))
+	zoom_col.add_child(_make_zoom_button("-", -0.08))
+	_fullscreen_button = Button.new()
+	_fullscreen_button.text = "⛶"
+	_fullscreen_button.tooltip_text = "Fullscreen"
+	_fullscreen_button.pressed.connect(_request_fullscreen)
+	_root.add_child(_fullscreen_button)
+	_combat_cluster = _build_action_cluster("Primary")
+	_root.add_child(_combat_cluster)
+	_action_cluster = _combat_cluster
+	_mobile_combat_cluster = _combat_cluster
+
+func _make_zoom_button(label_text: String, delta: float) -> Button:
+	var button := Button.new()
+	button.text = label_text
+	button.mouse_filter = Control.MOUSE_FILTER_STOP
+	if delta > 0.0:
+		button.pressed.connect(func(): (camera as NavalCameraController).adjust_zoom(delta))
+	elif delta < 0.0:
+		button.pressed.connect(func(): (camera as NavalCameraController).adjust_zoom(delta))
+	else:
+		button.pressed.connect(func(): (camera as NavalCameraController).zoom = MockupCompositionProfile.DEFAULT_CAMERA_ZOOM)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.08, 0.1, 0.9)
+	style.border_color = Color(0.62, 0.48, 0.24, 0.72)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_color_override("font_color", Color(0.9, 0.84, 0.68))
+	return button
+
+func _request_fullscreen() -> void:
+	if OS.get_name() == "Web" and ClassDB.class_exists("JavaScriptBridge"):
+		JavaScriptBridge.eval(
+			"""(() => {
+				const root = document.documentElement;
+				if (!document.fullscreenElement) root.requestFullscreen?.();
+				else document.exitFullscreen?.();
+			})()"""
+		)
+	elif DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_FULLSCREEN:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	else:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 
 func _make_captain_chip() -> PanelContainer:
 	var panel := _make_panel()
@@ -181,7 +247,7 @@ func _make_captain_chip() -> PanelContainer:
 	avatar_style.set_border_width_all(2)
 	avatar_style.set_corner_radius_all(24)
 	avatar.add_theme_stylebox_override("panel", avatar_style)
-	avatar.custom_minimum_size = Vector2(40, 40)
+	avatar.custom_minimum_size = Vector2(48, 48)
 	var avatar_mark := Label.new()
 	avatar_mark.text = "☠"
 	avatar_mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -357,88 +423,113 @@ func _build_action_cluster(suffix: String) -> Control:
 func _apply_responsive_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
 	var safe := PlatformService.safe_rect(viewport)
-	var mobile := HudLayout.is_mobile_layout(viewport)
-	var status_scale := HudLayout.semantic_scale(viewport, HudLayout.Semantic.PLAYER_STATUS)
-	var mission_scale := HudLayout.semantic_scale(viewport, HudLayout.Semantic.MISSION)
+	var profile := HudLayoutProfile.detect(viewport)
+	var landscape_mobile := profile == HudLayoutProfile.Profile.MOBILE_LANDSCAPE
 	var margin := HudLayout.panel_margin(viewport)
-	var top_height := 64.0 * status_scale
+	var top_height := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_TOP_BAR_H)
+	var mission_w := HudLayoutProfile.length(viewport, HudLayoutProfile.RATIO_MISSION_W, "x")
+	var mission_h := top_height * 1.15
 	_top_bar.position = Vector2(safe.position.x + margin, safe.position.y + margin)
-	_top_bar.size = Vector2(safe.size.x, top_height)
-	_top_bar.custom_minimum_size = Vector2(safe.size.x, top_height)
+	_top_bar.size = Vector2(safe.size.x - margin * 2.0, top_height)
+	_top_bar.custom_minimum_size = _top_bar.size
 	_left_status.position = Vector2(safe.position.x + margin, safe.position.y + margin + top_height + 6.0)
-	_left_status.custom_minimum_size = Vector2(118.0 * status_scale, 52.0 * status_scale)
-	_left_status.visible = not mobile
+	_left_status.custom_minimum_size = Vector2(HudLayoutProfile.length(viewport, 0.08, "x"), top_height * 0.9)
+	_left_status.visible = true
 	_mission_panel.position = Vector2(
-		safe.position.x + margin + (0.0 if mobile else 126.0 * status_scale),
+		safe.position.x + margin + _left_status.custom_minimum_size.x + 6.0,
 		safe.position.y + margin + top_height + 6.0
 	)
-	_mission_panel.custom_minimum_size = Vector2(240.0 * mission_scale, 78.0 * mission_scale)
-	_target_panel.position = Vector2(safe.position.x + safe.size.x * 0.5 - 90.0 * mission_scale, safe.position.y + margin + top_height + 6.0)
-	_target_panel.custom_minimum_size = Vector2(180.0 * mission_scale, 58.0 * mission_scale)
-	_nav_row.visible = not mobile
-	_menu_button.visible = mobile
-	_action_cluster.visible = not mobile
-	_mobile_combat_cluster.visible = mobile
-	_captain_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0, HudLayout.Semantic.PLAYER_STATUS))
-	_guild_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.PLAYER_STATUS))
-	_captain_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
-	_mission_heading.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.MISSION))
-	_mission_title.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 13.0, HudLayout.Semantic.MISSION))
-	_mission_objective.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.MISSION))
-	_gold_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
-	_iron_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
-	_pearl_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
-	_hp_bar.custom_minimum_size = Vector2(88.0 * status_scale, 6.0 * status_scale)
-	_hull_bar.custom_minimum_size = Vector2(120.0 * status_scale, 8.0 * status_scale)
-	_shield_bar.custom_minimum_size = Vector2(120.0 * status_scale, 6.0 * status_scale)
-	_exp_bar.custom_minimum_size = Vector2(88.0 * status_scale, 6.0 * status_scale)
-	_mission_progress.custom_minimum_size.y = 8.0 * mission_scale
+	_mission_panel.custom_minimum_size = Vector2(mission_w, mission_h)
+	_target_panel.position = Vector2(safe.position.x + safe.size.x * 0.5 - mission_w * 0.5, safe.position.y + margin + top_height + 6.0)
+	_target_panel.custom_minimum_size = Vector2(mission_w * 0.75, mission_h * 0.75)
+	_nav_row.visible = true
+	_menu_button.visible = false
+	_action_cluster.visible = true
+	_mobile_combat_cluster.visible = true
+	var status_font := HudLayout.font_size(viewport, 13.0 if landscape_mobile else 12.0, HudLayout.Semantic.PLAYER_STATUS)
+	_captain_name.add_theme_font_size_override("font_size", status_font)
+	_guild_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
+	_captain_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.PLAYER_STATUS))
+	_mission_heading.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.MISSION))
+	_mission_title.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 14.0 if landscape_mobile else 13.0, HudLayout.Semantic.MISSION))
+	_mission_objective.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.MISSION))
+	_gold_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.PLAYER_STATUS))
+	_iron_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.PLAYER_STATUS))
+	_pearl_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.PLAYER_STATUS))
+	_hp_bar.custom_minimum_size = Vector2(96.0, 8.0)
+	_hull_bar.custom_minimum_size = Vector2(140.0, 10.0 if landscape_mobile else 8.0)
+	_shield_bar.custom_minimum_size = Vector2(140.0, 8.0 if landscape_mobile else 6.0)
+	_exp_bar.custom_minimum_size = Vector2(96.0, 8.0)
+	_mission_progress.custom_minimum_size.y = 10.0 if landscape_mobile else 8.0
 	_target_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0, HudLayout.Semantic.TARGET_STATUS))
 	_target_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.TARGET_STATUS))
-	_target_hp.custom_minimum_size.y = 7.0 * mission_scale
+	_target_hp.custom_minimum_size.y = 8.0
+	var nav_size := Vector2(
+		HudLayout.touch_size(viewport, 34.0 if landscape_mobile else 46.0, HudLayout.Semantic.NAVIGATION),
+		HudLayout.touch_size(viewport, 30.0 if landscape_mobile else 42.0, HudLayout.Semantic.NAVIGATION)
+	)
 	for nav_button in _nav_row.get_children():
 		if nav_button is Button:
-			nav_button.custom_minimum_size = Vector2(46.0 * status_scale, 42.0 * status_scale)
-			nav_button.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 7.0, HudLayout.Semantic.NAVIGATION))
-	var dock_height := 54.0 * status_scale
-	_bottom_dock.position = Vector2(safe.position.x + safe.size.x * 0.5 - 220.0 * status_scale, safe.end.y - dock_height - margin)
-	_bottom_dock.custom_minimum_size = Vector2(440.0 * status_scale, dock_height)
-	_region_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0, HudLayout.Semantic.REGION))
-	_chat_panel.position = Vector2(safe.position.x + margin, safe.end.y - dock_height - margin - 52.0 * status_scale)
-	_chat_panel.custom_minimum_size = Vector2(280.0 * status_scale, 44.0 * status_scale)
-	_chat_panel.visible = not mobile
-	_chat_preview.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.NAVIGATION))
-	_layout_combat_cluster(_action_cluster, viewport, safe, false)
-	_layout_combat_cluster(_mobile_combat_cluster, viewport, safe, true)
+			nav_button.custom_minimum_size = nav_size
+			nav_button.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 6.0 if landscape_mobile else 7.0, HudLayout.Semantic.NAVIGATION))
+	var dock_h := HudLayoutProfile.touch_floor(viewport, 0.075)
+	var dock_w := HudLayoutProfile.length(viewport, HudLayoutProfile.RATIO_CONSUMABLE_ROW_W + HudLayoutProfile.RATIO_REGION_W, "x")
+	_bottom_dock.position = Vector2(safe.position.x + safe.size.x * 0.5 - dock_w * 0.5, safe.end.y - dock_h - margin)
+	_bottom_dock.custom_minimum_size = Vector2(dock_w, dock_h)
+	_region_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 13.0 if landscape_mobile else 12.0, HudLayout.Semantic.REGION))
+	var chat_w := HudLayoutProfile.length(viewport, HudLayoutProfile.RATIO_CHAT_W, "x")
+	var chat_h := HudLayoutProfile.touch_floor(viewport, 0.11)
+	_chat_panel.position = Vector2(safe.position.x + margin, safe.end.y - dock_h - margin - chat_h - 8.0)
+	_chat_panel.custom_minimum_size = Vector2(chat_w, chat_h)
+	_chat_panel.visible = true
+	_chat_preview.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.CHAT))
+	var zoom_w := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_ZOOM_W, "x")
+	_zoom_panel.position = Vector2(safe.position.x + margin, _mission_panel.position.y + mission_h + 8.0)
+	_zoom_panel.custom_minimum_size = Vector2(zoom_w, zoom_w * 3.2)
+	for child in _zoom_panel.get_child(0).get_children():
+		if child is Button:
+			child.custom_minimum_size = Vector2(zoom_w - 8.0, zoom_w - 4.0)
+			child.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0, HudLayout.Semantic.ZOOM))
+	var fs_size := HudLayout.touch_size(viewport, 40.0, HudLayout.Semantic.NAVIGATION)
+	_fullscreen_button.custom_minimum_size = Vector2(fs_size, fs_size)
+	_fullscreen_button.position = Vector2(safe.end.x - fs_size - margin, safe.position.y + margin)
+	_fullscreen_button.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 16.0, HudLayout.Semantic.NAVIGATION))
+	_layout_combat_cluster(_combat_cluster, viewport, safe, landscape_mobile)
+	for slot in _bottom_dock.get_child(0).get_children():
+		if slot is Button:
+			var consumable_size := HudLayout.touch_size(viewport, 52.0 if landscape_mobile else 44.0, HudLayout.Semantic.SECONDARY_ACTION)
+			slot.custom_minimum_size = Vector2(consumable_size, consumable_size)
+			slot.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.SECONDARY_ACTION))
 
-func _layout_combat_cluster(cluster: Control, viewport: Vector2, safe: Rect2, mobile: bool) -> void:
-	if not cluster.visible:
+func _layout_combat_cluster(cluster: Control, viewport: Vector2, safe: Rect2, landscape_mobile: bool) -> void:
+	if cluster == null:
 		return
+	var fire_size := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_FIRE_D)
 	var fire := cluster.get_node_or_null("FireButton") as Button
 	if fire != null:
-		var fire_size := HudLayout.touch_size(viewport, 76.0 if mobile else 92.0, HudLayout.Semantic.PRIMARY_ACTION)
 		fire.custom_minimum_size = Vector2(fire_size, fire_size)
-		fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.PRIMARY_ACTION))
+		fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.PRIMARY_ACTION))
 		fire.position = Vector2.ZERO
-	var ability_offsets := [-56.0, 0.0, 56.0]
+	var ability_offsets := [-fire_size * 0.72, 0.0, fire_size * 0.72]
 	var ability_names := ["Ability8", "Ability14", "Ability11"]
 	for index in ability_names.size():
 		var ability := cluster.get_node_or_null(ability_names[index]) as Button
 		if ability != null:
-			var ability_size := HudLayout.touch_size(viewport, 38.0 if mobile else 42.0, HudLayout.Semantic.SECONDARY_ACTION)
+			var ability_size := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_ABILITY_D)
 			ability.custom_minimum_size = Vector2(ability_size, ability_size)
-			ability.position = Vector2(ability_offsets[index] - ability_size * 0.5, -52.0)
+			ability.position = Vector2(ability_offsets[index] - ability_size * 0.5, -ability_size * 1.05)
 	var shield := cluster.get_node_or_null("ShieldButton") as Button
 	if shield != null:
-		var utility_size := HudLayout.touch_size(viewport, 36.0, HudLayout.Semantic.SECONDARY_ACTION)
+		var utility_size := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_ABILITY_D)
 		shield.custom_minimum_size = Vector2(utility_size, utility_size)
-		shield.position = Vector2(-58.0, 18.0)
+		shield.position = Vector2(-fire_size * 0.82, fire_size * 0.18)
 	var ammo := cluster.get_node_or_null("AmmoButton") as Button
 	if ammo != null:
-		var utility_size := HudLayout.touch_size(viewport, 36.0, HudLayout.Semantic.SECONDARY_ACTION)
+		var utility_size := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_ABILITY_D)
 		ammo.custom_minimum_size = Vector2(utility_size, utility_size)
-		ammo.position = Vector2(-58.0, 58.0)
-	cluster.position = Vector2(safe.end.x - (86.0 if mobile else 108.0), safe.end.y - (92.0 if mobile else 108.0))
+		ammo.position = Vector2(-fire_size * 0.82, fire_size * 0.58)
+	var cluster_pad := fire_size * 0.55
+	cluster.position = Vector2(safe.end.x - cluster_pad, safe.end.y - cluster_pad)
 
 func _refresh_status() -> void:
 	var ship_id := str(GameState.save_data.get("shipId", "sovereign"))

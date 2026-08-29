@@ -8,7 +8,7 @@ test("G0.4 build marker and version", async () => {
   const project = await read("godot/project.godot");
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
-  assert.match(project, /config\/version="0\.4\.0"/);
+  assert.match(project, /config\/version="0\.4\.[01]"/);
   assert.match(overlay, /BUILD: G0\.4/);
   assert.match(capture, /G0\.4/);
   assert.match(capture, /artifacts\/godot-g0\.4/);

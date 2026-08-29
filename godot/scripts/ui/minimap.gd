@@ -59,19 +59,20 @@ func _build_ui() -> void:
 
 func _apply_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
-	var scale := HudLayout.semantic_scale(viewport, HudLayout.Semantic.MINIMAP)
-	var diameter := 168.0 * scale
+	var diameter := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_MINIMAP_D)
 	custom_minimum_size = Vector2(diameter, diameter)
 	size = custom_minimum_size
 	anchor_left = 1.0
 	anchor_right = 1.0
 	anchor_top = 0.0
-	offset_left = -diameter - HudLayout.panel_margin(viewport)
-	offset_right = -HudLayout.panel_margin(viewport)
-	offset_top = 64.0 * HudLayout.semantic_scale(viewport, HudLayout.Semantic.PLAYER_STATUS)
+	var margin := HudLayout.panel_margin(viewport)
+	var top_offset := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_TOP_BAR_H) + margin + 8.0
+	offset_left = -diameter - margin - HudLayout.touch_size(viewport, 44.0, HudLayout.Semantic.NAVIGATION)
+	offset_right = -margin
+	offset_top = top_offset
 	offset_bottom = offset_top + diameter
 	if _canvas != null:
-		_canvas.custom_minimum_size = Vector2(diameter - 14.0, diameter - 14.0)
+		_canvas.custom_minimum_size = Vector2(diameter - 16.0, diameter - 16.0)
 	var heading := _panel.get_child(0).get_child(0) as Label
 	if heading != null:
 		heading.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.MINIMAP))

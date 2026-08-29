@@ -49,7 +49,7 @@ func _layout_touch_hud() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	var scale := HudLayout.semantic_scale(viewport_size, HudLayout.Semantic.NAVIGATION)
 	var margins := PlatformService.safe_margins(viewport_size)
-	var size := HudLayout.touch_size(viewport_size, 180.0, HudLayout.Semantic.NAVIGATION)
+	var size := HudLayoutProfile.touch_floor(viewport_size, HudLayoutProfile.RATIO_CAMERA_D)
 	joystick_area.custom_minimum_size = Vector2(size, size)
 	joystick_area.size = Vector2(size, size)
 	joystick_style_radius(joystick_area, size * 0.5)

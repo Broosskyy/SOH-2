@@ -104,7 +104,7 @@ static func create() -> RegionDefinition:
 			"Black Corsair",
 			24,
 			UnitFaction.Allegiance.HOSTILE,
-			MockupCompositionProfile.world_pos(305.0, -255.0),
+			MockupCompositionProfile.world_pos(220.0, -180.0),
 			Color(0.12, 0.1, 0.12),
 			0.0
 		),
@@ -114,7 +114,7 @@ static func create() -> RegionDefinition:
 			"Shadow Reaper",
 			23,
 			UnitFaction.Allegiance.HOSTILE,
-			MockupCompositionProfile.world_pos(-235.0, 195.0),
+			MockupCompositionProfile.world_pos(-180.0, 140.0),
 			Color(0.28, 0.12, 0.42),
 			0.0
 		),
@@ -124,7 +124,7 @@ static func create() -> RegionDefinition:
 			"Red Corsair",
 			24,
 			UnitFaction.Allegiance.HOSTILE,
-			MockupCompositionProfile.world_pos(335.0, 35.0),
+			MockupCompositionProfile.world_pos(240.0, 25.0),
 			Color(0.78, 0.16, 0.12),
 			0.0
 		),
@@ -134,7 +134,7 @@ static func create() -> RegionDefinition:
 			"Handelskonvoi",
 			12,
 			UnitFaction.Allegiance.FRIENDLY,
-			MockupCompositionProfile.world_pos(-480.0, -280.0),
+			MockupCompositionProfile.world_pos(-320.0, -180.0),
 			Color(0.35, 0.78, 0.92),
 			36.0
 		),

@@ -46,7 +46,7 @@ func _load_params() -> Dictionary:
 
 func _read_env_params() -> Dictionary:
 	var params := {}
-	for key in ["boot", "isolate", "diag", "no_kraken", "force_low", "force_high"]:
+	for key in ["boot", "isolate", "diag", "qa", "no_kraken", "force_low", "force_high"]:
 		var value := OS.get_environment("ABYSSAL_%s" % key.to_upper())
 		if not value.is_empty():
 			params[key] = value

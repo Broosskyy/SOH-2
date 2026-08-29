@@ -62,9 +62,7 @@ func _should_show() -> bool:
 		return true
 	if OS.get_name() != "Web":
 		return false
-	if MobileWebDiagnostics.query_flag("diag"):
-		return true
-	return PlatformService.mobile
+	return MobileWebDiagnostics.query_flag("diag")
 
 func _install_webgl_hooks() -> void:
 	if not ClassDB.class_exists("JavaScriptBridge"):
