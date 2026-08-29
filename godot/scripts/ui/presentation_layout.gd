@@ -15,7 +15,7 @@ enum Zone {
 }
 
 const BUILD_LABEL := "G0.5-WEB-PRESENTATION-REBASE"
-const GIT_SHA := "pending"
+const GIT_SHA := "2c81dc1"
 
 static func ui_scale(viewport: Vector2) -> float:
 	var short_edge := minf(viewport.x, viewport.y)
