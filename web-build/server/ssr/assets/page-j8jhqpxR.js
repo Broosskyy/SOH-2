@@ -1,5 +1,5 @@
 import { a as require_react, o as __commonJSMin, s as __toESM, t as require_jsx_runtime } from "../index.js";
-import { _ as SHIPS, c as saveQualityPreference, d as AMMO, f as CANNONS, g as QUESTS, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, m as ENTITY_DATA, o as loadQualityPreference, p as DECK_LEVELS, r as worldOffset, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-DbKvQ6Y6.js";
+import { _ as SHIPS, c as saveQualityPreference, d as AMMO, f as CANNONS, g as QUESTS, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, m as ENTITY_DATA, o as loadQualityPreference, p as DECK_LEVELS, r as worldOffset, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-CO8MoAPz.js";
 //#region node_modules/ipaddr.js/lib/ipaddr.js
 var require_ipaddr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(root) {
@@ -4724,7 +4724,7 @@ function Home() {
 		const canvas = threeCanvasRef.current;
 		if (!canvas || !ready) return;
 		let renderer = null, raf = 0, disposed = false;
-		import("./threeRenderer-BEjZkx9m.js").then(({ AbyssalThreeRenderer }) => {
+		import("./threeRenderer-D5acvNWe.js").then(({ AbyssalThreeRenderer }) => {
 			if (disposed) return;
 			renderer = new AbyssalThreeRenderer(canvas, qualityPreference);
 			renderer3DRef.current = renderer;
@@ -4916,7 +4916,7 @@ function Home() {
 			showVisualBuildDebug && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "visual-build-debug",
 				"aria-hidden": "true",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: ["BUILD: ", "V20.3.1"] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["COMMIT: ", "e1405f4"] })]
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: ["BUILD: ", "V20.3.2"] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["COMMIT: ", "d6c4de5"] })]
 			}),
 			showShipVisualDebug && playerVisualStatus && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: `player-visual-device-status ${playerVisualStatus.status}`,

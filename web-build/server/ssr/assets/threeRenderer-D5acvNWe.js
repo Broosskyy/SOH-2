@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-DbKvQ6Y6.js";
+import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-CO8MoAPz.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -1034,7 +1034,7 @@ function inverseLerp(x, y, value) {
 * @param {number} t - The interpolation factor in the closed interval `[0, 1]`.
 * @return {number} The interpolated value.
 */
-function lerp(x, y, t) {
+function lerp$1(x, y, t) {
 	return (1 - t) * x + t * y;
 }
 /**
@@ -1050,7 +1050,7 @@ function lerp(x, y, t) {
 * @return {number} The interpolated value.
 */
 function damp(x, y, lambda, dt) {
-	return lerp(x, y, 1 - Math.exp(-lambda * dt));
+	return lerp$1(x, y, 1 - Math.exp(-lambda * dt));
 }
 /**
 * Returns a value that alternates between `0` and the given `length` parameter.
@@ -1342,7 +1342,7 @@ var MathUtils = {
 	* @param {number} t - The interpolation factor in the closed interval `[0, 1]`.
 	* @return {number} The interpolated value.
 	*/
-	lerp,
+	lerp: lerp$1,
 	/**
 	* Smoothly interpolate a number from `x` to `y` in  a spring-like manner using a delta
 	* time to maintain frame rate independent movement. For details, see
@@ -11093,9 +11093,9 @@ var Color = class {
 	lerpHSL(color, alpha) {
 		this.getHSL(_hslA);
 		color.getHSL(_hslB);
-		const h = lerp(_hslA.h, _hslB.h, alpha);
-		const s = lerp(_hslA.s, _hslB.s, alpha);
-		const l = lerp(_hslA.l, _hslB.l, alpha);
+		const h = lerp$1(_hslA.h, _hslB.h, alpha);
+		const s = lerp$1(_hslA.s, _hslB.s, alpha);
+		const l = lerp$1(_hslA.l, _hslB.l, alpha);
 		this.setHSL(h, s, l);
 		return this;
 	}
@@ -40225,6 +40225,61 @@ function resolveWorldDensityCounts(quality, mapWidth, mapHeight) {
 	};
 }
 //#endregion
+//#region app/game/visuals/worldCompositionHierarchy.ts
+var MICRO_PROP_KINDS = new Set([
+	"crate",
+	"barrel",
+	"driftwood"
+]);
+var MACRO_PROP_KINDS = new Set([
+	"wreck",
+	"lighthouse",
+	"ruin"
+]);
+function classifyPropTier(kind) {
+	if (MACRO_PROP_KINDS.has(kind)) return "macro";
+	if (MICRO_PROP_KINDS.has(kind)) return "micro";
+	return "meso";
+}
+function countPropsByTier(props, x, z, radius = 520) {
+	const macro = { count: 0 };
+	const meso = { count: 0 };
+	const micro = { count: 0 };
+	for (const prop of props) {
+		if (Math.hypot(prop.x - x, prop.z - z) > radius) continue;
+		if (prop.tier === "macro") macro.count++;
+		else if (prop.tier === "meso") meso.count++;
+		else micro.count++;
+	}
+	return {
+		macro: macro.count,
+		meso: meso.count,
+		micro: micro.count
+	};
+}
+function countIsolatedMicroProps(props, clusterRadius = 48) {
+	let isolated = 0;
+	for (const prop of props) {
+		if (prop.tier !== "micro") continue;
+		if (!props.some((other) => other !== prop && (other.tier === "macro" || other.tier === "meso") && Math.hypot(other.x - prop.x, other.z - prop.z) <= clusterRadius)) isolated++;
+	}
+	return isolated;
+}
+function nearestMacroFeature(props, x, z) {
+	let best = null;
+	for (const prop of props) {
+		if (prop.tier !== "macro") continue;
+		const distance = Math.hypot(prop.x - x, prop.z - z);
+		if (!best || distance < best.distance) best = {
+			kind: prop.kind,
+			x: prop.x,
+			z: prop.z,
+			distance
+		};
+	}
+	return best;
+}
+//#endregion
 //#region app/game/visuals/worldComposition.ts
 var seeded$1 = (seed) => {
 	const x = Math.sin(seed * 91.731) * 43758.5453;
@@ -40243,68 +40298,105 @@ function pointOnIslandRing(isle, angle, radiusScale) {
 		z: isle.y + Math.sin(angle) * isle.ry * radiusScale
 	};
 }
-function pushLaneProps(props, from, to, seedCursor, step = 180) {
-	const dx = to.x - from.x;
-	const dz = to.z - from.z;
-	const steps = Math.max(2, Math.floor(Math.hypot(dx, dz) / step));
-	for (let s = 1; s < steps; s++) {
-		const t = s / steps;
-		const x = from.x + dx * t;
-		const z = from.z + dz * t;
-		const side = seeded$1(seedCursor.value++) * Math.PI * 2;
-		const offset = 12 + seeded$1(seedCursor.value++) * 22;
-		const laneKinds = [
-			"buoy",
-			"driftwood",
-			"rock",
-			"reef",
-			"mast"
-		];
-		props.push({
-			kind: laneKinds[s % laneKinds.length],
-			x: x + Math.cos(side) * offset,
-			z: z + Math.sin(side) * offset,
-			rotationY: side,
-			scale: .58 + seeded$1(seedCursor.value++) * .22,
-			zone: "navigationLane",
-			seed: seedCursor.value++
-		});
-		if (s % 3 === 0) props.push({
-			kind: [
-				"crate",
-				"barrel",
-				"wreck"
-			][s % 3],
-			x: x + Math.cos(side + 1.2) * (offset + 16),
-			z: z + Math.sin(side + 1.2) * (offset + 16),
-			rotationY: side + .4,
-			scale: .62 + seeded$1(seedCursor.value++) * .2,
-			zone: "coastalTransition",
-			seed: seedCursor.value++
+function pushProp(props, entry) {
+	props.push({
+		...entry,
+		tier: entry.tier ?? classifyPropTier(entry.kind)
+	});
+}
+function addRockFormation(props, x, z, seed, zone = "rockFormation", clusterId) {
+	const count = 4 + Math.floor(seeded$1(seed) * 3);
+	for (let i = 0; i < count; i++) {
+		const angle = seeded$1(seed + i * 7) * Math.PI * 2;
+		const radius = 18 + seeded$1(seed + i * 11) * 42;
+		pushProp(props, {
+			kind: i % 3 === 0 ? "reef" : "rock",
+			x: x + Math.cos(angle) * radius,
+			z: z + Math.sin(angle) * radius,
+			rotationY: angle + seeded$1(seed + i * 3) * .4,
+			scale: .72 + seeded$1(seed + i * 5) * .38,
+			zone,
+			y: i % 3 === 0 ? -1 : 0,
+			seed: seed + i,
+			clusterId
 		});
 	}
 }
-function queryNearestCompositionCluster(plan, x, z) {
-	const centers = /* @__PURE__ */ new Map();
-	for (const prop of plan.props) if (prop.zone === "openSeaCluster" || prop.zone === "portCluster" || prop.zone === "encounter" || prop.zone === "lootSalvage" || prop.zone === "macroLandmark") {
-		const key = `${prop.zone}:${Math.round(prop.x / 80)}:${Math.round(prop.z / 80)}`;
-		if (!centers.has(key)) centers.set(key, {
-			type: prop.zone,
-			x: prop.x,
-			z: prop.z
+function addWreckScene(props, x, z, seed, zone = "wreckScene", clusterId) {
+	pushProp(props, {
+		kind: "wreck",
+		x,
+		z,
+		rotationY: seeded$1(seed) * Math.PI * 2,
+		scale: .92 + seeded$1(seed + 1) * .18,
+		zone,
+		tier: "macro",
+		seed,
+		clusterId
+	});
+	const microKinds = [
+		"crate",
+		"barrel",
+		"driftwood"
+	];
+	for (let i = 0; i < 3; i++) {
+		const angle = seeded$1(seed + 20 + i) * Math.PI * 2;
+		const radius = 22 + i * 9;
+		pushProp(props, {
+			kind: microKinds[i],
+			x: x + Math.cos(angle) * radius,
+			z: z + Math.sin(angle) * radius,
+			rotationY: angle,
+			scale: .62 + seeded$1(seed + 30 + i) * .2,
+			zone,
+			seed: seed + 20 + i,
+			clusterId
 		});
 	}
-	let best = null;
-	for (const center of centers.values()) {
-		const dist = Math.hypot(center.x - x, center.z - z);
-		if (!best || dist < best.distance) best = {
-			type: center.type,
-			x: center.x,
-			z: center.z,
-			distance: dist
-		};
+}
+function addNavigationNode(props, x, z, seed, clusterId) {
+	pushProp(props, {
+		kind: "buoy",
+		x,
+		z,
+		rotationY: seeded$1(seed) * Math.PI * 2,
+		scale: .78 + seeded$1(seed + 2) * .16,
+		zone: "navigationNode",
+		seed,
+		clusterId
+	});
+	if (seeded$1(seed + 4) > .45) {
+		const offset = 28 + seeded$1(seed + 5) * 18;
+		const angle = seeded$1(seed + 6) * Math.PI * 2;
+		pushProp(props, {
+			kind: "mast",
+			x: x + Math.cos(angle) * offset,
+			z: z + Math.sin(angle) * offset,
+			rotationY: angle,
+			scale: .66 + seeded$1(seed + 7) * .18,
+			zone: "navigationNode",
+			seed: seed + 8,
+			clusterId
+		});
 	}
-	return best;
+}
+function pushSparseLaneMarkers(props, from, to, seedCursor, step = 280) {
+	const dx = to.x - from.x;
+	const dz = to.z - from.z;
+	const len = Math.hypot(dx, dz);
+	const steps = Math.max(2, Math.floor(len / step));
+	for (let s = 1; s < steps; s++) {
+		if (s % 2 !== 0) continue;
+		const t = s / steps;
+		const x = from.x + dx * t;
+		const z = from.z + dz * t;
+		const side = seeded$1(seedCursor.value++) > .5 ? 1 : -1;
+		const offset = 72 + seeded$1(seedCursor.value++) * 36;
+		const perpX = -dz / len * offset * side;
+		const perpZ = dx / len * offset * side;
+		addNavigationNode(props, x + perpX, z + perpZ, seedCursor.value++, `lane-${Math.round(x)}-${Math.round(z)}`);
+		seedCursor.value += 2;
+	}
 }
 function countVisibleCompositionNear(plan, x, z, radius = 520) {
 	return plan.props.filter((prop) => Math.hypot(prop.x - x, prop.z - z) <= radius).length;
@@ -40313,97 +40405,119 @@ function buildMapCompositionPlan(map, density) {
 	const props = [];
 	let seedCursor = map.id.length * 97;
 	for (const [index, isle] of map.islands.entries()) {
+		const portClusterId = `port-${index}`;
 		if (isle.port) {
 			const pierAngle = index * .55 + .2;
 			const pier = pointOnIslandRing(isle, pierAngle, .92);
-			props.push({
+			pushProp(props, {
 				kind: "pier",
 				x: pier.x,
 				z: pier.z,
 				rotationY: pierAngle + Math.PI * .5,
 				scale: 1,
 				zone: "portCluster",
-				seed: seedCursor++
+				tier: "macro",
+				seed: seedCursor++,
+				clusterId: portClusterId
 			});
-			const clusterKinds = [
-				"crate",
-				"barrel",
-				"buoy",
-				"crate",
-				"barrel",
-				"lighthouse"
-			];
-			const clusterCount = Math.min(6, density.islandPropsPerIsland + 1);
-			for (let c = 0; c < clusterCount; c++) {
-				const a = pierAngle + (c - clusterCount * .5) * .22;
-				const p = pointOnIslandRing(isle, a, isle.rx * (1.02 + c % 2 * .05) / isle.rx);
-				props.push({
-					kind: clusterKinds[c % clusterKinds.length],
-					x: p.x + (seeded$1(seedCursor) - .5) * 18,
-					z: p.z + (seeded$1(seedCursor + 1) - .5) * 18,
-					rotationY: a + seeded$1(seedCursor + 2) * .4,
-					scale: .82 + seeded$1(seedCursor + 3) * .28,
+			const dockMicro = ["crate", "barrel"];
+			const dockCount = Math.min(3, Math.max(2, Math.round(density.islandPropsPerIsland * .45)));
+			for (let c = 0; c < dockCount; c++) {
+				const a = pierAngle + (c - dockCount * .5) * .18;
+				const p = pointOnIslandRing(isle, a, 1.02);
+				pushProp(props, {
+					kind: dockMicro[c % dockMicro.length],
+					x: p.x + (seeded$1(seedCursor) - .5) * 12,
+					z: p.z + (seeded$1(seedCursor + 1) - .5) * 12,
+					rotationY: a + seeded$1(seedCursor + 2) * .3,
+					scale: .8 + seeded$1(seedCursor + 3) * .2,
 					zone: "portCluster",
-					seed: seedCursor
+					seed: seedCursor,
+					clusterId: portClusterId
 				});
 				seedCursor += 4;
+			}
+			pushProp(props, {
+				kind: "lighthouse",
+				x: isle.x + Math.cos(pierAngle + 1.1) * isle.rx * .72,
+				z: isle.y + Math.sin(pierAngle + 1.1) * isle.ry * .72,
+				rotationY: pierAngle,
+				scale: .88 + seeded$1(seedCursor) * .12,
+				zone: "portCluster",
+				tier: "macro",
+				seed: seedCursor++,
+				clusterId: portClusterId
+			});
+			for (let b = 0; b < 2; b++) {
+				const a = pierAngle + (b === 0 ? -.35 : .35);
+				const p = pointOnIslandRing(isle, a, 1.08);
+				pushProp(props, {
+					kind: "buoy",
+					x: p.x,
+					z: p.z,
+					rotationY: a,
+					scale: .72 + seeded$1(seedCursor + b) * .16,
+					zone: "portCluster",
+					seed: seedCursor++,
+					clusterId: portClusterId
+				});
 			}
 		}
 		const ringKinds = isle.port ? [
 			"buoy",
 			"rock",
 			"reef",
-			"driftwood",
 			"wreck",
 			"mast"
 		] : [
 			"rock",
 			"reef",
-			"driftwood",
 			"wreck",
 			"mast",
 			"buoy"
 		];
 		for (let p = 0; p < density.islandPropsPerIsland; p++) {
 			const a = index * .83 + p * (Math.PI * 2 / Math.max(4, density.islandPropsPerIsland));
-			const point = pointOnIslandRing(isle, a, 1.04 + p % 3 * .06);
-			props.push({
-				kind: ringKinds[p % ringKinds.length],
+			const point = pointOnIslandRing(isle, a, 1.04 + p % 2 * .05);
+			const kind = ringKinds[p % ringKinds.length];
+			pushProp(props, {
+				kind,
 				x: point.x,
 				z: point.z,
-				rotationY: a + seeded$1(seedCursor) * .45,
-				scale: .78 + seeded$1(seedCursor + 1) * .34,
+				rotationY: a + seeded$1(seedCursor) * .35,
+				scale: .78 + seeded$1(seedCursor + 1) * .3,
 				zone: "islandRing",
-				y: ringKinds[p % ringKinds.length] === "reef" ? -1 : 0,
-				seed: seedCursor
+				y: kind === "reef" ? -1 : 0,
+				seed: seedCursor,
+				clusterId: `isle-${index}`
 			});
 			seedCursor += 2;
 		}
 		for (let s = 0; s < density.shorelinePropsPerIsland; s++) {
 			const a = index * .67 + s * 1.23;
-			const point = pointOnIslandRing(isle, a, 1.16 + s % 2 * .05);
+			const point = pointOnIslandRing(isle, a, 1.14 + s % 2 * .04);
 			const kind = [
 				"rock",
 				"reef",
 				"buoy",
-				"driftwood",
 				"wreck",
 				"mast"
-			][(s + index) % 6];
-			props.push({
+			][(s + index) % 5];
+			pushProp(props, {
 				kind,
 				x: point.x,
 				z: point.z,
-				rotationY: a + seeded$1(seedCursor) * .35,
-				scale: .7 + seeded$1(seedCursor + 1) * .28,
+				rotationY: a + seeded$1(seedCursor) * .3,
+				scale: .72 + seeded$1(seedCursor + 1) * .26,
 				zone: "shoreline",
 				y: kind === "reef" ? -1 : 0,
-				seed: seedCursor
+				seed: seedCursor,
+				clusterId: `shore-${index}`
 			});
 			seedCursor += 2;
 		}
 	}
-	const lanes = [];
+	const graphNodes = [];
 	const seedRef = { value: seedCursor };
 	for (let a = 0; a < map.islands.length; a++) for (let b = a + 1; b < map.islands.length; b++) {
 		const from = {
@@ -40414,197 +40528,192 @@ function buildMapCompositionPlan(map, density) {
 			x: map.islands[b].x,
 			z: map.islands[b].y
 		};
-		lanes.push({
+		const mid = {
 			x: (from.x + to.x) * .5,
 			z: (from.z + to.z) * .5
+		};
+		const dist = nearestIslandDistance(mid.x, mid.z, map.islands);
+		if (dist > 1.05 && dist < 3.2) graphNodes.push({
+			x: mid.x,
+			z: mid.z,
+			seed: seedRef.value++
 		});
-		pushLaneProps(props, from, to, seedRef, 165);
+		pushSparseLaneMarkers(props, from, to, seedRef, 300);
 	}
 	seedCursor = seedRef.value;
-	for (let t = 0; t < Math.min(6, lanes.length); t++) {
-		const lane = lanes[t];
-		for (let c = 0; c < 2; c++) {
-			const angle = seeded$1(t * 11 + c) * Math.PI * 2;
-			const radius = 34 + seeded$1(t * 13 + c) * 48;
-			props.push({
-				kind: [
-					"wreck",
-					"driftwood",
-					"crate",
-					"barrel"
-				][(t + c) % 4],
-				x: lane.x + Math.cos(angle) * radius,
-				z: lane.z + Math.sin(angle) * radius,
-				rotationY: angle,
-				scale: .66 + seeded$1(t * 15 + c) * .24,
-				zone: "coastalTransition",
-				seed: seedCursor++
-			});
-		}
+	for (const [idx, node] of graphNodes.entries()) {
+		const clusterId = `graph-${idx}`;
+		const roll = seeded$1(node.seed);
+		if (roll < .34) addWreckScene(props, node.x, node.z, node.seed, "wreckScene", clusterId);
+		else if (roll < .72) addRockFormation(props, node.x, node.z, node.seed, "rockFormation", clusterId);
+		else addNavigationNode(props, node.x, node.z, node.seed, clusterId);
 	}
-	const openKinds = [
-		"crate",
-		"barrel",
-		"driftwood",
-		"wreck",
-		"buoy",
-		"mast",
-		"reef"
-	];
-	const clusterCenters = [];
-	for (let i = 0; i < Math.max(4, Math.round(density.openOceanProps / 4)); i++) {
-		const lane = lanes[i % Math.max(1, lanes.length)];
-		const x = lane ? lane.x + (seeded$1(i + 81) - .5) * map.width * .18 : map.width * (.14 + seeded$1(i + 81) * .72);
-		const z = lane ? lane.z + (seeded$1(i + 121) - .5) * map.height * .18 : map.height * (.12 + seeded$1(i + 121) * .76);
+	const openSceneCount = Math.max(3, Math.round(density.openOceanProps / 5));
+	for (let i = 0; i < openSceneCount; i++) {
+		const node = graphNodes[i % Math.max(1, graphNodes.length)];
+		const x = node ? node.x + (seeded$1(i + 81) - .5) * 220 : map.width * (.2 + seeded$1(i + 81) * .6);
+		const z = node ? node.z + (seeded$1(i + 121) - .5) * 180 : map.height * (.18 + seeded$1(i + 121) * .64);
 		const dist = nearestIslandDistance(x, z, map.islands);
-		if (dist < 1.18 || dist > 2.4) continue;
-		clusterCenters.push({
-			x,
-			z
-		});
-		const clusterSize = 2 + Math.floor(seeded$1(i + 201) * 2);
-		for (let c = 0; c < clusterSize; c++) {
-			const angle = seeded$1(i * 17 + c) * Math.PI * 2;
-			const radius = 16 + seeded$1(i * 19 + c) * 34;
-			props.push({
-				kind: openKinds[(i + c) % openKinds.length],
-				x: x + Math.cos(angle) * radius,
-				z: z + Math.sin(angle) * radius,
-				rotationY: seeded$1(i * 221 + c) * Math.PI * 2,
-				scale: .62 + seeded$1(i * 301 + c) * .34,
-				zone: "openSeaCluster",
-				seed: seedCursor++
-			});
-		}
+		if (dist < 1.2 || dist > 3.5) continue;
+		const clusterId = `open-${i}`;
+		if (i % 3 === 0) addWreckScene(props, x, z, seedCursor, "openSea", clusterId);
+		else if (i % 3 === 1) addRockFormation(props, x, z, seedCursor, "openSea", clusterId);
+		else addNavigationNode(props, x, z, seedCursor, clusterId);
+		seedCursor += 12;
 	}
-	const encounterKinds = [
-		"wreck",
-		"crate",
-		"barrel",
-		"rock",
-		"reef",
-		"driftwood",
-		"buoy"
-	];
 	for (const [idx, spawn] of map.enemies.entries()) {
-		for (let c = 0; c < 4; c++) {
-			const angle = seeded$1(idx * 13 + c) * Math.PI * 2;
-			const radius = 24 + seeded$1(idx * 17 + c) * 58;
-			props.push({
-				kind: encounterKinds[(idx + c) % encounterKinds.length],
-				x: spawn.x + Math.cos(angle) * radius,
-				z: spawn.y + Math.sin(angle) * radius,
-				rotationY: angle + seeded$1(idx * 29 + c) * .5,
-				scale: .68 + seeded$1(idx * 31 + c) * .3,
-				zone: "encounter",
-				y: encounterKinds[(idx + c) % encounterKinds.length] === "reef" ? -1 : 0,
-				seed: seedCursor++
-			});
-		}
-		if (idx % 2 === 0) {
-			const salvageAngle = seeded$1(idx * 41) * Math.PI * 2;
-			for (let s = 0; s < 3; s++) {
-				const a = salvageAngle + s * .55;
-				const r = 42 + s * 11;
-				props.push({
-					kind: [
-						"wreck",
-						"crate",
-						"barrel"
-					][s],
-					x: spawn.x + Math.cos(a) * r,
-					z: spawn.y + Math.sin(a) * r,
-					rotationY: a,
-					scale: .72 + seeded$1(idx * 51 + s) * .22,
-					zone: "lootSalvage",
-					seed: seedCursor++
-				});
-			}
-		}
+		const clusterId = `encounter-${idx}`;
+		addWreckScene(props, spawn.x + 34, spawn.y + 28, seedCursor + idx, "encounter", clusterId);
 		for (let c = 0; c < 2; c++) {
-			const angle = seeded$1(idx * 61 + c) * Math.PI * 2;
-			props.push({
-				kind: [
-					"rock",
-					"reef",
-					"buoy"
-				][c],
-				x: spawn.x + Math.cos(angle) * (70 + c * 18),
-				z: spawn.y + Math.sin(angle) * (70 + c * 18),
+			const angle = seeded$1(idx * 13 + c) * Math.PI * 2;
+			pushProp(props, {
+				kind: ["rock", "buoy"][c],
+				x: spawn.x + Math.cos(angle) * (58 + c * 16),
+				z: spawn.y + Math.sin(angle) * (58 + c * 16),
 				rotationY: angle,
-				scale: .64 + seeded$1(idx * 71 + c) * .2,
+				scale: .68 + seeded$1(idx * 17 + c) * .2,
 				zone: "encounter",
-				seed: seedCursor++
+				seed: seedCursor++,
+				clusterId
 			});
 		}
-	}
-	const gridX = Math.max(3, Math.round(map.width / 680));
-	const gridZ = Math.max(3, Math.round(map.height / 580));
-	const macroKinds = [
-		"buoy",
-		"mast",
-		"rock",
-		"driftwood",
-		"wreck",
-		"reef"
-	];
-	for (let gx = 1; gx < gridX; gx++) for (let gz = 1; gz < gridZ; gz++) {
-		const x = map.width * gx / gridX + (seeded$1(gx * 17 + gz) - .5) * 110;
-		const z = map.height * gz / gridZ + (seeded$1(gx * 23 + gz) - .5) * 110;
-		const dist = nearestIslandDistance(x, z, map.islands);
-		if (dist < 1.02 || dist > 3.4) continue;
-		props.push({
-			kind: macroKinds[(gx + gz) % macroKinds.length],
-			x,
-			z,
-			rotationY: seeded$1(gx * 31 + gz) * Math.PI * 2,
-			scale: .6 + seeded$1(gx * 37 + gz) * .26,
-			zone: "macroLandmark",
-			seed: seedCursor++
-		});
-		if ((gx + gz) % 3 === 0) {
-			const a = seeded$1(gx * 41 + gz) * Math.PI * 2;
-			props.push({
-				kind: [
-					"crate",
-					"barrel",
-					"driftwood"
-				][gz % 3],
-				x: x + Math.cos(a) * 28,
-				z: z + Math.sin(a) * 28,
-				rotationY: a,
-				scale: .58 + seeded$1(gx * 43 + gz) * .18,
-				zone: "openSea",
-				seed: seedCursor++
-			});
-		}
+		if (idx % 2 === 0) addWreckScene(props, spawn.x + 72, spawn.y - 48, seedCursor + idx * 3, "lootSalvage", `salvage-${idx}`);
 	}
 	return { props };
 }
 //#endregion
-//#region app/game/visuals/playerLabelAnchor.ts
-var EXCLUDED_ANCESTOR_NAMES = new Set(["HullWaterInteraction", "ShipVisualDebug"]);
-var EXCLUDED_MESH_NAME_RE = /sail|mast|rig|rope|cord|line|flag|lantern|light|wake|foam|aura|vfx|debug|collision|helper/i;
-function isHullMesh(object) {
-	if (!(object instanceof Mesh)) return false;
-	if (!object.visible) return false;
-	if (object.userData.visualFallback) return false;
-	if (object.userData.visualEffectType) return false;
-	if (EXCLUDED_MESH_NAME_RE.test(object.name)) return false;
-	let node = object;
-	while (node) {
-		if (EXCLUDED_ANCESTOR_NAMES.has(node.name)) return false;
-		if (EXCLUDED_MESH_NAME_RE.test(node.name)) return false;
-		node = node.parent;
+//#region app/game/visuals/playerStatusAnchorProfile.ts
+/**
+* Kraken player visual footprint calibration per 45° sector.
+* Tuned for scale ~65 oblique camera — replaces GLB/vertex sampling.
+*/
+var PLAYER_STATUS_ANCHOR_PROFILE = [
+	{
+		headingDeg: 0,
+		bottomLiftCss: 0,
+		forwardScale: 1,
+		lateralScale: 1
+	},
+	{
+		headingDeg: 45,
+		bottomLiftCss: 3,
+		forwardScale: .98,
+		lateralScale: 1.02
+	},
+	{
+		headingDeg: 90,
+		bottomLiftCss: 14,
+		forwardScale: .92,
+		lateralScale: 1.08
+	},
+	{
+		headingDeg: 135,
+		bottomLiftCss: 5,
+		forwardScale: .96,
+		lateralScale: 1.04
+	},
+	{
+		headingDeg: 180,
+		bottomLiftCss: 1,
+		forwardScale: 1,
+		lateralScale: 1
+	},
+	{
+		headingDeg: 225,
+		bottomLiftCss: 5,
+		forwardScale: .96,
+		lateralScale: 1.04
+	},
+	{
+		headingDeg: 270,
+		bottomLiftCss: 18,
+		forwardScale: .9,
+		lateralScale: 1.1
+	},
+	{
+		headingDeg: 315,
+		bottomLiftCss: 3,
+		forwardScale: .98,
+		lateralScale: 1.02
 	}
-	const materials = Array.isArray(object.material) ? object.material : [object.material];
-	for (const material of materials) {
-		if (!material) continue;
-		if ("visible" in material && material.visible === false) return false;
-		if ("opacity" in material && typeof material.opacity === "number" && material.opacity < .08) return false;
-	}
-	return true;
+];
+function normalizeHeadingDeg(headingRad) {
+	let deg = headingRad * 180 / Math.PI;
+	deg %= 360;
+	if (deg < 0) deg += 360;
+	return deg;
 }
+function lerp(a, b, t) {
+	return a + (b - a) * t;
+}
+function interpolateAnchorProfile(headingRad) {
+	const deg = normalizeHeadingDeg(headingRad);
+	const sectors = PLAYER_STATUS_ANCHOR_PROFILE;
+	const startIdx = Math.floor(deg / 45) % sectors.length;
+	const endIdx = (startIdx + 1) % sectors.length;
+	const start = sectors[startIdx];
+	const end = sectors[endIdx];
+	const span = end.headingDeg > start.headingDeg ? end.headingDeg - start.headingDeg : 360 - start.headingDeg + end.headingDeg;
+	const t = span <= 0 ? 0 : (deg - start.headingDeg + 360) % 360 / span;
+	return {
+		headingDeg: deg,
+		bottomLiftCss: lerp(start.bottomLiftCss, end.bottomLiftCss, t),
+		forwardScale: lerp(start.forwardScale, end.forwardScale, t),
+		lateralScale: lerp(start.lateralScale, end.lateralScale, t),
+		sectorStart: start.headingDeg,
+		sectorEnd: end.headingDeg,
+		interpolationT: t
+	};
+}
+function resolveAnchorGapCss(zoom) {
+	if (zoom < .75) return 6;
+	if (zoom > 1.1) return 9;
+	return 7;
+}
+function buildDeterministicFootprintLocal(definition, profile) {
+	const halfForward = definition.scale * .4 * profile.forwardScale;
+	const halfLateral = definition.scale * .2 * profile.lateralScale;
+	const keelY = definition.waterlineOffset * .12;
+	return [
+		{
+			x: halfForward,
+			y: keelY,
+			z: halfLateral
+		},
+		{
+			x: halfForward,
+			y: keelY,
+			z: -halfLateral
+		},
+		{
+			x: -halfForward * .88,
+			y: keelY,
+			z: halfLateral * .92
+		},
+		{
+			x: -halfForward * .88,
+			y: keelY,
+			z: -halfLateral * .92
+		},
+		{
+			x: halfForward * .5,
+			y: keelY * .5,
+			z: 0
+		},
+		{
+			x: -halfForward * .5,
+			y: keelY * .5,
+			z: 0
+		},
+		{
+			x: 0,
+			y: 0,
+			z: 0
+		}
+	];
+}
+//#endregion
+//#region app/game/visuals/playerLabelAnchor.ts
 function projectScreenY(point, camera, canvasHeight) {
 	return (1 - point.clone().project(camera).y) * .5 * canvasHeight;
 }
@@ -40617,67 +40726,26 @@ function unprojectScreenToGround(camera, screenX, screenY, canvasWidth, canvasHe
 	const t = (groundY - origin.y) / denom;
 	return origin.add(dir.multiplyScalar(Math.max(0, t)));
 }
-function fallbackFootprintCorners(player, definition, corners) {
-	const halfForward = definition.scale * .42;
-	const halfLateral = definition.scale * .22;
-	const local = [
-		new Vector3(halfForward, 0, halfLateral),
-		new Vector3(halfForward, 0, -halfLateral),
-		new Vector3(-halfForward, 0, halfLateral),
-		new Vector3(-halfForward, 0, -halfLateral),
-		new Vector3(halfForward * .55, definition.waterlineOffset * .22, 0),
-		new Vector3(-halfForward * .55, definition.waterlineOffset * .22, 0)
-	];
-	player.updateMatrixWorld(true);
-	for (let i = 0; i < local.length; i++) corners[i].copy(local[i]).applyMatrix4(player.matrixWorld);
-	return local.length;
-}
-function collectVisualHullScreenSamples(playerVisualRoot, camera, canvasHeight, out) {
-	const samplePoint = new Vector3();
-	const meshBox = new Box3();
-	playerVisualRoot.updateMatrixWorld(true);
-	playerVisualRoot.traverse((object) => {
-		if (!isHullMesh(object)) return;
-		const geometry = object.geometry;
-		if (!geometry?.attributes?.position) return;
-		meshBox.setFromBufferAttribute(geometry.attributes.position);
-		if (meshBox.isEmpty()) return;
-		const spanY = meshBox.max.y - meshBox.min.y;
-		const hullCeiling = meshBox.min.y + spanY * .38;
-		const positions = geometry.attributes.position;
-		const stride = Math.max(1, Math.floor(positions.count / 48));
-		for (let i = 0; i < positions.count; i += stride) {
-			samplePoint.fromBufferAttribute(positions, i);
-			if (samplePoint.y > hullCeiling) continue;
-			samplePoint.applyMatrix4(object.matrixWorld);
-			out.push(samplePoint.clone());
-		}
-	});
-}
 function computeRotationSafePlayerLabelAnchor(options) {
-	const { player, playerVisualRoot, shipId, heading, camera, canvasWidth, canvasHeight, labelTotalHeightCss, gapCss = 8, groundY = 8, statusScale = 1 } = options;
-	const hullWorld = [];
-	let anchorSource = "visualHullSamples";
-	collectVisualHullScreenSamples(playerVisualRoot, camera, canvasHeight, hullWorld);
-	if (!hullWorld.length) {
-		anchorSource = "fallbackFootprint";
-		const cornerPool = Array.from({ length: 8 }, () => new Vector3());
-		const definition = PLAYER_SHIP_VISUALS[shipId];
-		const count = fallbackFootprintCorners(player, definition, cornerPool);
-		for (let i = 0; i < count; i++) hullWorld.push(cornerPool[i].clone());
-	}
-	let best = hullWorld[0];
-	let bestScreenY = projectScreenY(best, camera, canvasHeight);
-	for (let i = 1; i < hullWorld.length; i++) {
-		const screenY = projectScreenY(hullWorld[i], camera, canvasHeight);
+	const { player, shipId, heading, camera, canvasWidth, canvasHeight, labelTotalHeightCss, zoom = .96, groundY = 8, statusScale = 1 } = options;
+	const definition = PLAYER_SHIP_VISUALS[shipId];
+	const profile = interpolateAnchorProfile(heading);
+	const gapCss = resolveAnchorGapCss(zoom);
+	const localPoints = buildDeterministicFootprintLocal(definition, profile);
+	const worldPoint = new Vector3();
+	player.updateMatrixWorld(true);
+	let bestScreenY = Number.NEGATIVE_INFINITY;
+	let bestScreenX = canvasWidth * .5;
+	for (const local of localPoints) {
+		worldPoint.set(local.x, local.y, local.z).applyMatrix4(player.matrixWorld);
+		const screenY = projectScreenY(worldPoint, camera, canvasHeight);
 		if (screenY > bestScreenY) {
 			bestScreenY = screenY;
-			best = hullWorld[i];
+			bestScreenX = (worldPoint.clone().project(camera).x + 1) * .5 * canvasWidth || bestScreenX;
 		}
 	}
-	const projectedVisualBottom = bestScreenY;
+	const projectedVisualBottom = bestScreenY - profile.bottomLiftCss;
 	const statusVisualTop = projectedVisualBottom + gapCss;
-	const bestScreenX = (best.clone().project(camera).x + 1) * .5 * canvasWidth || canvasWidth * .5;
 	const labelCenterScreenY = statusVisualTop + labelTotalHeightCss * .5;
 	const position = unprojectScreenToGround(camera, bestScreenX, labelCenterScreenY, canvasWidth, canvasHeight, groundY);
 	return {
@@ -40691,13 +40759,15 @@ function computeRotationSafePlayerLabelAnchor(options) {
 			shipScreenBottomY: projectedVisualBottom,
 			projectedVisualBottom,
 			statusVisualTop,
+			statusTopCss: statusVisualTop,
 			labelCenterScreenY,
 			gapCss,
 			visualGapCss: statusVisualTop - projectedVisualBottom,
-			headingDeg: Math.round(heading * 180 / Math.PI) % 360,
-			usedProjectedBounds: anchorSource === "visualHullSamples",
-			anchorSource,
-			hullSampleCount: hullWorld.length,
+			headingDeg: Math.round(normalizeHeadingDeg(heading)),
+			anchorSource: "headingProfile",
+			anchorProfileSector: profile.sectorStart,
+			anchorInterpolation: profile.interpolationT,
+			hullSampleCount: localPoints.length,
 			statusScale
 		}
 	};
@@ -48190,15 +48260,15 @@ function createIslandPresentation(isle, texture, seed, kind, rockCount = 10) {
 	for (const ring of [
 		{
 			r: 1.02,
-			o: .045
+			o: .036
 		},
 		{
 			r: 1.08,
-			o: .028
+			o: .022
 		},
 		{
 			r: 1.14,
-			o: .016
+			o: .012
 		}
 	]) {
 		const shallowRing = new Mesh(new RingGeometry(isle.rx * ring.r * .92, isle.rx * ring.r, 36), new MeshBasicMaterial({
@@ -48964,6 +49034,8 @@ var AbyssalThreeRenderer = class {
 			prop.rotation.y = entry.rotationY;
 			prop.scale.setScalar(entry.scale);
 			prop.userData.compositionZone = entry.zone;
+			prop.userData.compositionTier = entry.tier;
+			prop.userData.clusterId = entry.clusterId;
 			this.world.add(prop);
 			placedProps++;
 		}
@@ -49061,14 +49133,13 @@ var AbyssalThreeRenderer = class {
 		}, this.camera, this.renderer, this.smoothedZoom, this.labelProbe);
 		const labelAnchor = computeRotationSafePlayerLabelAnchor({
 			player: this.player,
-			playerVisualRoot: this.playerVisualRoot,
 			shipId: frame.shipId,
 			heading: frame.player.angle,
 			camera: this.camera,
 			canvasWidth: this.canvas.clientWidth || 1,
 			canvasHeight: this.canvas.clientHeight || 1,
 			labelTotalHeightCss: this.lastPlayerLabelDebug?.totalLabelHeightCss ?? 18,
-			gapCss: 8,
+			zoom: this.smoothedZoom,
 			statusScale: labelZoomFactor(this.smoothedZoom)
 		});
 		this.playerWorldLabel.group.position.copy(labelAnchor.position);
@@ -49322,7 +49393,11 @@ var AbyssalThreeRenderer = class {
 		}
 		for (const marker of this.poiLabels) updatePoiWorldLabel(marker, marker.poiName, marker.poiLevel, this.camera, this.renderer, this.smoothedZoom, marker.group.position);
 		if (this.visualDebugEnabled && typeof window !== "undefined") {
-			const game = window.__ABYSSAL_GAME__, mv = game?.movementDebug, npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), pl = this.lastPlayerLabelDebug, nl = this.lastNpcLabelDebug, zoomFactor = labelZoomFactor(this.smoothedZoom), pal = this.lastPlayerLabelAnchorDebug, shipToLabelGapCss = pal ? Math.max(0, pal.visualGapCss) : 0, nearestCluster = this.compositionPlan ? queryNearestCompositionCluster(this.compositionPlan, frame.player.x, frame.player.y) : null, visibleComposition = this.compositionPlan ? countVisibleCompositionNear(this.compositionPlan, frame.player.x, frame.player.y) : 0, activeClusters = this.compositionPlan ? new Set(this.compositionPlan.props.map((p) => p.zone)).size : 0, lc = this.lastLabelCollisionDebug;
+			const game = window.__ABYSSAL_GAME__, mv = game?.movementDebug, npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), pl = this.lastPlayerLabelDebug, nl = this.lastNpcLabelDebug, zoomFactor = labelZoomFactor(this.smoothedZoom), pal = this.lastPlayerLabelAnchorDebug, shipToLabelGapCss = pal ? Math.max(0, pal.visualGapCss) : 0, tierCounts = this.compositionPlan ? countPropsByTier(this.compositionPlan.props, frame.player.x, frame.player.y) : {
+				macro: 0,
+				meso: 0,
+				micro: 0
+			}, nearestMacro = this.compositionPlan ? nearestMacroFeature(this.compositionPlan.props, frame.player.x, frame.player.y) : null, isolatedMicro = this.compositionPlan ? countIsolatedMicroProps(this.compositionPlan.props) : 0, visibleComposition = this.compositionPlan ? countVisibleCompositionNear(this.compositionPlan, frame.player.x, frame.player.y) : 0, activeClusters = this.compositionPlan ? new Set(this.compositionPlan.props.map((p) => p.zone)).size : 0, lc = this.lastLabelCollisionDebug;
 			window.__ABYSSAL_VISUAL_DEBUG__ = {
 				zoom: this.smoothedZoom,
 				zoomFactor,
@@ -49333,9 +49408,10 @@ var AbyssalThreeRenderer = class {
 				islandCount: MAPS[frame.mapId].islands.length,
 				wakeSampleCount: wakeCount,
 				activeWakeMeshes: playerWakeMeshes,
-				shipHeading: game?.player?.angle,
-				projectedVisualBottom: pal?.projectedVisualBottom,
-				statusVisualTop: pal?.statusVisualTop,
+				heading: game?.player?.angle,
+				anchorProfileSector: pal?.anchorProfileSector,
+				anchorInterpolation: pal?.anchorInterpolation,
+				statusTopCss: pal?.statusTopCss,
 				visualGapCss: pal?.visualGapCss,
 				anchorSource: pal?.anchorSource,
 				statusScale: pal?.statusScale,
@@ -49343,8 +49419,7 @@ var AbyssalThreeRenderer = class {
 					x: pal.anchor.x,
 					y: pal.anchor.z,
 					headingDeg: pal.headingDeg,
-					usedProjectedBounds: pal.usedProjectedBounds,
-					hullSampleCount: pal.hullSampleCount
+					footprintPoints: pal.hullSampleCount
 				} : {
 					x: this.labelProbe.x,
 					y: this.labelProbe.z
@@ -49357,8 +49432,12 @@ var AbyssalThreeRenderer = class {
 				} : null,
 				world: {
 					activeClusters,
-					nearestClusterType: nearestCluster?.type ?? null,
-					distanceToNearestCluster: nearestCluster?.distance ?? null,
+					visibleMacroFeatures: tierCounts.macro,
+					visibleMesoFeatures: tierCounts.meso,
+					visibleMicroProps: tierCounts.micro,
+					isolatedMicroProps: isolatedMicro,
+					nearestMacroFeature: nearestMacro?.kind ?? null,
+					distanceToNearestMacroFeature: nearestMacro?.distance ?? null,
 					visibleCompositionProps: visibleComposition
 				},
 				movement: mv ? {
