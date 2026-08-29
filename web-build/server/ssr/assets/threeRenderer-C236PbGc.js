@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-DVhY7PQK.js";
+import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-B5E5ijbm.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
