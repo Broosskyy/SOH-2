@@ -10,26 +10,23 @@ extends Control
 
 var _panel: PanelContainer
 var _canvas: MinimapCanvas
-var _region_label: Label
-var _managed_layout := false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	clip_contents = false
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
 
 func _process(_delta: float) -> void:
 	if _canvas != null:
 		_canvas.queue_redraw()
-	if not _managed_layout:
-		_apply_legacy_layout()
 
-func apply_zone_rect(rect: Rect2) -> void:
-	_managed_layout = true
-	position = rect.position
-	size = rect.size
-	custom_minimum_size = rect.size
-	call_deferred("_resize_canvas")
+func fill_parent_zone() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	position = Vector2.ZERO
+	if get_parent() is Control:
+		size = (get_parent() as Control).size
+	_resize_canvas()
 
 func _build_ui() -> void:
 	_panel = PanelContainer.new()
@@ -46,32 +43,13 @@ func _build_ui() -> void:
 	style.content_margin_bottom = 5
 	_panel.add_theme_stylebox_override("panel", style)
 	add_child(_panel)
-	var stack := VBoxContainer.new()
-	stack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	stack.add_theme_constant_override("separation", 3)
-	_panel.add_child(stack)
-	var heading := Label.new()
-	heading.name = "Heading"
-	heading.text = "SEEKARTE"
-	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	heading.add_theme_color_override("font_color", Color(0.92, 0.76, 0.42))
-	stack.add_child(heading)
-	heading.visible = false
 	_canvas = MinimapCanvas.new()
+	_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_canvas.region_runtime = region_runtime
 	_canvas.player = player
 	_canvas.map_radius = map_radius
-	stack.add_child(_canvas)
-	_region_label = Label.new()
-	_region_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_region_label.add_theme_color_override("font_color", Color(0.72, 0.82, 0.78))
-	stack.add_child(_region_label)
-	_region_label.visible = false
+	_panel.add_child(_canvas)
 
 func _resize_canvas() -> void:
 	if _canvas == null:
@@ -79,10 +57,6 @@ func _resize_canvas() -> void:
 	var inner := maxf(32.0, minf(size.x, size.y) - 14.0)
 	_canvas.custom_minimum_size = Vector2(inner, inner)
 	_canvas.size = _canvas.custom_minimum_size
-
-func _apply_legacy_layout() -> void:
-	var viewport := get_viewport().get_visible_rect().size
-	apply_zone_rect(PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.MINIMAP))
 
 func map_data() -> Dictionary:
 	return {

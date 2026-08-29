@@ -109,7 +109,7 @@ test("World labels and responsive viewport policy", async () => {
   assert.match(labels, /register_anchor/);
   assert.match(labels, /unproject_position|update_projection/);
   assert.match(world, /_apply_viewport_policy/);
-  assert.match(world, /CONTENT_SCALE_ASPECT_EXPAND/);
+  assert.match(world, /CONTENT_SCALE_MODE_DISABLED/);
 });
 
 test("QualityManager directional shadow regression remains", async () => {

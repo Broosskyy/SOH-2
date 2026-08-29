@@ -8,9 +8,9 @@ test("G0.5 build marker and version", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
-  assert.match(project, /config\/version="0\.5\.[01]"/);
-  assert.match(layout, /G0\.5\.[01]-/);
-  assert.match(overlay, /G0\.5\.[01]-/);
+  assert.match(project, /config\/version="0\.5\.[012]"/);
+  assert.match(layout, /G0\.5\.[012]-/);
+  assert.match(overlay, /G0\.5\.[012]-/);
 });
 
 test("single presentation root replaces legacy gameplay HUD in scene", async () => {
@@ -29,7 +29,8 @@ test("presentation layout uses anchored zones not full-screen containers", async
   assert.match(layout, /enum Zone/);
   assert.match(layout, /zone_rect/);
   assert.match(root, /PresentationLayout\.Zone/);
-  assert.match(root, /apply_zone_rect/);
+  assert.match(root, /ProfileZone/);
+  assert.match(root, /fill_parent_zone/);
   assert.doesNotMatch(root, /safe\.size\.x - margin/);
 });
 

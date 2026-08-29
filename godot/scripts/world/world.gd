@@ -35,9 +35,18 @@ func set_debug_island_bounds_visible(enabled: bool) -> void:
 func _apply_viewport_policy() -> void:
 	if OS.get_name() != "Web":
 		return
-	get_window().content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
-	if PlatformService.mobile:
-		get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
+	var window := get_window()
+	window.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
+	window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_IGNORE
+	_sync_web_ui_viewport()
+	if not window.size_changed.is_connected(_sync_web_ui_viewport):
+		window.size_changed.connect(_sync_web_ui_viewport)
+
+func _sync_web_ui_viewport() -> void:
+	if OS.get_name() != "Web":
+		return
+	ResponsiveHudMetrics.apply_web_window_size(get_window())
+	get_viewport().size_changed.emit()
 
 func _apply_mobile_web_render_profile() -> void:
 	if OS.get_name() != "Web" or not PlatformService.mobile:

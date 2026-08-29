@@ -10,6 +10,9 @@ extends CanvasLayer
 @onready var region_runtime: Node = get_node(region_runtime_path)
 
 var _root: Control
+var _zones: Dictionary = {}
+var _last_viewport := Vector2.ZERO
+
 var _profile: PanelContainer
 var _status: PanelContainer
 var _nav: HBoxContainer
@@ -45,77 +48,115 @@ var _chat_preview: Label
 func _ready() -> void:
 	add_to_group("gameplay_presentation_root")
 	layer = 5
+	scale = Vector2.ONE
 	_build()
 	_refresh()
 	TargetingSystem.target_changed.connect(func(_t): _refresh_target())
 	TargetingSystem.target_cleared.connect(func(): _refresh_target())
+	get_viewport().size_changed.connect(_on_viewport_changed)
 	if OS.get_name() == "Web" and ClassDB.class_exists("JavaScriptBridge"):
 		JavaScriptBridge.eval(
 			"""document.addEventListener('fullscreenchange', () => {
 				if (window.godotDisplayResized) window.godotDisplayResized();
+			});
+			window.addEventListener('resize', () => {
+				if (window.godotDisplayResized) window.godotDisplayResized();
 			});"""
 		)
+	call_deferred("_on_viewport_changed")
 
 func _process(_delta: float) -> void:
-	_apply_layout()
 	if Engine.get_frames_drawn() % 15 == 0:
 		_refresh()
 		_refresh_target()
 
+func _on_viewport_changed() -> void:
+	var viewport := ResponsiveHudMetrics.ui_viewport(self)
+	if viewport == _last_viewport:
+		return
+	_last_viewport = viewport
+	_apply_layout(viewport)
+
 func _build() -> void:
 	_root = Control.new()
+	_root.name = "PresentationRoot"
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.scale = Vector2.ONE
 	add_child(_root)
+	_zones["profile"] = _make_zone("ProfileZone")
+	_zones["status"] = _make_zone("StatusZone")
+	_zones["nav"] = _make_zone("NavZone")
+	_zones["currency"] = _make_zone("CurrencyZone")
+	_zones["mission"] = _make_zone("MissionZone")
+	_zones["minimap"] = _make_zone("MinimapZone")
+	_zones["zoom"] = _make_zone("ZoomZone")
+	_zones["chat"] = _make_zone("ChatZone")
+	_zones["consumables"] = _make_zone("ConsumablesZone")
+	_zones["combat"] = _make_zone("CombatZone")
+	_zones["fullscreen"] = _make_zone("FullscreenZone")
+	_zones["target"] = _make_zone("TargetZone")
 	_profile = _panel()
 	_profile.add_child(_build_profile())
-	_root.add_child(_profile)
+	_zones["profile"].add_child(_profile)
 	_status = _panel()
 	_status.add_child(_build_status())
-	_root.add_child(_status)
+	_zones["status"].add_child(_status)
 	_nav = _build_nav()
-	_root.add_child(_nav)
+	_zones["nav"].add_child(_nav)
 	_currency = _build_currency()
-	_root.add_child(_currency)
+	_zones["currency"].add_child(_currency)
 	_mission = _panel()
 	_mission.add_child(_build_mission())
-	_root.add_child(_mission)
+	_zones["mission"].add_child(_mission)
 	_target = _panel()
 	_target.visible = false
 	_target.add_child(_build_target())
-	_root.add_child(_target)
+	_zones["target"].add_child(_target)
 	_chat = _panel()
 	_chat.add_child(_build_chat())
-	_root.add_child(_chat)
+	_zones["chat"].add_child(_chat)
 	_zoom = _build_zoom()
-	_root.add_child(_zoom)
+	_zones["zoom"].add_child(_zoom)
 	_consumables = _build_consumables()
-	_root.add_child(_consumables)
+	_zones["consumables"].add_child(_consumables)
 	_combat = _build_combat()
-	_root.add_child(_combat)
+	_zones["combat"].add_child(_combat)
 	_fullscreen = Button.new()
 	_fullscreen.text = "⛶"
 	_fullscreen.tooltip_text = "Fullscreen"
 	_fullscreen.pressed.connect(_toggle_fullscreen)
-	_root.add_child(_fullscreen)
+	_zones["fullscreen"].add_child(_fullscreen)
 	_minimap = Minimap.new()
-	_minimap.region_runtime_path = region_runtime_path
-	_minimap.player_path = player_path
+	_minimap.region_runtime_path = region_runtime.get_path()
+	_minimap.player_path = player.get_path()
 	_minimap.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(_minimap)
+	_zones["minimap"].add_child(_minimap)
+
+func _make_zone(name: String) -> Control:
+	var zone := Control.new()
+	zone.name = name
+	zone.scale = Vector2.ONE
+	zone.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	zone.set_script(load("res://scripts/ui/hud_zone.gd"))
+	_root.add_child(zone)
+	return zone
 
 func _panel() -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", PresentationTheme.glass_panel())
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	return panel
 
 func _build_profile() -> HBoxContainer:
 	var row := HBoxContainer.new()
+	row.name = "ProfileRow"
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 6)
 	var avatar := PanelContainer.new()
+	avatar.name = "Avatar"
 	avatar.add_theme_stylebox_override("panel", PresentationTheme.round_button(18.0))
-	avatar.custom_minimum_size = Vector2(36, 36)
 	var mark := Label.new()
 	mark.text = "☠"
 	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -124,6 +165,7 @@ func _build_profile() -> HBoxContainer:
 	avatar.add_child(mark)
 	row.add_child(avatar)
 	var copy := VBoxContainer.new()
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy.add_theme_constant_override("separation", 0)
 	_captain_name = Label.new()
 	_captain_name.text = MockupCompositionProfile.HUD_PLAYER_NAME
@@ -142,6 +184,7 @@ func _build_profile() -> HBoxContainer:
 
 func _build_status() -> VBoxContainer:
 	var stack := VBoxContainer.new()
+	stack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	stack.add_theme_constant_override("separation", 2)
 	_exp_bar = _bar(Color(0.28, 0.52, 0.95))
 	stack.add_child(_status_row("EXP", _exp_bar, "_exp_value"))
@@ -173,6 +216,7 @@ func _status_row(title: String, bar: ProgressBar, value_var: String) -> VBoxCont
 func _build_nav() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.name = "TopNavRow"
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 1)
 	for entry in [
 		["⛵", "SHIPS"], ["⚓", "WERFT"], ["✦", "EVENTS"], ["◆", "QUESTS"],
@@ -187,6 +231,7 @@ func _nav_btn(icon: String, label_text: String) -> Button:
 	button.text = "%s\n%s" % [icon, label_text]
 	button.disabled = true
 	button.tooltip_text = "Coming soon"
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.add_theme_stylebox_override("normal", PresentationTheme.nav_button(false))
 	button.add_theme_stylebox_override("disabled", PresentationTheme.nav_button(false))
 	button.add_theme_color_override("font_disabled_color", Color(0.55, 0.58, 0.56))
@@ -194,6 +239,7 @@ func _nav_btn(icon: String, label_text: String) -> Button:
 
 func _build_currency() -> HBoxContainer:
 	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 8)
 	_gold_label = Label.new()
 	_gold_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
@@ -205,12 +251,14 @@ func _build_currency() -> HBoxContainer:
 
 func _build_mission() -> HBoxContainer:
 	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 8)
 	var icon := Label.new()
 	icon.text = "✦"
 	icon.add_theme_color_override("font_color", Color(0.82, 0.45, 0.32))
 	row.add_child(icon)
 	var copy := VBoxContainer.new()
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy.add_theme_constant_override("separation", 1)
 	var heading := Label.new()
 	heading.text = "AKTIVE MISSION"
@@ -222,6 +270,7 @@ func _build_mission() -> HBoxContainer:
 	copy.add_child(_mission_title)
 	_mission_objective = Label.new()
 	_mission_objective.text = MockupCompositionProfile.HUD_MISSION_OBJECTIVE
+	_mission_objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_mission_objective.add_theme_color_override("font_color", PresentationTheme.label_color("muted"))
 	copy.add_child(_mission_objective)
 	_mission_progress = _bar(Color(0.78, 0.38, 0.22))
@@ -232,11 +281,13 @@ func _build_mission() -> HBoxContainer:
 
 func _build_target() -> HBoxContainer:
 	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 6)
 	var icon := Label.new()
 	icon.text = "⚔"
 	row.add_child(icon)
 	var copy := VBoxContainer.new()
+	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_target_name = Label.new()
 	copy.add_child(_target_name)
 	_target_level = Label.new()
@@ -248,6 +299,7 @@ func _build_target() -> HBoxContainer:
 
 func _build_chat() -> VBoxContainer:
 	var stack := VBoxContainer.new()
+	stack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	stack.add_theme_constant_override("separation", 2)
 	var tabs := HBoxContainer.new()
 	for tab in ["Global", "Guild", "System"]:
@@ -269,12 +321,14 @@ func _build_chat() -> VBoxContainer:
 
 func _build_zoom() -> VBoxContainer:
 	var col := VBoxContainer.new()
+	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	col.add_theme_constant_override("separation", 3)
 	col.add_child(_zoom_btn("+", 0.08))
 	col.add_child(_zoom_btn("MID", 0.0))
 	col.add_child(_zoom_btn("-", -0.08))
 	var recenter := Button.new()
 	recenter.text = "⚓\nSCHIFF"
+	recenter.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	recenter.pressed.connect(func(): camera.reset_pan())
 	col.add_child(recenter)
 	return col
@@ -282,6 +336,7 @@ func _build_zoom() -> VBoxContainer:
 func _zoom_btn(label_text: String, delta: float) -> Button:
 	var button := Button.new()
 	button.text = label_text
+	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	if delta > 0.0:
 		button.pressed.connect(func(): camera.adjust_zoom(delta))
 	elif delta < 0.0:
@@ -293,6 +348,8 @@ func _zoom_btn(label_text: String, delta: float) -> Button:
 
 func _build_consumables() -> HBoxContainer:
 	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 6)
 	for slot in [["🛢", "32"], ["🧪", "21"], ["💣", "18"], ["💧", "24"]]:
 		var button := Button.new()
@@ -305,6 +362,7 @@ func _build_consumables() -> HBoxContainer:
 func _build_combat() -> Control:
 	var cluster := Control.new()
 	cluster.name = "CombatCluster"
+	cluster.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	cluster.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fire := Button.new()
 	fire.name = "FireButton"
@@ -334,84 +392,84 @@ func _bar(color: Color) -> ProgressBar:
 	bar.add_theme_stylebox_override("fill", PresentationTheme.bar_fill(color))
 	return bar
 
-func _apply_layout() -> void:
-	var viewport := get_viewport().get_visible_rect().size
-	_fit(_profile, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.TOP_LEFT))
-	_fit(_status, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.TOP_STATUS))
-	_fit(_nav, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.TOP_NAV))
-	var currency_rect := PresentationLayout.safe(viewport)
-	var currency_w := HudLayoutProfile.length(viewport, 0.08, "x")
-	_currency.position = Vector2(currency_rect.end.x - currency_w - PresentationLayout.margin(viewport), currency_rect.position.y + 8.0)
-	_fit(_mission, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.MISSION))
-	_fit(_target, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.TARGET))
-	_fit(_chat, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.BOTTOM_LEFT))
-	_fit(_consumables, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.BOTTOM_CENTER))
+func _apply_layout(viewport: Vector2) -> void:
+	_root.scale = Vector2.ONE
+	scale = Vector2.ONE
+	var zone_map := {
+		"profile": PresentationLayout.Zone.PROFILE,
+		"status": PresentationLayout.Zone.STATUS,
+		"nav": PresentationLayout.Zone.NAV,
+		"currency": PresentationLayout.Zone.CURRENCY,
+		"mission": PresentationLayout.Zone.MISSION,
+		"minimap": PresentationLayout.Zone.MINIMAP,
+		"zoom": PresentationLayout.Zone.ZOOM,
+		"chat": PresentationLayout.Zone.CHAT,
+		"consumables": PresentationLayout.Zone.CONSUMABLES,
+		"combat": PresentationLayout.Zone.COMBAT,
+		"fullscreen": PresentationLayout.Zone.FULLSCREEN,
+		"target": PresentationLayout.Zone.TARGET,
+	}
+	for key in zone_map.keys():
+		var zone: Control = _zones[key]
+		var rect := PresentationLayout.zone_rect(viewport, zone_map[key])
+		PresentationLayout.apply_zone(zone, rect)
+		if zone.has_method("set_qa_outline"):
+			zone.call("set_qa_outline", MobileWebDiagnostics.query_flag("qa"))
+	_style_content(viewport)
 	_layout_combat(viewport)
-	_fit(_zoom, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.ZOOM))
-	_minimap.apply_zone_rect(PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.MINIMAP))
-	var fs := HudLayout.touch_size(viewport, 40.0, HudLayout.Semantic.NAVIGATION)
-	_fullscreen.custom_minimum_size = Vector2(fs, fs)
-	_fullscreen.position = Vector2(
-		PresentationLayout.safe(viewport).end.x - fs - PresentationLayout.margin(viewport),
-		PresentationLayout.safe(viewport).position.y + PresentationLayout.top_bar_height(viewport) + 4.0
-	)
-	var bar_h := maxf(8.0, viewport.y * 0.0085)
+	if _minimap != null:
+		_minimap.fill_parent_zone()
+
+func _style_content(viewport: Vector2) -> void:
+	var bar_h := maxf(6.0, viewport.y * 0.009)
 	for bar in [_exp_bar, _hull_bar, _shield_bar, _target_hp, _mission_progress]:
 		if bar != null:
 			bar.custom_minimum_size.y = bar_h
-	var nav_h := PresentationLayout.top_bar_height(viewport) * 0.82
-	var nav_w := HudLayout.touch_size(viewport, viewport.x * 0.034, HudLayout.Semantic.NAVIGATION)
+	var nav_h: float = (_zones["nav"] as Control).size.y * 0.82
 	for child in _nav.get_children():
 		if child is Button:
-			child.custom_minimum_size = Vector2(nav_w, nav_h)
-			child.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 8.0, HudLayout.Semantic.NAVIGATION))
+			child.custom_minimum_size = Vector2(0.0, nav_h)
+			child.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.013, 8, 14))
 	for slot in _consumables.get_children():
 		if slot is Button:
-			var consumable_size := HudLayout.touch_size(viewport, viewport.y * HudLayoutProfile.RATIO_ABILITY_D, HudLayout.Semantic.SECONDARY_ACTION)
+			var consumable_size := ResponsiveHudMetrics.touch_diameter(viewport, HudLayoutProfile.RATIO_ABILITY_D, ResponsiveHudMetrics.min_touch_px(viewport) * 0.85, 0.14)
 			slot.custom_minimum_size = Vector2(consumable_size, consumable_size)
-	var avatar := _profile.get_child(0).get_child(0) as PanelContainer if _profile.get_child_count() > 0 else null
+			slot.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 8, 13))
+	var avatar := _profile.get_node_or_null("ProfileRow/Avatar") as PanelContainer
 	if avatar != null:
-		var avatar_size := HudLayout.touch_size(viewport, viewport.y * 0.055, HudLayout.Semantic.PLAYER_STATUS)
+		var avatar_size := ResponsiveHudMetrics.touch_diameter(viewport, 0.055, 32.0, 0.12)
 		avatar.custom_minimum_size = Vector2(avatar_size, avatar_size)
-	_captain_name.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 13.0, HudLayout.Semantic.PLAYER_STATUS))
-	_captain_level.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 11.0, HudLayout.Semantic.PLAYER_STATUS))
-	_guild_label.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
+	_captain_name.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.016, 11, 18))
+	_captain_level.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.014, 10, 16))
+	_guild_label.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 9, 14))
+	_gold_label.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 9, 14))
+	_pearl_label.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 9, 14))
 	for value in [_exp_value, _hull_value, _shield_value]:
 		if value != null:
-			value.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
-
-func _fit(control: Control, rect: Rect2) -> void:
-	if control == null:
-		return
-	var min_size := control.get_combined_minimum_size()
-	control.position = rect.position
-	control.size = Vector2(maxf(rect.size.x, min_size.x), maxf(rect.size.y, min_size.y))
+			value.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.011, 9, 14))
+	for child in _chat.get_children():
+		if child is Label:
+			(child as Label).add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.011, 9, 14))
+	for child in _zoom.get_children():
+		if child is Button:
+			(child as Button).add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 9, 14))
 
 func _layout_combat(viewport: Vector2) -> void:
-	var rect := PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.BOTTOM_RIGHT)
+	var rect: Vector2 = (_zones["combat"] as Control).size
 	var fire := _combat.get_node_or_null("FireButton") as Button
-	var fire_size := HudLayout.touch_size(
-		viewport,
-		HudLayoutProfile.length(viewport, HudLayoutProfile.RATIO_FIRE_D, "y"),
-		HudLayout.Semantic.PRIMARY_ACTION
-	)
+	var fire_size := ResponsiveHudMetrics.touch_diameter(viewport, HudLayoutProfile.RATIO_FIRE_D, ResponsiveHudMetrics.min_touch_px(viewport), 0.22)
 	if fire != null:
 		fire.custom_minimum_size = Vector2(fire_size, fire_size)
-		fire.position = Vector2(rect.size.x - fire_size * 0.92, rect.size.y - fire_size * 0.88)
-		fire.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 12.0, HudLayout.Semantic.PRIMARY_ACTION))
+		fire.position = Vector2(rect.x - fire_size * 0.92, rect.y - fire_size * 0.88)
+		fire.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.014, 10, 16))
 	for i in range(3):
-		var ability_name := ["Ability8", "Ability14", "Ability11"][i]
+		var ability_name: String = ["Ability8", "Ability14", "Ability11"][i]
 		var ability := _combat.get_node_or_null(ability_name) as Button
 		if ability != null:
-			var ability_size := HudLayout.touch_size(
-				viewport,
-				HudLayoutProfile.length(viewport, HudLayoutProfile.RATIO_ABILITY_D, "y"),
-				HudLayout.Semantic.SECONDARY_ACTION
-			)
+			var ability_size := ResponsiveHudMetrics.touch_diameter(viewport, HudLayoutProfile.RATIO_ABILITY_D, ResponsiveHudMetrics.min_touch_px(viewport) * 0.85, 0.12)
 			ability.custom_minimum_size = Vector2(ability_size, ability_size)
-			ability.position = Vector2(rect.size.x - fire_size * 1.05, rect.size.y - fire_size * (1.35 + i * 0.42))
-	_combat.position = rect.position
-	_combat.size = rect.size
+			ability.position = Vector2(rect.x - fire_size * 1.05, rect.y - fire_size * (1.35 + i * 0.42))
+			ability.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.011, 8, 13))
 
 func _refresh() -> void:
 	var ship_id := str(GameState.save_data.get("shipId", "sovereign"))
@@ -466,6 +524,7 @@ func _toggle_fullscreen() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	ResponsiveHudMetrics.apply_web_window_size(get_window())
 	get_viewport().size_changed.emit()
 
 func _fmt(value: float) -> String:

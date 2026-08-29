@@ -39,7 +39,7 @@ test("region selector removed from normal gameplay HUD", async () => {
 test("no giant full-screen HUD panel regression guards", async () => {
   const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
-  assert.match(root, /_fit\(/);
+  assert.match(root, /PresentationLayout\.apply_zone/);
   assert.match(layout, /zone_rect/);
   assert.doesNotMatch(root, /safe\.size\.x - margin/);
 });
@@ -48,7 +48,7 @@ test("responsive landscape and fullscreen action", async () => {
   const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   assert.match(root, /_toggle_fullscreen/);
-  assert.match(layout, /ui_scale/);
+  assert.match(layout, /ResponsiveHudMetrics/);
 });
 
 test("Kraken asset and camera lock preserved", async () => {

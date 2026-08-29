@@ -27,7 +27,7 @@ test("HudLayout semantic sizing contract", async () => {
 test("floating player HUD compact bounds", async () => {
   const floating = await read("godot/scripts/ui/floating_status_hud.gd");
   assert.match(floating, /floating_width/);
-  assert.match(floating, /4\.0 \* scale/);
+  assert.match(floating, /viewport_size\.y \* 0\.00/);
   assert.match(floating, /compact := true/);
 });
 

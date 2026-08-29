@@ -60,5 +60,5 @@ static func label_color(kind := "default") -> Color:
 		_:
 			return Color(0.86, 0.82, 0.68)
 
-static func font_px(viewport: Vector2, base: float, semantic: HudLayout.Semantic = HudLayout.Semantic.PLAYER_STATUS) -> int:
-	return HudLayout.font_size(viewport, base, semantic)
+static func font_px(viewport: Vector2, ratio: float, min_px := 10, max_px := 28) -> int:
+	return ResponsiveHudMetrics.font_px(viewport, ratio, min_px, max_px)

@@ -37,7 +37,7 @@ test("HudLayout responsive scaling contract", async () => {
   assert.match(layout, /MIN_TOUCH_PX/);
   assert.match(layout, /semantic_scale/);
   assert.match(root, /PresentationLayout/);
-  assert.match(minimap, /PresentationLayout\.zone_rect|HudLayoutProfile\.touch_floor|apply_zone_rect/);
+  assert.match(minimap, /PresentationLayout\.zone_rect|fill_parent_zone/);
   assert.match(floating, /HudLayout\.semantic_scale/);
 });
 

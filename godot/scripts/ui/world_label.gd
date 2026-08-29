@@ -55,7 +55,7 @@ func update_projection(camera: Camera3D, world_position: Vector3) -> void:
 	var font_px := HudLayout.font_size(viewport, 16.0 if HudLayout.is_mobile_landscape(viewport) else 12.0, HudLayout.Semantic.FLOATING_NPC)
 	_label.add_theme_font_size_override("font_size", font_px)
 	if _hp_bar != null:
-		_hp_bar.custom_minimum_size = Vector2(HudLayout.floating_width(viewport, false), maxf(5.0, UiMetrics.min_touch_render_px(viewport) * 0.08))
+		_hp_bar.custom_minimum_size = Vector2(HudLayout.floating_width(viewport, false), maxf(5.0, viewport.y * 0.006))
 	var screen_position := camera.unproject_position(world_position)
 	var height := _label.size.y + (_hp_bar.custom_minimum_size.y if _hp_bar != null else 0.0)
 	position = screen_position + _offset - Vector2(_label.size.x * 0.5, height)

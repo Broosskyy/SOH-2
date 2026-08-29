@@ -31,27 +31,21 @@ func _on_label_input(event: InputEvent) -> void:
 func _refresh() -> void:
 	if _label == null:
 		return
-	var viewport := get_viewport().get_visible_rect().size
+	var viewport := ResponsiveHudMetrics.ui_viewport(self)
 	var safe := PlatformService.safe_rect(viewport)
 	_label.anchor_left = 1.0
 	_label.anchor_right = 1.0
 	_label.anchor_top = 1.0
 	_label.anchor_bottom = 1.0
-	_label.offset_right = -(safe.size.x - safe.end.x + 8.0)
-	_label.offset_bottom = -(safe.size.y - safe.end.y + 8.0)
-	_label.offset_left = _label.offset_right - 280.0
-	_label.offset_top = _label.offset_bottom - 120.0
+	_label.offset_right = -(safe.size.x - safe.end.x + 6.0)
+	_label.offset_bottom = -(safe.size.y - safe.end.y + 6.0)
+	_label.offset_left = _label.offset_right - 220.0
+	_label.offset_top = _label.offset_bottom - 96.0
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	if _collapsed:
 		_label.text = "QA ▶"
 		return
-	var hud_owner := "GameplayPresentationRoot"
-	for node in get_tree().get_nodes_in_group("gameplay_presentation_root"):
-		if node != null:
-			hud_owner = str(node.get_class())
-			break
-	var lines := UiMetrics.audit_lines(viewport)
-	lines.append("HUD OWNER: %s" % hud_owner)
+	var lines := ResponsiveHudMetrics.audit_lines(viewport)
 	lines.append("GIT: %s" % PresentationLayout.GIT_SHA)
 	lines.append("(tap to collapse)")
 	_label.text = "\n".join(lines)

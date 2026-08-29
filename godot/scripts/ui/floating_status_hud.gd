@@ -82,9 +82,9 @@ func _process(_delta: float) -> void:
 	var width := HudLayout.floating_width(viewport_size, true)
 	player_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 11.0, HudLayout.Semantic.FLOATING_PLAYER))
 	level_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 9.0, HudLayout.Semantic.FLOATING_PLAYER))
-	hp_bar.custom_minimum_size = Vector2(width, maxf(4.0 * scale, UiMetrics.min_touch_render_px(viewport_size) * 0.08))
-	shield_bar.custom_minimum_size = Vector2(width, maxf(3.0 * scale, UiMetrics.min_touch_render_px(viewport_size) * 0.06))
-	root.custom_minimum_size = Vector2(width, maxf(36.0 * scale, UiMetrics.min_touch_render_px(viewport_size) * 0.75))
+	hp_bar.custom_minimum_size = Vector2(width, maxf(4.0, viewport_size.y * 0.006))
+	shield_bar.custom_minimum_size = Vector2(width, maxf(3.0, viewport_size.y * 0.005))
+	root.custom_minimum_size = Vector2(width, maxf(28.0, viewport_size.y * 0.05))
 	var screen_position := camera.unproject_position(ui_anchor.global_position)
 	var desired := screen_position + _profile.nameplate_offset
 	desired -= Vector2(width * 0.5, root.size.y + _profile.ui_safe_gap)

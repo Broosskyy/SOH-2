@@ -46,13 +46,13 @@ test("mobile hybrid input separates destination navigation and camera pan", asyn
 
 test("HUD and controls share safe-area policy", async () => {
   const platform = await read("godot/scripts/platform/platform_service.gd");
-  const presentation = await read("godot/scripts/ui/presentation_layout.gd");
+  const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   const mobile = await read("godot/scripts/input/mobile_controls.gd");
   assert.match(platform, /func safe_rect/);
   assert.match(platform, /func safe_margins/);
   assert.match(platform, /DisplayServer\.screen_get_size/);
   assert.match(platform, /display_to_viewport/);
-  assert.match(presentation, /PlatformService\.safe_rect/);
+  assert.match(metrics, /PlatformService\.safe_rect/);
   assert.match(mobile, /PlatformService\.safe_margins/);
 });
 
