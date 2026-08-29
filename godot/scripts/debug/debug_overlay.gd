@@ -26,7 +26,8 @@ var island_bounds_visible := false
 var performance_visible := true
 
 func _ready() -> void:
-	if not OS.is_debug_build():
+	var show_overlay := _should_show_overlay()
+	if not show_overlay:
 		visible = false
 		set_process(false)
 		set_process_unhandled_key_input(false)
@@ -49,8 +50,8 @@ func _process(_delta: float) -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	var safe := PlatformService.safe_rect(viewport_size)
 	var lines := [
-		"BUILD: G0.3.1",
-		"MILESTONE: TARGET VISUAL FOUNDATION",
+		"BUILD: G0.3.2",
+		"MILESTONE: MOBILE TARGET PRESENTATION",
 		"REFERENCE: V20.3.2",
 		"ENGINE: Godot %s" % Engine.get_version_info().get("string", "unknown"),
 		"RENDERER: %s" % renderer,
@@ -142,3 +143,8 @@ func _device_pixel_ratio() -> float:
 	if OS.get_name() == "Web" and ClassDB.class_exists("JavaScriptBridge"):
 		return float(JavaScriptBridge.eval("window.devicePixelRatio || 1"))
 	return 1.0
+
+func _should_show_overlay() -> bool:
+	if MobileWebDiagnostics.query_flag("diag"):
+		return true
+	return OS.is_debug_build() and OS.get_name() != "Web"

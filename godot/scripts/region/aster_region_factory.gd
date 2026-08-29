@@ -140,7 +140,7 @@ static func _island(
 	profile.gameplay_radius_z = radius_z
 	profile.navigation_block_radius = maxf(radius_x, radius_z) * 0.92
 	profile.world_label_height = label_height
-	profile.visual_scale = 0.88
+	profile.visual_scale = 0.58
 	profile.use_proxy_geometry = true
 	profile.harbor_anchor = Vector3(0, 0, radius_z * 0.42) if shape_class == IslandPresentationProfile.ShapeClass.HARBOR else Vector3.ZERO
 	return profile

@@ -35,7 +35,6 @@ func _ready() -> void:
 
 func _build_hud() -> void:
 	panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(188, 58) if compact else Vector2(220, 66)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel_style = StyleBoxFlat.new()
 	_panel_style.bg_color = Color(0.01, 0.055, 0.075, 0.78)
@@ -82,10 +81,15 @@ func _process(_delta: float) -> void:
 		panel.visible = false
 		return
 	panel.visible = true
+	var viewport_size := get_viewport().get_visible_rect().size
+	var scale := HudLayout.scale_factor(viewport_size)
+	panel.custom_minimum_size = Vector2(200.0, 62.0) * scale if compact else Vector2(240.0, 72.0) * scale
+	player_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 14.0 if compact else 17.0))
+	hp_bar.custom_minimum_size.y = 8.0 * scale if compact else 10.0 * scale
+	shield_bar.custom_minimum_size.y = 6.0 * scale if compact else 8.0 * scale
 	var screen_position := camera.unproject_position(ui_anchor.global_position)
 	var desired := screen_position + _profile.nameplate_offset
 	desired -= Vector2(panel.size.x * 0.5, panel.size.y + _profile.ui_safe_gap)
-	var viewport_size := get_viewport().get_visible_rect().size
 	var safe_rect := PlatformService.safe_rect(viewport_size)
 	var inset := 8.0
 	panel.position = Vector2(

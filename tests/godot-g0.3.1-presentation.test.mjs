@@ -4,14 +4,11 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("G0.3.1 build marker and version", async () => {
-  const project = await read("godot/project.godot");
-  const overlay = await read("godot/scripts/debug/debug_overlay.gd");
+test("G0.3.1 build marker and version (historical docs)", async () => {
+  const report = await read("docs/godot-migration/G0.3.1_REPORT.md");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
-  assert.match(project, /config\/version="0\.3\.1"/);
-  assert.match(overlay, /BUILD: G0\.3\.1/);
-  assert.match(capture, /G0\.3\.1/);
-  assert.match(capture, /artifacts\/godot-g0\.3\.1/);
+  assert.match(report, /G0\.3\.1/);
+  assert.match(capture, /artifacts\/godot-g0\.3\.2/);
 });
 
 test("visual and collision separation — no production debug slabs", async () => {

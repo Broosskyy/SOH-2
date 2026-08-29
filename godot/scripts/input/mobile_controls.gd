@@ -1,5 +1,8 @@
 extends CanvasLayer
 
+## Single authoritative mobile control layer — camera pan joystick + pinch zoom only.
+## Combat controls live in GameplayHud (disabled until G0.4).
+
 @export var camera_path: NodePath
 
 var camera: NavalCameraController
@@ -8,9 +11,7 @@ var joystick_pointer := -1
 var joystick_radius := 110.0
 var root: Control
 var joystick_area: Panel
-var fire_button: Button
-var ability_buttons: Array[Button] = []
-var _last_viewport_size := Vector2.ZERO
+var joystick_label: Label
 var _pinch_touches: Dictionary = {}
 var _pinch_distance := 0.0
 
@@ -28,50 +29,48 @@ func _build_touch_hud() -> void:
 	add_child(root)
 	joystick_area = Panel.new()
 	joystick_area.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	joystick_area.custom_minimum_size = Vector2(220, 220)
 	var joystick_style := StyleBoxFlat.new()
-	joystick_style.bg_color = Color(0.02, 0.09, 0.13, 0.48)
-	joystick_style.border_color = Color(0.35, 0.9, 0.92, 0.58)
+	joystick_style.bg_color = Color(0.02, 0.09, 0.13, 0.52)
+	joystick_style.border_color = Color(0.62, 0.48, 0.24, 0.72)
 	joystick_style.set_border_width_all(3)
 	joystick_style.set_corner_radius_all(110)
 	joystick_area.add_theme_stylebox_override("panel", joystick_style)
 	root.add_child(joystick_area)
-	fire_button = Button.new()
-	fire_button.text = "FEUER"
-	fire_button.custom_minimum_size = Vector2(150, 150)
-	fire_button.button_down.connect(func(): Input.action_press("primaryFire"))
-	fire_button.button_up.connect(func(): Input.action_release("primaryFire"))
-	root.add_child(fire_button)
-	for index in 3:
-		var ability := Button.new()
-		ability.text = str(index + 1)
-		ability.custom_minimum_size = Vector2(82, 82)
-		var action := "ability%d" % (index + 1)
-		ability.pressed.connect(func(): _pulse_action(action))
-		ability_buttons.append(ability)
-		root.add_child(ability)
+	joystick_label = Label.new()
+	joystick_label.text = "KAMERA"
+	joystick_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	joystick_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	joystick_label.add_theme_color_override("font_color", Color(0.86, 0.78, 0.58))
+	joystick_area.add_child(joystick_label)
 
 func _layout_touch_hud() -> void:
 	if root == null:
 		return
 	var viewport_size := get_viewport().get_visible_rect().size
+	var scale := HudLayout.scale_factor(viewport_size)
 	var margins := PlatformService.safe_margins(viewport_size)
-	var left := maxf(24.0, margins.x + 20.0)
-	var right_safe := margins.z
-	var bottom_safe := margins.w
-	joystick_area.position = Vector2(left, viewport_size.y - bottom_safe - 244.0)
-	fire_button.position = Vector2(viewport_size.x - right_safe - 174.0, viewport_size.y - bottom_safe - 184.0)
-	for index in ability_buttons.size():
-		ability_buttons[index].position = Vector2(
-			viewport_size.x - right_safe - 278.0 - index * 92.0,
-			viewport_size.y - bottom_safe - 96.0
-		)
+	var size := HudLayout.touch_size(viewport_size, 200.0)
+	joystick_area.custom_minimum_size = Vector2(size, size)
+	joystick_area.size = Vector2(size, size)
+	joystick_style_radius(joystick_area, size * 0.5)
+	joystick_area.position = Vector2(
+		maxf(18.0, margins.x + 14.0),
+		viewport_size.y - margins.w - size - 12.0
+	)
+	joystick_radius = size * 0.42
+	joystick_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 11.0))
+	joystick_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+func joystick_style_radius(panel: Panel, radius: float) -> void:
+	var style := panel.get_theme_stylebox("panel") as StyleBoxFlat
+	if style != null:
+		style.set_corner_radius_all(int(radius))
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 	if event is InputEventScreenTouch:
-		if event.pressed and event.position.x < get_viewport().get_visible_rect().size.x * 0.42:
+		if event.pressed and _is_joystick_zone(event.position):
 			joystick_pointer = event.index
 			joystick_center = event.position
 			camera.reset_pan()
@@ -96,10 +95,8 @@ func _unhandled_input(event: InputEvent) -> void:
 					camera.adjust_zoom((distance - _pinch_distance) / 560.0)
 				_pinch_distance = distance
 
-func _pulse_action(action: StringName) -> void:
-	Input.action_press(action)
-	await get_tree().process_frame
-	Input.action_release(action)
+func _is_joystick_zone(position: Vector2) -> bool:
+	return joystick_area.get_global_rect().has_point(position)
 
 func _update_pinch_distance() -> void:
 	if _pinch_touches.size() != 2:
@@ -107,4 +104,3 @@ func _update_pinch_distance() -> void:
 		return
 	var points := _pinch_touches.values()
 	_pinch_distance = (points[0] as Vector2).distance_to(points[1] as Vector2)
-

@@ -55,7 +55,7 @@ func _apply_isolation(step: int) -> void:
 	if step >= 7:
 		return
 	player_ship.visible = step >= 3
-	floating_hud.visible = false
+	floating_hud.visible = step >= 5
 	mobile_controls.visible = step >= 5 and PlatformService.mobile
 	region_runtime.visible = step >= 2
 	if step <= 2:
