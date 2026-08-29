@@ -33,6 +33,9 @@ test("platform-neutral catalog contains every V15 gameplay domain", async () => 
   assert.equal(catalog.presentation.heightIsPlayerControlled, false);
   assert.equal(catalog.presentation.camera.playerOrbitEnabled, false);
   assert.equal(catalog.presentation.camera.thirdPersonChaseEnabled, false);
+  assert.equal(catalog.presentation.camera.fovDegrees, 35);
+  assert.equal(catalog.presentation.camera.zoomMin, 0.55);
+  assert.equal(catalog.presentation.camera.zoomMax, 1.38);
   for (const domain of required) assert.ok(catalog[domain], domain);
   assert.deepEqual(Object.keys(catalog.ships), [
     "sovereign",

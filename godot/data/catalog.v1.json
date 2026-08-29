@@ -10,9 +10,9 @@
     "heightIsPlayerControlled": false,
     "camera": {
       "projection": "FIXED_OBLIQUE_PERSPECTIVE",
-      "fovDegrees": 39,
-      "zoomMin": 0.68,
-      "zoomMax": 1.35,
+      "fovDegrees": 35,
+      "zoomMin": 0.55,
+      "zoomMax": 1.38,
       "playerOrbitEnabled": false,
       "thirdPersonChaseEnabled": false,
       "firstPersonEnabled": false,
