@@ -1,5 +1,5 @@
 import { a as require_react, o as __commonJSMin, s as __toESM, t as require_jsx_runtime } from "../index.js";
-import { _ as SHIPS, c as saveQualityPreference, d as AMMO, f as CANNONS, g as QUESTS, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, m as ENTITY_DATA, o as loadQualityPreference, p as DECK_LEVELS, r as worldOffset, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-B5E5ijbm.js";
+import { _ as SHIPS, c as saveQualityPreference, d as AMMO, f as CANNONS, g as QUESTS, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, m as ENTITY_DATA, o as loadQualityPreference, p as DECK_LEVELS, r as worldOffset, t as PLAYER_SHIP_VISUALS } from "./shipVisuals-DbKvQ6Y6.js";
 //#region node_modules/ipaddr.js/lib/ipaddr.js
 var require_ipaddr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	(function(root) {
@@ -3105,6 +3105,56 @@ var normalizeAngle = (value) => {
 	return angle;
 };
 //#endregion
+//#region app/game/navigation/navalTurnProfile.ts
+/** Relative angle between ship forward and target (0–180°). */
+function relativeTargetAngleDeg(shipAngle, targetAngle) {
+	return Math.abs(normalizeAngle(targetAngle - shipAngle)) * 180 / Math.PI;
+}
+/**
+* V20.3.1 hybrid naval turning — forward-only, tighter hard turns behind ship.
+* Parameters are intentionally grouped for future CLASSIC/RESPONSIVE modes.
+*/
+function resolveNavalTurnProfile(shipAngle, targetAngle) {
+	const deg = relativeTargetAngleDeg(shipAngle, targetAngle);
+	if (deg <= 45) return {
+		relativeTargetAngleDeg: deg,
+		turnMode: "forward",
+		turnAuthority: 1,
+		forwardThrustFactor: 1
+	};
+	if (deg <= 100) {
+		const t = (deg - 45) / 55;
+		return {
+			relativeTargetAngleDeg: deg,
+			turnMode: "arc",
+			turnAuthority: 1 + t * .12,
+			forwardThrustFactor: 1 - t * .22
+		};
+	}
+	if (deg <= 140) {
+		const t = (deg - 100) / 40;
+		return {
+			relativeTargetAngleDeg: deg,
+			turnMode: "tight",
+			turnAuthority: 1.12 + t * .38,
+			forwardThrustFactor: .78 - t * .38
+		};
+	}
+	const t = clamp((deg - 140) / 40, 0, 1);
+	return {
+		relativeTargetAngleDeg: deg,
+		turnMode: "hard",
+		turnAuthority: 1.5 + t * .35,
+		forwardThrustFactor: .4 - t * .2
+	};
+}
+function applyNavalTurnInput(angleDiff, profile, baseTurnGain = 2.4) {
+	return {
+		turn: clamp(angleDiff * baseTurnGain * profile.turnAuthority, -1, 1),
+		thrustScale: clamp(profile.forwardThrustFactor, .2, 1)
+	};
+}
+//#endregion
 //#region app/game/navigation/shipMovement.ts
 var ARRIVAL_RADIUS = 36;
 var STUCK_SECONDS = 1.35;
@@ -3204,12 +3254,23 @@ function stepShipMovement(config) {
 	let destination = config.destination;
 	let turn = config.keyboardTurn;
 	let thrust = config.keyboardThrust;
+	let movementDebug;
 	if (destination) {
 		const d = distance(player, destination);
-		const angleDiff = normalizeAngle(Math.atan2(destination.y - player.y, destination.x - player.x) - player.angle);
-		turn = clamp(angleDiff * 2.4, -1, 1);
-		const turningFactor = clamp(1 - Math.abs(angleDiff) / Math.PI * .72, .28, 1);
+		const targetAngle = Math.atan2(destination.y - player.y, destination.x - player.x);
+		const angleDiff = normalizeAngle(targetAngle - player.angle);
+		const turnProfile = resolveNavalTurnProfile(player.angle, targetAngle);
+		const navalTurn = applyNavalTurnInput(angleDiff, turnProfile);
+		turn = navalTurn.turn;
+		const turningFactor = navalTurn.thrustScale;
 		thrust = d > ARRIVAL_RADIUS ? turningFactor : 0;
+		movementDebug = {
+			relativeTargetAngle: turnProfile.relativeTargetAngleDeg,
+			turnMode: turnProfile.turnMode,
+			turnAuthority: turnProfile.turnAuthority,
+			forwardThrustFactor: turnProfile.forwardThrustFactor,
+			targetDistance: d
+		};
 		if (d < ARRIVAL_RADIUS) if (navigation.detourWaypoint && navigation.ultimateDestination) {
 			navigation.detourWaypoint = null;
 			destination = navigation.ultimateDestination;
@@ -3258,7 +3319,8 @@ function stepShipMovement(config) {
 	return {
 		player,
 		destination,
-		navigation
+		navigation,
+		movementDebug
 	};
 }
 //#endregion
@@ -3379,6 +3441,7 @@ var createRuntimeState = () => ({
 		x: 680,
 		y: 900
 	}),
+	movementDebug: null,
 	entities: spawnMap("aster"),
 	shots: [],
 	loot: [],
@@ -4403,6 +4466,7 @@ function Home() {
 				g.player.speed = movement.player.speed;
 				g.destination = movement.destination;
 				g.navigation = movement.navigation;
+				g.movementDebug = movement.movementDebug ?? null;
 				if (Math.abs(g.player.speed) > 40 && Math.random() < clamp(Math.abs(g.player.speed) / 520, .07, .24)) {
 					const wakeOffset = PLAYER_SHIP_VISUALS[g.shipId]?.wakeOffset ?? {
 						forward: -43,
@@ -4660,7 +4724,7 @@ function Home() {
 		const canvas = threeCanvasRef.current;
 		if (!canvas || !ready) return;
 		let renderer = null, raf = 0, disposed = false;
-		import("./threeRenderer-C236PbGc.js").then(({ AbyssalThreeRenderer }) => {
+		import("./threeRenderer-BEjZkx9m.js").then(({ AbyssalThreeRenderer }) => {
 			if (disposed) return;
 			renderer = new AbyssalThreeRenderer(canvas, qualityPreference);
 			renderer3DRef.current = renderer;
@@ -4852,7 +4916,7 @@ function Home() {
 			showVisualBuildDebug && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "visual-build-debug",
 				"aria-hidden": "true",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: ["BUILD: ", "V20.3"] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["COMMIT: ", "50dabed"] })]
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("b", { children: ["BUILD: ", "V20.3.1"] }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("small", { children: ["COMMIT: ", "e1405f4"] })]
 			}),
 			showShipVisualDebug && playerVisualStatus && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: `player-visual-device-status ${playerVisualStatus.status}`,

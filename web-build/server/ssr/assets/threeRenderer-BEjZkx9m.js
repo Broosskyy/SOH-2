@@ -1,4 +1,4 @@
-import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-B5E5ijbm.js";
+import { a as resolveCameraPresentation, d as AMMO, h as MAPS, i as GAMEPLAY_CAMERA_POLICY, l as BUILD_COMMIT, m as ENTITY_DATA, n as validateShipVisualDefinition, s as resolveQuality, t as PLAYER_SHIP_VISUALS, u as BUILD_RELEASE } from "./shipVisuals-DbKvQ6Y6.js";
 /**
 * @license
 * Copyright 2010-2025 Three.js Authors
@@ -40243,6 +40243,72 @@ function pointOnIslandRing(isle, angle, radiusScale) {
 		z: isle.y + Math.sin(angle) * isle.ry * radiusScale
 	};
 }
+function pushLaneProps(props, from, to, seedCursor, step = 180) {
+	const dx = to.x - from.x;
+	const dz = to.z - from.z;
+	const steps = Math.max(2, Math.floor(Math.hypot(dx, dz) / step));
+	for (let s = 1; s < steps; s++) {
+		const t = s / steps;
+		const x = from.x + dx * t;
+		const z = from.z + dz * t;
+		const side = seeded$1(seedCursor.value++) * Math.PI * 2;
+		const offset = 12 + seeded$1(seedCursor.value++) * 22;
+		const laneKinds = [
+			"buoy",
+			"driftwood",
+			"rock",
+			"reef",
+			"mast"
+		];
+		props.push({
+			kind: laneKinds[s % laneKinds.length],
+			x: x + Math.cos(side) * offset,
+			z: z + Math.sin(side) * offset,
+			rotationY: side,
+			scale: .58 + seeded$1(seedCursor.value++) * .22,
+			zone: "navigationLane",
+			seed: seedCursor.value++
+		});
+		if (s % 3 === 0) props.push({
+			kind: [
+				"crate",
+				"barrel",
+				"wreck"
+			][s % 3],
+			x: x + Math.cos(side + 1.2) * (offset + 16),
+			z: z + Math.sin(side + 1.2) * (offset + 16),
+			rotationY: side + .4,
+			scale: .62 + seeded$1(seedCursor.value++) * .2,
+			zone: "coastalTransition",
+			seed: seedCursor.value++
+		});
+	}
+}
+function queryNearestCompositionCluster(plan, x, z) {
+	const centers = /* @__PURE__ */ new Map();
+	for (const prop of plan.props) if (prop.zone === "openSeaCluster" || prop.zone === "portCluster" || prop.zone === "encounter" || prop.zone === "lootSalvage" || prop.zone === "macroLandmark") {
+		const key = `${prop.zone}:${Math.round(prop.x / 80)}:${Math.round(prop.z / 80)}`;
+		if (!centers.has(key)) centers.set(key, {
+			type: prop.zone,
+			x: prop.x,
+			z: prop.z
+		});
+	}
+	let best = null;
+	for (const center of centers.values()) {
+		const dist = Math.hypot(center.x - x, center.z - z);
+		if (!best || dist < best.distance) best = {
+			type: center.type,
+			x: center.x,
+			z: center.z,
+			distance: dist
+		};
+	}
+	return best;
+}
+function countVisibleCompositionNear(plan, x, z, radius = 520) {
+	return plan.props.filter((prop) => Math.hypot(prop.x - x, prop.z - z) <= radius).length;
+}
 function buildMapCompositionPlan(map, density) {
 	const props = [];
 	let seedCursor = map.id.length * 97;
@@ -40338,13 +40404,25 @@ function buildMapCompositionPlan(map, density) {
 		}
 	}
 	const lanes = [];
-	for (let t = 0; t < Math.min(4, map.islands.length - 1); t++) {
-		const a = map.islands[t];
-		const b = map.islands[(t + 1) % map.islands.length];
+	const seedRef = { value: seedCursor };
+	for (let a = 0; a < map.islands.length; a++) for (let b = a + 1; b < map.islands.length; b++) {
+		const from = {
+			x: map.islands[a].x,
+			z: map.islands[a].y
+		};
+		const to = {
+			x: map.islands[b].x,
+			z: map.islands[b].y
+		};
 		lanes.push({
-			x: (a.x + b.x) * .5,
-			z: (a.y + b.y) * .5
+			x: (from.x + to.x) * .5,
+			z: (from.z + to.z) * .5
 		});
+		pushLaneProps(props, from, to, seedRef, 165);
+	}
+	seedCursor = seedRef.value;
+	for (let t = 0; t < Math.min(6, lanes.length); t++) {
+		const lane = lanes[t];
 		for (let c = 0; c < 2; c++) {
 			const angle = seeded$1(t * 11 + c) * Math.PI * 2;
 			const radius = 34 + seeded$1(t * 13 + c) * 48;
@@ -40355,8 +40433,8 @@ function buildMapCompositionPlan(map, density) {
 					"crate",
 					"barrel"
 				][(t + c) % 4],
-				x: lanes[lanes.length - 1].x + Math.cos(angle) * radius,
-				z: lanes[lanes.length - 1].z + Math.sin(angle) * radius,
+				x: lane.x + Math.cos(angle) * radius,
+				z: lane.z + Math.sin(angle) * radius,
 				rotationY: angle,
 				scale: .66 + seeded$1(t * 15 + c) * .24,
 				zone: "coastalTransition",
@@ -40443,33 +40521,89 @@ function buildMapCompositionPlan(map, density) {
 				});
 			}
 		}
+		for (let c = 0; c < 2; c++) {
+			const angle = seeded$1(idx * 61 + c) * Math.PI * 2;
+			props.push({
+				kind: [
+					"rock",
+					"reef",
+					"buoy"
+				][c],
+				x: spawn.x + Math.cos(angle) * (70 + c * 18),
+				z: spawn.y + Math.sin(angle) * (70 + c * 18),
+				rotationY: angle,
+				scale: .64 + seeded$1(idx * 71 + c) * .2,
+				zone: "encounter",
+				seed: seedCursor++
+			});
+		}
+	}
+	const gridX = Math.max(3, Math.round(map.width / 680));
+	const gridZ = Math.max(3, Math.round(map.height / 580));
+	const macroKinds = [
+		"buoy",
+		"mast",
+		"rock",
+		"driftwood",
+		"wreck",
+		"reef"
+	];
+	for (let gx = 1; gx < gridX; gx++) for (let gz = 1; gz < gridZ; gz++) {
+		const x = map.width * gx / gridX + (seeded$1(gx * 17 + gz) - .5) * 110;
+		const z = map.height * gz / gridZ + (seeded$1(gx * 23 + gz) - .5) * 110;
+		const dist = nearestIslandDistance(x, z, map.islands);
+		if (dist < 1.02 || dist > 3.4) continue;
+		props.push({
+			kind: macroKinds[(gx + gz) % macroKinds.length],
+			x,
+			z,
+			rotationY: seeded$1(gx * 31 + gz) * Math.PI * 2,
+			scale: .6 + seeded$1(gx * 37 + gz) * .26,
+			zone: "macroLandmark",
+			seed: seedCursor++
+		});
+		if ((gx + gz) % 3 === 0) {
+			const a = seeded$1(gx * 41 + gz) * Math.PI * 2;
+			props.push({
+				kind: [
+					"crate",
+					"barrel",
+					"driftwood"
+				][gz % 3],
+				x: x + Math.cos(a) * 28,
+				z: z + Math.sin(a) * 28,
+				rotationY: a,
+				scale: .58 + seeded$1(gx * 43 + gz) * .18,
+				zone: "openSea",
+				seed: seedCursor++
+			});
+		}
 	}
 	return { props };
 }
 //#endregion
 //#region app/game/visuals/playerLabelAnchor.ts
 var EXCLUDED_ANCESTOR_NAMES = new Set(["HullWaterInteraction", "ShipVisualDebug"]);
+var EXCLUDED_MESH_NAME_RE = /sail|mast|rig|rope|cord|line|flag|lantern|light|wake|foam|aura|vfx|debug|collision|helper/i;
 function isHullMesh(object) {
 	if (!(object instanceof Mesh)) return false;
+	if (!object.visible) return false;
 	if (object.userData.visualFallback) return false;
 	if (object.userData.visualEffectType) return false;
+	if (EXCLUDED_MESH_NAME_RE.test(object.name)) return false;
 	let node = object;
 	while (node) {
 		if (EXCLUDED_ANCESTOR_NAMES.has(node.name)) return false;
+		if (EXCLUDED_MESH_NAME_RE.test(node.name)) return false;
 		node = node.parent;
 	}
+	const materials = Array.isArray(object.material) ? object.material : [object.material];
+	for (const material of materials) {
+		if (!material) continue;
+		if ("visible" in material && material.visible === false) return false;
+		if ("opacity" in material && typeof material.opacity === "number" && material.opacity < .08) return false;
+	}
 	return true;
-}
-function boxCorners(box, target) {
-	const { min, max } = box;
-	target[0].set(min.x, min.y, min.z);
-	target[1].set(max.x, min.y, min.z);
-	target[2].set(min.x, max.y, min.z);
-	target[3].set(max.x, max.y, min.z);
-	target[4].set(min.x, min.y, max.z);
-	target[5].set(max.x, min.y, max.z);
-	target[6].set(min.x, max.y, max.z);
-	target[7].set(max.x, max.y, max.z);
 }
 function projectScreenY(point, camera, canvasHeight) {
 	return (1 - point.clone().project(camera).y) * .5 * canvasHeight;
@@ -40491,32 +40625,43 @@ function fallbackFootprintCorners(player, definition, corners) {
 		new Vector3(halfForward, 0, -halfLateral),
 		new Vector3(-halfForward, 0, halfLateral),
 		new Vector3(-halfForward, 0, -halfLateral),
-		new Vector3(halfForward, definition.waterlineOffset * .35, 0),
-		new Vector3(-halfForward, definition.waterlineOffset * .35, 0)
+		new Vector3(halfForward * .55, definition.waterlineOffset * .22, 0),
+		new Vector3(-halfForward * .55, definition.waterlineOffset * .22, 0)
 	];
 	player.updateMatrixWorld(true);
 	for (let i = 0; i < local.length; i++) corners[i].copy(local[i]).applyMatrix4(player.matrixWorld);
 	return local.length;
 }
-function computeRotationSafePlayerLabelAnchor(options) {
-	const { player, playerVisualRoot, shipId, heading, camera, canvasWidth, canvasHeight, labelTotalHeightCss, gapCss = 5, groundY = 8 } = options;
-	const cornerPool = Array.from({ length: 8 }, () => new Vector3());
-	const hullWorld = [];
-	const hullBox = new Box3();
-	let hasHull = false;
-	player.updateMatrixWorld(true);
+function collectVisualHullScreenSamples(playerVisualRoot, camera, canvasHeight, out) {
+	const samplePoint = new Vector3();
+	const meshBox = new Box3();
 	playerVisualRoot.updateMatrixWorld(true);
 	playerVisualRoot.traverse((object) => {
 		if (!isHullMesh(object)) return;
-		const meshBox = new Box3().setFromObject(object);
+		const geometry = object.geometry;
+		if (!geometry?.attributes?.position) return;
+		meshBox.setFromBufferAttribute(geometry.attributes.position);
 		if (meshBox.isEmpty()) return;
-		hullBox.union(meshBox);
-		hasHull = true;
+		const spanY = meshBox.max.y - meshBox.min.y;
+		const hullCeiling = meshBox.min.y + spanY * .38;
+		const positions = geometry.attributes.position;
+		const stride = Math.max(1, Math.floor(positions.count / 48));
+		for (let i = 0; i < positions.count; i += stride) {
+			samplePoint.fromBufferAttribute(positions, i);
+			if (samplePoint.y > hullCeiling) continue;
+			samplePoint.applyMatrix4(object.matrixWorld);
+			out.push(samplePoint.clone());
+		}
 	});
-	if (hasHull && !hullBox.isEmpty()) {
-		boxCorners(hullBox, cornerPool);
-		for (const corner of cornerPool) hullWorld.push(corner.clone());
-	} else {
+}
+function computeRotationSafePlayerLabelAnchor(options) {
+	const { player, playerVisualRoot, shipId, heading, camera, canvasWidth, canvasHeight, labelTotalHeightCss, gapCss = 8, groundY = 8, statusScale = 1 } = options;
+	const hullWorld = [];
+	let anchorSource = "visualHullSamples";
+	collectVisualHullScreenSamples(playerVisualRoot, camera, canvasHeight, hullWorld);
+	if (!hullWorld.length) {
+		anchorSource = "fallbackFootprint";
+		const cornerPool = Array.from({ length: 8 }, () => new Vector3());
 		const definition = PLAYER_SHIP_VISUALS[shipId];
 		const count = fallbackFootprintCorners(player, definition, cornerPool);
 		for (let i = 0; i < count; i++) hullWorld.push(cornerPool[i].clone());
@@ -40530,8 +40675,10 @@ function computeRotationSafePlayerLabelAnchor(options) {
 			best = hullWorld[i];
 		}
 	}
+	const projectedVisualBottom = bestScreenY;
+	const statusVisualTop = projectedVisualBottom + gapCss;
 	const bestScreenX = (best.clone().project(camera).x + 1) * .5 * canvasWidth || canvasWidth * .5;
-	const labelCenterScreenY = bestScreenY + gapCss + labelTotalHeightCss * .5;
+	const labelCenterScreenY = statusVisualTop + labelTotalHeightCss * .5;
 	const position = unprojectScreenToGround(camera, bestScreenX, labelCenterScreenY, canvasWidth, canvasHeight, groundY);
 	return {
 		position,
@@ -40541,14 +40688,100 @@ function computeRotationSafePlayerLabelAnchor(options) {
 				y: position.y,
 				z: position.z
 			},
-			shipScreenBottomY: bestScreenY,
+			shipScreenBottomY: projectedVisualBottom,
+			projectedVisualBottom,
+			statusVisualTop,
 			labelCenterScreenY,
 			gapCss,
+			visualGapCss: statusVisualTop - projectedVisualBottom,
 			headingDeg: Math.round(heading * 180 / Math.PI) % 360,
-			usedProjectedBounds: hasHull,
-			hullCornerCount: hullWorld.length
+			usedProjectedBounds: anchorSource === "visualHullSamples",
+			anchorSource,
+			hullSampleCount: hullWorld.length,
+			statusScale
 		}
 	};
+}
+//#endregion
+//#region app/game/visuals/worldLabelCollision.ts
+var MAX_STACK_PX = 20;
+function rectsOverlap(a, b, pad = 2) {
+	return !(a.x + a.width + pad < b.x || b.x + b.width + pad < a.x || a.y + a.height + pad < b.y || b.y + b.height + pad < a.y);
+}
+function projectWorldLabelRect(worldPosition, camera, canvasWidth, canvasHeight, widthCss, heightCss, screenOffsetY = 0) {
+	const center = worldPosition.clone();
+	center.project(camera);
+	const cx = (center.x + 1) * .5 * canvasWidth;
+	const cy = (1 - center.y) * .5 * canvasHeight + screenOffsetY;
+	return {
+		x: cx - widthCss * .5,
+		y: cy - heightCss * .5,
+		width: widthCss,
+		height: heightCss
+	};
+}
+/**
+* Resolve NPC/POI label stacking in screen space.
+* Higher priority wins; lower priority labels stack down or hide.
+*/
+function resolveWorldLabelCollisions(entries) {
+	const sorted = [...entries].sort((a, b) => b.priority - a.priority);
+	const placed = [];
+	for (const entry of sorted) {
+		let screenOffsetY = 0;
+		let hidden = false;
+		let reduced = false;
+		const baseRect = entry.rect;
+		for (let attempt = 0; attempt < 4; attempt++) {
+			const candidate = {
+				...baseRect,
+				y: baseRect.y + screenOffsetY
+			};
+			if (!placed.some((p) => !p.hidden && rectsOverlap(candidate, {
+				...p.rect,
+				y: p.rect.y + p.screenOffsetY
+			}))) {
+				placed.push({
+					...entry,
+					screenOffsetY,
+					hidden,
+					reduced
+				});
+				break;
+			}
+			screenOffsetY += 6;
+			if (screenOffsetY > MAX_STACK_PX) {
+				if (entry.priority < 80) {
+					hidden = true;
+					reduced = true;
+				} else reduced = entry.priority < 100;
+				placed.push({
+					...entry,
+					screenOffsetY: Math.min(screenOffsetY, MAX_STACK_PX),
+					hidden,
+					reduced
+				});
+				break;
+			}
+		}
+	}
+	return placed;
+}
+function screenOffsetToWorldDelta(camera, origin, screenOffsetY, canvasWidth, canvasHeight, groundY = 8) {
+	if (Math.abs(screenOffsetY) < .5) return new Vector3(0, 0, 0);
+	const base = origin.clone().project(camera);
+	const sx = (base.x + 1) * .5 * canvasWidth;
+	const sy = (1 - base.y) * .5 * canvasHeight;
+	const ndcA = new Vector3(sx / canvasWidth * 2 - 1, 1 - sy / canvasHeight * 2, .5);
+	const ndcB = new Vector3(sx / canvasWidth * 2 - 1, 1 - (sy + screenOffsetY) / canvasHeight * 2, .5);
+	const worldA = ndcA.unproject(camera);
+	const worldB = ndcB.unproject(camera);
+	const dirA = worldA.sub(camera.position).normalize();
+	const dirB = worldB.sub(camera.position).normalize();
+	const tA = (groundY - camera.position.y) / dirA.y;
+	const tB = (groundY - camera.position.y) / dirB.y;
+	const groundA = camera.position.clone().add(dirA.multiplyScalar(Math.max(0, tA)));
+	return camera.position.clone().add(dirB.multiplyScalar(Math.max(0, tB))).sub(groundA);
 }
 //#endregion
 //#region node_modules/troika-worker-utils/dist/troika-worker-utils.esm.js
@@ -48389,6 +48622,8 @@ var AbyssalThreeRenderer = class {
 		this.lastPlayerLabelDebug = null;
 		this.lastNpcLabelDebug = null;
 		this.lastPlayerLabelAnchorDebug = null;
+		this.compositionPlan = null;
+		this.lastLabelCollisionDebug = null;
 		this.quality = resolveQuality(qualityPreference);
 		this.renderer = new WebGLRenderer({
 			canvas,
@@ -48444,7 +48679,7 @@ var AbyssalThreeRenderer = class {
 		this.world.add(this.destinationRing);
 		this.setMap("aster");
 		this.loadPlayerShipVisuals();
-		this.visualDebugEnabled = typeof location !== "undefined" && (location.hostname === "localhost" || location.hostname === "127.0.0.1") && new URLSearchParams(location.search).get("visualDebug") === "1";
+		this.visualDebugEnabled = typeof location !== "undefined" && new URLSearchParams(location.search).get("visualDebug") === "1";
 		if (typeof window !== "undefined") {
 			window.addEventListener("resize", this.onLayoutChange);
 			const vv = window.visualViewport;
@@ -48722,6 +48957,7 @@ var AbyssalThreeRenderer = class {
 			}
 		}
 		const composition = buildMapCompositionPlan(map, density);
+		this.compositionPlan = composition;
 		for (const entry of composition.props) {
 			const prop = createWorldProp(entry.kind, entry.seed);
 			prop.position.set(entry.x, entry.y ?? 0, entry.z);
@@ -48832,7 +49068,8 @@ var AbyssalThreeRenderer = class {
 			canvasWidth: this.canvas.clientWidth || 1,
 			canvasHeight: this.canvas.clientHeight || 1,
 			labelTotalHeightCss: this.lastPlayerLabelDebug?.totalLabelHeightCss ?? 18,
-			gapCss: 5
+			gapCss: 8,
+			statusScale: labelZoomFactor(this.smoothedZoom)
 		});
 		this.playerWorldLabel.group.position.copy(labelAnchor.position);
 		this.labelProbe.copy(labelAnchor.position);
@@ -48859,6 +49096,8 @@ var AbyssalThreeRenderer = class {
 			this.requestCameraShake(2.4, time, 230);
 		}
 		const live = /* @__PURE__ */ new Set();
+		const canvasW = this.canvas.clientWidth || 1, canvasH = this.canvas.clientHeight || 1;
+		const npcLabelPasses = [];
 		for (const e of frame.entities) {
 			if (e.hp <= 0) continue;
 			live.add(e.id);
@@ -48879,18 +49118,49 @@ var AbyssalThreeRenderer = class {
 				});
 				if (frame.selectedId === e.id || ENTITY_DATA[e.kind].boss) this.requestCameraShake(ENTITY_DATA[e.kind].boss ? 4.5 : 1.8, time);
 			}
+			if (monsterKinds.has(e.kind)) continue;
 			let label = this.entityLabels.get(e.id);
 			if (!label) {
-				label = createNpcWorldLabel(!monsterKinds.has(e.kind));
+				label = createNpcWorldLabel(true);
 				this.entityLabels.set(e.id, label);
 				this.world.add(label.group);
 			}
 			const selected = frame.selectedId === e.id, d = ENTITY_DATA[e.kind];
-			if (monsterKinds.has(e.kind)) continue;
-			this.labelProbe.set(e.x, 10, e.y + 24);
-			this.lastNpcLabelDebug = updateNpcWorldLabel(label, d.name, d.level, e.hp, e.maxHp, selected, this.camera, this.renderer, this.smoothedZoom, this.labelProbe);
-			label.group.visible = true;
+			const basePos = new Vector3(e.x, 10, e.y + 24);
+			const debug = updateNpcWorldLabel(label, d.name, d.level, e.hp, e.maxHp, selected, this.camera, this.renderer, this.smoothedZoom, basePos);
+			npcLabelPasses.push({
+				id: e.id,
+				label,
+				debug,
+				basePos,
+				priority: selected ? 100 : d.boss ? 90 : 50,
+				selected
+			});
 		}
+		const resolved = resolveWorldLabelCollisions(npcLabelPasses.map((pass) => ({
+			id: String(pass.id),
+			priority: pass.priority,
+			rect: projectWorldLabelRect(pass.basePos, this.camera, canvasW, canvasH, Math.max(pass.debug.screenWidth, pass.debug.textScreenWidth ?? pass.debug.screenWidth), pass.debug.totalLabelHeightCss ?? pass.debug.screenHeight)
+		})));
+		let stackedNpc = 0, hiddenNpc = 0, maxLabelDisp = 0;
+		for (const pass of npcLabelPasses) {
+			const outcome = resolved.find((r) => r.id === String(pass.id));
+			if (!outcome) continue;
+			if (outcome.screenOffsetY > 0) stackedNpc++;
+			if (outcome.hidden) hiddenNpc++;
+			maxLabelDisp = Math.max(maxLabelDisp, outcome.screenOffsetY);
+			pass.label.group.visible = !outcome.hidden;
+			pass.label.levelTag.mesh.visible = !outcome.reduced || pass.selected;
+			const delta = screenOffsetToWorldDelta(this.camera, pass.basePos, outcome.screenOffsetY, canvasW, canvasH);
+			pass.label.group.position.copy(pass.basePos).add(delta);
+			this.lastNpcLabelDebug = pass.debug;
+		}
+		this.lastLabelCollisionDebug = {
+			visibleNpcLabels: npcLabelPasses.length - hiddenNpc,
+			stackedNpcLabels: stackedNpc,
+			hiddenNpcLabels: hiddenNpc,
+			maxLabelDisplacement: maxLabelDisp
+		};
 		for (const [id, mesh] of this.entityMeshes) if (!live.has(id)) {
 			const destroyed = frame.entities.some((e) => e.id === id && e.hp <= 0);
 			this.entityMeshes.delete(id);
@@ -49052,7 +49322,7 @@ var AbyssalThreeRenderer = class {
 		}
 		for (const marker of this.poiLabels) updatePoiWorldLabel(marker, marker.poiName, marker.poiLevel, this.camera, this.renderer, this.smoothedZoom, marker.group.position);
 		if (this.visualDebugEnabled && typeof window !== "undefined") {
-			const npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), pl = this.lastPlayerLabelDebug, nl = this.lastNpcLabelDebug, zoomFactor = labelZoomFactor(this.smoothedZoom), pal = this.lastPlayerLabelAnchorDebug, shipToLabelGapCss = pal ? Math.max(0, pal.gapCss) : 0;
+			const game = window.__ABYSSAL_GAME__, mv = game?.movementDebug, npcCount = frame.entities.filter((e) => e.hp > 0 && !monsterKinds.has(e.kind)).length, wakeCount = frame.wake.length, playerWakeMeshes = this.wakeMeshes.size, vv = window.visualViewport, labelUnitsPerPixel = worldUnitsPerPixel(this.camera, this.renderer, this.labelProbe), pl = this.lastPlayerLabelDebug, nl = this.lastNpcLabelDebug, zoomFactor = labelZoomFactor(this.smoothedZoom), pal = this.lastPlayerLabelAnchorDebug, shipToLabelGapCss = pal ? Math.max(0, pal.visualGapCss) : 0, nearestCluster = this.compositionPlan ? queryNearestCompositionCluster(this.compositionPlan, frame.player.x, frame.player.y) : null, visibleComposition = this.compositionPlan ? countVisibleCompositionNear(this.compositionPlan, frame.player.x, frame.player.y) : 0, activeClusters = this.compositionPlan ? new Set(this.compositionPlan.props.map((p) => p.zone)).size : 0, lc = this.lastLabelCollisionDebug;
 			window.__ABYSSAL_VISUAL_DEBUG__ = {
 				zoom: this.smoothedZoom,
 				zoomFactor,
@@ -49063,15 +49333,41 @@ var AbyssalThreeRenderer = class {
 				islandCount: MAPS[frame.mapId].islands.length,
 				wakeSampleCount: wakeCount,
 				activeWakeMeshes: playerWakeMeshes,
+				shipHeading: game?.player?.angle,
+				projectedVisualBottom: pal?.projectedVisualBottom,
+				statusVisualTop: pal?.statusVisualTop,
+				visualGapCss: pal?.visualGapCss,
+				anchorSource: pal?.anchorSource,
+				statusScale: pal?.statusScale,
 				labelAnchor: pal ? {
 					x: pal.anchor.x,
 					y: pal.anchor.z,
 					headingDeg: pal.headingDeg,
-					usedProjectedBounds: pal.usedProjectedBounds
+					usedProjectedBounds: pal.usedProjectedBounds,
+					hullSampleCount: pal.hullSampleCount
 				} : {
 					x: this.labelProbe.x,
 					y: this.labelProbe.z
 				},
+				labelCollision: lc ? {
+					visibleNpcLabels: lc.visibleNpcLabels,
+					stackedNpcLabels: lc.stackedNpcLabels,
+					hiddenNpcLabels: lc.hiddenNpcLabels,
+					maxLabelDisplacement: lc.maxLabelDisplacement
+				} : null,
+				world: {
+					activeClusters,
+					nearestClusterType: nearestCluster?.type ?? null,
+					distanceToNearestCluster: nearestCluster?.distance ?? null,
+					visibleCompositionProps: visibleComposition
+				},
+				movement: mv ? {
+					relativeTargetAngle: mv.relativeTargetAngle,
+					turnMode: mv.turnMode,
+					turnAuthority: mv.turnAuthority,
+					forwardThrustFactor: mv.forwardThrustFactor,
+					targetDistance: mv.targetDistance
+				} : null,
 				quality: this.quality.id,
 				mapId: frame.mapId,
 				krakenAttached: this.player.userData.visualRuntimeState?.status === "kraken-attached",

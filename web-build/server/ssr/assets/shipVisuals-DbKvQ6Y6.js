@@ -716,8 +716,8 @@ var QUESTS = [
 ];
 //#endregion
 //#region app/generated/buildInfo.ts
-var BUILD_RELEASE = "V20.3";
-var BUILD_COMMIT = "50dabed";
+var BUILD_RELEASE = "V20.3.1";
+var BUILD_COMMIT = "e1405f4";
 //#endregion
 //#region app/game/platform/detection.ts
 function detectPlatform() {
