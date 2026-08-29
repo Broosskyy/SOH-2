@@ -6,26 +6,19 @@ import { dirname, join } from "node:path";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
-test("V20.3.1 player anchor uses visual hull samples not full AABB corners", async () => {
+test("V20.3.1 player anchor superseded by V20.3.2 heading profile", async () => {
   const anchor = await readFile(join(root, "app/game/visuals/playerLabelAnchor.ts"), "utf8");
-  const renderer = await readFile(join(root, "app/threeRenderer.ts"), "utf8");
+  const profile = await readFile(join(root, "app/game/visuals/playerStatusAnchorProfile.ts"), "utf8");
 
-  assert.match(anchor, /collectVisualHullScreenSamples/);
-  assert.match(anchor, /hullCeiling/);
-  assert.match(anchor, /EXCLUDED_MESH_NAME_RE/);
-  assert.match(anchor, /visualGapCss/);
-  assert.match(anchor, /projectedVisualBottom/);
-  assert.match(anchor, /statusVisualTop/);
-  assert.match(anchor, /anchorSource/);
-  assert.doesNotMatch(anchor, /boxCorners\(hullBox/);
-  assert.match(renderer, /gapCss:8/);
-  assert.match(renderer, /projectedVisualBottom/);
+  assert.match(profile, /PLAYER_STATUS_ANCHOR_PROFILE/);
+  assert.match(anchor, /headingProfile/);
+  assert.doesNotMatch(anchor, /collectVisualHullScreenSamples/);
 });
 
 test("V20.3.1 visual debug exposes anchor hardware fields", async () => {
   const renderer = await readFile(join(root, "app/threeRenderer.ts"), "utf8");
 
-  assert.match(renderer, /shipHeading/);
+  assert.match(renderer, /heading:game\?\.player\?\.angle/);
   assert.match(renderer, /statusScale/);
-  assert.match(renderer, /anchorSource/);
+  assert.match(renderer, /anchorProfileSector/);
 });

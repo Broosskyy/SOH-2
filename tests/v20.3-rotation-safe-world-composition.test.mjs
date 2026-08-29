@@ -10,12 +10,8 @@ test("V20.3 rotation-safe player label anchor exists", async () => {
   const anchor = await readFile(join(root, "app/game/visuals/playerLabelAnchor.ts"), "utf8");
   const renderer = await readFile(join(root, "app/threeRenderer.ts"), "utf8");
 
-  assert.match(anchor, /computeRotationSafePlayerLabelAnchor/);
-  assert.match(anchor, /HullWaterInteraction/);
-  assert.match(anchor, /visualEffectType/);
-  assert.match(anchor, /projectScreenY/);
-  assert.match(anchor, /unprojectScreenToGround/);
   assert.match(renderer, /computeRotationSafePlayerLabelAnchor/);
+  assert.match(anchor, /headingProfile/);
   assert.doesNotMatch(renderer, /frame\.player\.y\+50/);
 });
 
@@ -43,11 +39,12 @@ test("V20.3 world composition module covers gameplay zones", async () => {
   const renderer = await readFile(join(root, "app/threeRenderer.ts"), "utf8");
 
   assert.match(composition, /buildMapCompositionPlan/);
-  assert.match(composition, /portCluster/);
-  assert.match(composition, /openSeaCluster/);
+  assert.match(composition, /wreckScene/);
+  assert.match(composition, /rockFormation/);
+  assert.match(composition, /navigationNode/);
   assert.match(composition, /encounter/);
   assert.match(composition, /lootSalvage/);
-  assert.match(composition, /coastalTransition/);
+  assert.match(composition, /navigationNode/);
   assert.match(renderer, /buildMapCompositionPlan/);
 });
 

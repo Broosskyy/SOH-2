@@ -1,6 +1,13 @@
-import * as THREE from "three";
 import type { MapConfig } from "../../gameData";
 import type { WorldDensityCounts } from "./worldDensity";
+import {
+  classifyPropTier,
+  countIsolatedMicroProps,
+  countPropsByTier,
+  nearestMacroFeature,
+  type CompositionPropEntry,
+  type CompositionTier,
+} from "./worldCompositionHierarchy";
 
 export type PropKind =
   | "rock"
@@ -21,16 +28,12 @@ export type CompositionZone =
   | "coastalTransition"
   | "navigationLane"
   | "openSea"
-  | "openSeaCluster"
+  | "rockFormation"
+  | "wreckScene"
+  | "navigationNode"
   | "encounter"
   | "lootSalvage"
-  | "islandRing"
-  | "macroLandmark";
-
-export type PlacedProp = {
-  prop: THREE.Group;
-  zone: CompositionZone;
-};
+  | "islandRing";
 
 export const seeded = (seed: number) => {
   const x = Math.sin(seed * 91.731) * 43758.5453;
@@ -62,16 +65,7 @@ function pointOnIslandRing(
 }
 
 export type CompositionPlan = {
-  props: Array<{
-    kind: PropKind;
-    x: number;
-    z: number;
-    rotationY: number;
-    scale: number;
-    zone: CompositionZone;
-    y?: number;
-    seed: number;
-  }>;
+  props: CompositionPropEntry[];
 };
 
 export type CompositionClusterInfo = {
@@ -81,44 +75,132 @@ export type CompositionClusterInfo = {
   distance: number;
 };
 
-function pushLaneProps(
-  props: CompositionPlan["props"],
+type PropInput = Omit<CompositionPropEntry, "tier"> & { tier?: CompositionTier };
+
+function pushProp(props: CompositionPropEntry[], entry: PropInput) {
+  props.push({
+    ...entry,
+    tier: entry.tier ?? classifyPropTier(entry.kind),
+  });
+}
+
+function addRockFormation(
+  props: CompositionPropEntry[],
+  x: number,
+  z: number,
+  seed: number,
+  zone: CompositionZone = "rockFormation",
+  clusterId?: string,
+) {
+  const count = 4 + Math.floor(seeded(seed) * 3);
+  for (let i = 0; i < count; i++) {
+    const angle = seeded(seed + i * 7) * Math.PI * 2;
+    const radius = 18 + seeded(seed + i * 11) * 42;
+    pushProp(props, {
+      kind: i % 3 === 0 ? "reef" : "rock",
+      x: x + Math.cos(angle) * radius,
+      z: z + Math.sin(angle) * radius,
+      rotationY: angle + seeded(seed + i * 3) * 0.4,
+      scale: 0.72 + seeded(seed + i * 5) * 0.38,
+      zone,
+      y: i % 3 === 0 ? -1 : 0,
+      seed: seed + i,
+      clusterId,
+    });
+  }
+}
+
+function addWreckScene(
+  props: CompositionPropEntry[],
+  x: number,
+  z: number,
+  seed: number,
+  zone: CompositionZone = "wreckScene",
+  clusterId?: string,
+) {
+  pushProp(props, {
+    kind: "wreck",
+    x,
+    z,
+    rotationY: seeded(seed) * Math.PI * 2,
+    scale: 0.92 + seeded(seed + 1) * 0.18,
+    zone,
+    tier: "macro",
+    seed,
+    clusterId,
+  });
+  const microKinds: PropKind[] = ["crate", "barrel", "driftwood"];
+  for (let i = 0; i < 3; i++) {
+    const angle = seeded(seed + 20 + i) * Math.PI * 2;
+    const radius = 22 + i * 9;
+    pushProp(props, {
+      kind: microKinds[i],
+      x: x + Math.cos(angle) * radius,
+      z: z + Math.sin(angle) * radius,
+      rotationY: angle,
+      scale: 0.62 + seeded(seed + 30 + i) * 0.2,
+      zone,
+      seed: seed + 20 + i,
+      clusterId,
+    });
+  }
+}
+
+function addNavigationNode(
+  props: CompositionPropEntry[],
+  x: number,
+  z: number,
+  seed: number,
+  clusterId?: string,
+) {
+  pushProp(props, {
+    kind: "buoy",
+    x,
+    z,
+    rotationY: seeded(seed) * Math.PI * 2,
+    scale: 0.78 + seeded(seed + 2) * 0.16,
+    zone: "navigationNode",
+    seed,
+    clusterId,
+  });
+  if (seeded(seed + 4) > 0.45) {
+    const offset = 28 + seeded(seed + 5) * 18;
+    const angle = seeded(seed + 6) * Math.PI * 2;
+    pushProp(props, {
+      kind: "mast",
+      x: x + Math.cos(angle) * offset,
+      z: z + Math.sin(angle) * offset,
+      rotationY: angle,
+      scale: 0.66 + seeded(seed + 7) * 0.18,
+      zone: "navigationNode",
+      seed: seed + 8,
+      clusterId,
+    });
+  }
+}
+
+function pushSparseLaneMarkers(
+  props: CompositionPropEntry[],
   from: { x: number; z: number },
   to: { x: number; z: number },
   seedCursor: { value: number },
-  step = 180,
+  step = 280,
 ) {
   const dx = to.x - from.x;
   const dz = to.z - from.z;
   const len = Math.hypot(dx, dz);
   const steps = Math.max(2, Math.floor(len / step));
   for (let s = 1; s < steps; s++) {
+    if (s % 2 !== 0) continue;
     const t = s / steps;
     const x = from.x + dx * t;
     const z = from.z + dz * t;
-    const side = seeded(seedCursor.value++) * Math.PI * 2;
-    const offset = 12 + seeded(seedCursor.value++) * 22;
-    const laneKinds: PropKind[] = ["buoy", "driftwood", "rock", "reef", "mast"];
-    props.push({
-      kind: laneKinds[s % laneKinds.length],
-      x: x + Math.cos(side) * offset,
-      z: z + Math.sin(side) * offset,
-      rotationY: side,
-      scale: 0.58 + seeded(seedCursor.value++) * 0.22,
-      zone: "navigationLane",
-      seed: seedCursor.value++,
-    });
-    if (s % 3 === 0) {
-      props.push({
-        kind: (["crate", "barrel", "wreck"] as PropKind[])[s % 3],
-        x: x + Math.cos(side + 1.2) * (offset + 16),
-        z: z + Math.sin(side + 1.2) * (offset + 16),
-        rotationY: side + 0.4,
-        scale: 0.62 + seeded(seedCursor.value++) * 0.2,
-        zone: "coastalTransition",
-        seed: seedCursor.value++,
-      });
-    }
+    const side = seeded(seedCursor.value++) > 0.5 ? 1 : -1;
+    const offset = 72 + seeded(seedCursor.value++) * 36;
+    const perpX = (-dz / len) * offset * side;
+    const perpZ = (dx / len) * offset * side;
+    addNavigationNode(props, x + perpX, z + perpZ, seedCursor.value++, `lane-${Math.round(x)}-${Math.round(z)}`);
+    seedCursor.value += 2;
   }
 }
 
@@ -127,27 +209,15 @@ export function queryNearestCompositionCluster(
   x: number,
   z: number,
 ): CompositionClusterInfo | null {
-  const centers = new Map<string, { type: CompositionZone; x: number; z: number }>();
-  for (const prop of plan.props) {
-    if (
-      prop.zone === "openSeaCluster" ||
-      prop.zone === "portCluster" ||
-      prop.zone === "encounter" ||
-      prop.zone === "lootSalvage" ||
-      prop.zone === "macroLandmark"
-    ) {
-      const key = `${prop.zone}:${Math.round(prop.x / 80)}:${Math.round(prop.z / 80)}`;
-      if (!centers.has(key)) centers.set(key, { type: prop.zone, x: prop.x, z: prop.z });
-    }
-  }
-  let best: CompositionClusterInfo | null = null;
-  for (const center of centers.values()) {
-    const dist = Math.hypot(center.x - x, center.z - z);
-    if (!best || dist < best.distance) {
-      best = { type: center.type, x: center.x, z: center.z, distance: dist };
-    }
-  }
-  return best;
+  const macro = nearestMacroFeature(plan.props, x, z);
+  if (!macro) return null;
+  const zone =
+    macro.kind === "wreck"
+      ? "wreckScene"
+      : macro.kind === "lighthouse" || macro.kind === "ruin"
+        ? "portCluster"
+        : "rockFormation";
+  return { type: zone, x: macro.x, z: macro.z, distance: macro.distance };
 }
 
 export function countVisibleCompositionNear(
@@ -159,219 +229,190 @@ export function countVisibleCompositionNear(
   return plan.props.filter((prop) => Math.hypot(prop.x - x, prop.z - z) <= radius).length;
 }
 
+export { countPropsByTier, countIsolatedMicroProps, nearestMacroFeature };
+
 export function buildMapCompositionPlan(
   map: MapConfig,
   density: WorldDensityCounts,
 ): CompositionPlan {
-  const props: CompositionPlan["props"] = [];
+  const props: CompositionPropEntry[] = [];
   let seedCursor = map.id.length * 97;
 
   for (const [index, isle] of map.islands.entries()) {
+    const portClusterId = `port-${index}`;
     if (isle.port) {
       const pierAngle = index * 0.55 + 0.2;
       const pier = pointOnIslandRing(isle, pierAngle, 0.92);
-      props.push({
+      pushProp(props, {
         kind: "pier",
         x: pier.x,
         z: pier.z,
         rotationY: pierAngle + Math.PI * 0.5,
         scale: 1,
         zone: "portCluster",
+        tier: "macro",
         seed: seedCursor++,
+        clusterId: portClusterId,
       });
-      const clusterKinds: PropKind[] = ["crate", "barrel", "buoy", "crate", "barrel", "lighthouse"];
-      const clusterCount = Math.min(6, density.islandPropsPerIsland + 1);
-      for (let c = 0; c < clusterCount; c++) {
-        const a = pierAngle + (c - clusterCount * 0.5) * 0.22;
-        const r = isle.rx * (1.02 + (c % 2) * 0.05);
-        const p = pointOnIslandRing(isle, a, r / isle.rx);
-        props.push({
-          kind: clusterKinds[c % clusterKinds.length],
-          x: p.x + (seeded(seedCursor) - 0.5) * 18,
-          z: p.z + (seeded(seedCursor + 1) - 0.5) * 18,
-          rotationY: a + seeded(seedCursor + 2) * 0.4,
-          scale: 0.82 + seeded(seedCursor + 3) * 0.28,
+      const dockMicro: PropKind[] = ["crate", "barrel"];
+      const dockCount = Math.min(3, Math.max(2, Math.round(density.islandPropsPerIsland * 0.45)));
+      for (let c = 0; c < dockCount; c++) {
+        const a = pierAngle + (c - dockCount * 0.5) * 0.18;
+        const p = pointOnIslandRing(isle, a, 1.02);
+        pushProp(props, {
+          kind: dockMicro[c % dockMicro.length],
+          x: p.x + (seeded(seedCursor) - 0.5) * 12,
+          z: p.z + (seeded(seedCursor + 1) - 0.5) * 12,
+          rotationY: a + seeded(seedCursor + 2) * 0.3,
+          scale: 0.8 + seeded(seedCursor + 3) * 0.2,
           zone: "portCluster",
           seed: seedCursor,
+          clusterId: portClusterId,
         });
         seedCursor += 4;
+      }
+      pushProp(props, {
+        kind: "lighthouse",
+        x: isle.x + Math.cos(pierAngle + 1.1) * isle.rx * 0.72,
+        z: isle.y + Math.sin(pierAngle + 1.1) * isle.ry * 0.72,
+        rotationY: pierAngle,
+        scale: 0.88 + seeded(seedCursor) * 0.12,
+        zone: "portCluster",
+        tier: "macro",
+        seed: seedCursor++,
+        clusterId: portClusterId,
+      });
+      for (let b = 0; b < 2; b++) {
+        const a = pierAngle + (b === 0 ? -0.35 : 0.35);
+        const p = pointOnIslandRing(isle, a, 1.08);
+        pushProp(props, {
+          kind: "buoy",
+          x: p.x,
+          z: p.z,
+          rotationY: a,
+          scale: 0.72 + seeded(seedCursor + b) * 0.16,
+          zone: "portCluster",
+          seed: seedCursor++,
+          clusterId: portClusterId,
+        });
       }
     }
 
     const ringKinds: PropKind[] = isle.port
-      ? ["buoy", "rock", "reef", "driftwood", "wreck", "mast"]
-      : ["rock", "reef", "driftwood", "wreck", "mast", "buoy"];
+      ? ["buoy", "rock", "reef", "wreck", "mast"]
+      : ["rock", "reef", "wreck", "mast", "buoy"];
     for (let p = 0; p < density.islandPropsPerIsland; p++) {
       const a = index * 0.83 + p * ((Math.PI * 2) / Math.max(4, density.islandPropsPerIsland));
-      const r = 1.04 + (p % 3) * 0.06;
-      const point = pointOnIslandRing(isle, a, r);
-      props.push({
-        kind: ringKinds[p % ringKinds.length],
+      const point = pointOnIslandRing(isle, a, 1.04 + (p % 2) * 0.05);
+      const kind = ringKinds[p % ringKinds.length];
+      pushProp(props, {
+        kind,
         x: point.x,
         z: point.z,
-        rotationY: a + seeded(seedCursor) * 0.45,
-        scale: 0.78 + seeded(seedCursor + 1) * 0.34,
+        rotationY: a + seeded(seedCursor) * 0.35,
+        scale: 0.78 + seeded(seedCursor + 1) * 0.3,
         zone: "islandRing",
-        y: ringKinds[p % ringKinds.length] === "reef" ? -1 : 0,
+        y: kind === "reef" ? -1 : 0,
         seed: seedCursor,
+        clusterId: `isle-${index}`,
       });
       seedCursor += 2;
     }
 
     for (let s = 0; s < density.shorelinePropsPerIsland; s++) {
       const a = index * 0.67 + s * 1.23;
-      const point = pointOnIslandRing(isle, a, 1.16 + (s % 2) * 0.05);
-      const kind = (["rock", "reef", "buoy", "driftwood", "wreck", "mast"] as PropKind[])[
-        (s + index) % 6
-      ];
-      props.push({
+      const point = pointOnIslandRing(isle, a, 1.14 + (s % 2) * 0.04);
+      const kind = (["rock", "reef", "buoy", "wreck", "mast"] as PropKind[])[(s + index) % 5];
+      pushProp(props, {
         kind,
         x: point.x,
         z: point.z,
-        rotationY: a + seeded(seedCursor) * 0.35,
-        scale: 0.7 + seeded(seedCursor + 1) * 0.28,
+        rotationY: a + seeded(seedCursor) * 0.3,
+        scale: 0.72 + seeded(seedCursor + 1) * 0.26,
         zone: "shoreline",
         y: kind === "reef" ? -1 : 0,
         seed: seedCursor,
+        clusterId: `shore-${index}`,
       });
       seedCursor += 2;
     }
   }
 
-  const lanes: Array<{ x: number; z: number }> = [];
+  const graphNodes: Array<{ x: number; z: number; seed: number }> = [];
   const seedRef = { value: seedCursor };
   for (let a = 0; a < map.islands.length; a++) {
     for (let b = a + 1; b < map.islands.length; b++) {
       const from = { x: map.islands[a].x, z: map.islands[a].y };
       const to = { x: map.islands[b].x, z: map.islands[b].y };
-      lanes.push({ x: (from.x + to.x) * 0.5, z: (from.z + to.z) * 0.5 });
-      pushLaneProps(props, from, to, seedRef, 165);
+      const mid = { x: (from.x + to.x) * 0.5, z: (from.z + to.z) * 0.5 };
+      const dist = nearestIslandDistance(mid.x, mid.z, map.islands);
+      if (dist > 1.05 && dist < 3.2) {
+        graphNodes.push({ x: mid.x, z: mid.z, seed: seedRef.value++ });
+      }
+      pushSparseLaneMarkers(props, from, to, seedRef, 300);
     }
   }
   seedCursor = seedRef.value;
 
-  for (let t = 0; t < Math.min(6, lanes.length); t++) {
-    const lane = lanes[t];
-    for (let c = 0; c < 2; c++) {
-      const angle = seeded(t * 11 + c) * Math.PI * 2;
-      const radius = 34 + seeded(t * 13 + c) * 48;
-      props.push({
-        kind: (["wreck", "driftwood", "crate", "barrel"] as PropKind[])[(t + c) % 4],
-        x: lane.x + Math.cos(angle) * radius,
-        z: lane.z + Math.sin(angle) * radius,
-        rotationY: angle,
-        scale: 0.66 + seeded(t * 15 + c) * 0.24,
-        zone: "coastalTransition",
-        seed: seedCursor++,
-      });
+  for (const [idx, node] of graphNodes.entries()) {
+    const clusterId = `graph-${idx}`;
+    const roll = seeded(node.seed);
+    if (roll < 0.34) {
+      addWreckScene(props, node.x, node.z, node.seed, "wreckScene", clusterId);
+    } else if (roll < 0.72) {
+      addRockFormation(props, node.x, node.z, node.seed, "rockFormation", clusterId);
+    } else {
+      addNavigationNode(props, node.x, node.z, node.seed, clusterId);
     }
   }
 
-  const openKinds: PropKind[] = ["crate", "barrel", "driftwood", "wreck", "buoy", "mast", "reef"];
-  const clusterCenters: Array<{ x: number; z: number }> = [];
-  for (let i = 0; i < Math.max(4, Math.round(density.openOceanProps / 4)); i++) {
-    const lane = lanes[i % Math.max(1, lanes.length)];
-    const x = lane
-      ? lane.x + (seeded(i + 81) - 0.5) * map.width * 0.18
-      : map.width * (0.14 + seeded(i + 81) * 0.72);
-    const z = lane
-      ? lane.z + (seeded(i + 121) - 0.5) * map.height * 0.18
-      : map.height * (0.12 + seeded(i + 121) * 0.76);
+  const openSceneCount = Math.max(3, Math.round(density.openOceanProps / 5));
+  for (let i = 0; i < openSceneCount; i++) {
+    const node = graphNodes[i % Math.max(1, graphNodes.length)];
+    const x = node
+      ? node.x + (seeded(i + 81) - 0.5) * 220
+      : map.width * (0.2 + seeded(i + 81) * 0.6);
+    const z = node
+      ? node.z + (seeded(i + 121) - 0.5) * 180
+      : map.height * (0.18 + seeded(i + 121) * 0.64);
     const dist = nearestIslandDistance(x, z, map.islands);
-    if (dist < 1.18 || dist > 2.4) continue;
-    clusterCenters.push({ x, z });
-    const clusterSize = 2 + Math.floor(seeded(i + 201) * 2);
-    for (let c = 0; c < clusterSize; c++) {
-      const angle = seeded(i * 17 + c) * Math.PI * 2;
-      const radius = 16 + seeded(i * 19 + c) * 34;
-      props.push({
-        kind: openKinds[(i + c) % openKinds.length],
-        x: x + Math.cos(angle) * radius,
-        z: z + Math.sin(angle) * radius,
-        rotationY: seeded(i * 221 + c) * Math.PI * 2,
-        scale: 0.62 + seeded(i * 301 + c) * 0.34,
-        zone: "openSeaCluster",
-        seed: seedCursor++,
-      });
+    if (dist < 1.2 || dist > 3.5) continue;
+    const clusterId = `open-${i}`;
+    if (i % 3 === 0) {
+      addWreckScene(props, x, z, seedCursor, "openSea", clusterId);
+    } else if (i % 3 === 1) {
+      addRockFormation(props, x, z, seedCursor, "openSea", clusterId);
+    } else {
+      addNavigationNode(props, x, z, seedCursor, clusterId);
     }
+    seedCursor += 12;
   }
 
-  const encounterKinds: PropKind[] = ["wreck", "crate", "barrel", "rock", "reef", "driftwood", "buoy"];
   for (const [idx, spawn] of map.enemies.entries()) {
-    for (let c = 0; c < 4; c++) {
+    const clusterId = `encounter-${idx}`;
+    addWreckScene(props, spawn.x + 34, spawn.y + 28, seedCursor + idx, "encounter", clusterId);
+    for (let c = 0; c < 2; c++) {
       const angle = seeded(idx * 13 + c) * Math.PI * 2;
-      const radius = 24 + seeded(idx * 17 + c) * 58;
-      props.push({
-        kind: encounterKinds[(idx + c) % encounterKinds.length],
-        x: spawn.x + Math.cos(angle) * radius,
-        z: spawn.y + Math.sin(angle) * radius,
-        rotationY: angle + seeded(idx * 29 + c) * 0.5,
-        scale: 0.68 + seeded(idx * 31 + c) * 0.3,
+      pushProp(props, {
+        kind: (["rock", "buoy"] as PropKind[])[c],
+        x: spawn.x + Math.cos(angle) * (58 + c * 16),
+        z: spawn.y + Math.sin(angle) * (58 + c * 16),
+        rotationY: angle,
+        scale: 0.68 + seeded(idx * 17 + c) * 0.2,
         zone: "encounter",
-        y: encounterKinds[(idx + c) % encounterKinds.length] === "reef" ? -1 : 0,
         seed: seedCursor++,
+        clusterId,
       });
     }
     if (idx % 2 === 0) {
-      const salvageAngle = seeded(idx * 41) * Math.PI * 2;
-      for (let s = 0; s < 3; s++) {
-        const a = salvageAngle + s * 0.55;
-        const r = 42 + s * 11;
-        props.push({
-          kind: (["wreck", "crate", "barrel"] as PropKind[])[s],
-          x: spawn.x + Math.cos(a) * r,
-          z: spawn.y + Math.sin(a) * r,
-          rotationY: a,
-          scale: 0.72 + seeded(idx * 51 + s) * 0.22,
-          zone: "lootSalvage",
-          seed: seedCursor++,
-        });
-      }
-    }
-    for (let c = 0; c < 2; c++) {
-      const angle = seeded(idx * 61 + c) * Math.PI * 2;
-      props.push({
-        kind: (["rock", "reef", "buoy"] as PropKind[])[c],
-        x: spawn.x + Math.cos(angle) * (70 + c * 18),
-        z: spawn.y + Math.sin(angle) * (70 + c * 18),
-        rotationY: angle,
-        scale: 0.64 + seeded(idx * 71 + c) * 0.2,
-        zone: "encounter",
-        seed: seedCursor++,
-      });
-    }
-  }
-
-  const gridX = Math.max(3, Math.round(map.width / 680));
-  const gridZ = Math.max(3, Math.round(map.height / 580));
-  const macroKinds: PropKind[] = ["buoy", "mast", "rock", "driftwood", "wreck", "reef"];
-  for (let gx = 1; gx < gridX; gx++) {
-    for (let gz = 1; gz < gridZ; gz++) {
-      const x = (map.width * gx) / gridX + (seeded(gx * 17 + gz) - 0.5) * 110;
-      const z = (map.height * gz) / gridZ + (seeded(gx * 23 + gz) - 0.5) * 110;
-      const dist = nearestIslandDistance(x, z, map.islands);
-      if (dist < 1.02 || dist > 3.4) continue;
-      props.push({
-        kind: macroKinds[(gx + gz) % macroKinds.length],
-        x,
-        z,
-        rotationY: seeded(gx * 31 + gz) * Math.PI * 2,
-        scale: 0.6 + seeded(gx * 37 + gz) * 0.26,
-        zone: "macroLandmark",
-        seed: seedCursor++,
-      });
-      if ((gx + gz) % 3 === 0) {
-        const a = seeded(gx * 41 + gz) * Math.PI * 2;
-        props.push({
-          kind: (["crate", "barrel", "driftwood"] as PropKind[])[gz % 3],
-          x: x + Math.cos(a) * 28,
-          z: z + Math.sin(a) * 28,
-          rotationY: a,
-          scale: 0.58 + seeded(gx * 43 + gz) * 0.18,
-          zone: "openSea",
-          seed: seedCursor++,
-        });
-      }
+      addWreckScene(
+        props,
+        spawn.x + 72,
+        spawn.y - 48,
+        seedCursor + idx * 3,
+        "lootSalvage",
+        `salvage-${idx}`,
+      );
     }
   }
 
