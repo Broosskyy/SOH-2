@@ -17,6 +17,10 @@ func _ready() -> void:
 	apply(current_level)
 
 func _recommended_level() -> QualityLevel:
+	if MobileWebDiagnostics.force_low_quality():
+		return QualityLevel.LOW
+	if MobileWebDiagnostics.force_high_quality():
+		return QualityLevel.HIGH
 	if OS.get_name() in ["Android", "iOS"]:
 		return QualityLevel.MEDIUM
 	if OS.get_name() == "Web":
@@ -28,7 +32,7 @@ func apply(level: QualityLevel) -> void:
 	var profile: Dictionary = PROFILES[level]
 	get_viewport().scaling_3d_scale = profile.scale
 	get_viewport().mesh_lod_threshold = profile.lod
-	RenderingServer.directional_shadow_atlas_set_size(2048 if profile.shadows else 0, true)
+	apply_directional_shadows(bool(profile.shadows))
 
 func apply_forced(level: QualityLevel) -> void:
 	apply(level)
@@ -40,6 +44,9 @@ func level_from_name(value: String) -> QualityLevel:
 
 func profile() -> Dictionary:
 	return PROFILES[current_level].duplicate(true)
+
+func shadows_enabled() -> bool:
+	return bool(PROFILES[current_level].shadows)
 
 func cycle_profile() -> void:
 	apply(((current_level + 1) % PROFILES.size()) as QualityLevel)
@@ -53,3 +60,10 @@ func lod_bias() -> float:
 func particle_multiplier() -> float:
 	return float(PROFILES[current_level].particles)
 
+func apply_directional_shadows(enabled: bool) -> void:
+	RenderingServer.directional_shadow_atlas_set_size(2048 if enabled else 0, true)
+	if not is_inside_tree():
+		return
+	for light in get_tree().get_nodes_in_group("directional_lights"):
+		if light is DirectionalLight3D:
+			light.shadow_enabled = enabled

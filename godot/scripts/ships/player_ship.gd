@@ -11,6 +11,7 @@ var forward_speed := 0.0
 var _command := PlayerCommand.new()
 
 @onready var visual_root: Node3D = $VisualRoot
+@onready var kraken_model: Node3D = $VisualRoot/KrakenModel
 @onready var ui_anchor: Marker3D = $UIAnchor
 @onready var wake_anchor: Marker3D = $VFXAnchors/Wake
 @onready var debug_ui_anchor: GeometryInstance3D = $Debug/UIAnchorMarker
@@ -20,14 +21,23 @@ var _command := PlayerCommand.new()
 func _ready() -> void:
 	if presentation_profile == null:
 		push_error("PlayerShip requires a ShipPresentationProfile")
+		MobileWebBootTelemetry.report_error("PlayerShip missing profile")
 		return
 	visual_root.scale = Vector3.ONE * presentation_profile.visual_scale
 	visual_root.rotation_degrees.y = presentation_profile.visual_yaw_degrees
 	visual_root.position.y = presentation_profile.waterline_offset
 	ui_anchor.position.y = presentation_profile.ui_anchor_height
-	# Gameplay forward is -Z, therefore the stern/wake sits on local +Z.
 	wake_anchor.position.z = presentation_profile.wake_stern_offset
-	_tune_visual_materials()
+	if MobileWebDiagnostics.hide_kraken():
+		kraken_model.visible = false
+		MobileWebBootTelemetry.mark_stage("KRAKEN READY", "hidden")
+	else:
+		if OS.get_name() == "Web" and PlatformService.mobile:
+			call_deferred("_tune_visual_materials")
+		else:
+			_tune_visual_materials()
+		MobileWebBootTelemetry.mark_stage("KRAKEN READY", "visible")
+	MobileWebBootTelemetry.mark_stage("PLAYER READY", "heading=%.1f" % heading_degrees())
 
 func _tune_visual_materials() -> void:
 	for child in visual_root.find_children("*", "MeshInstance3D", true, false):
@@ -38,13 +48,10 @@ func _tune_visual_materials() -> void:
 			var material := mesh_instance.get_active_material(surface_index)
 			if material is BaseMaterial3D:
 				var tuned := material.duplicate() as BaseMaterial3D
-				# The source texture is intentionally dark. A small albedo lift
-				# keeps its palette while avoiding a second mobile shader path.
 				tuned.albedo_color *= Color(1.28, 1.24, 1.2, 1.0)
 				mesh_instance.set_surface_override_material(surface_index, tuned)
 
 func _physics_process(delta: float) -> void:
-	# Navigation is strictly two-dimensional even though this is a 3D body.
 	position.y = GameplayPlane.WATER_Y
 	rotate_y(-_command.steering * turn_speed * delta)
 	var thrust := _command.thrust
@@ -61,8 +68,6 @@ func _physics_process(delta: float) -> void:
 func apply_command(command: PlayerCommand) -> void:
 	_command.copy_from(command)
 
-## Heading zero points along the binding gameplay forward vector (-Z). Positive
-## headings turn clockwise when viewed from above.
 func set_heading_degrees(value: float) -> void:
 	rotation.y = -deg_to_rad(wrapf(value, 0.0, 360.0))
 

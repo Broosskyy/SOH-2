@@ -1,0 +1,35 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/debug/mobile_web_primitive.gd" id="1_primitive"]
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 1
+background_color = Color(0.08, 0.32, 0.42, 1)
+ambient_light_source = 1
+ambient_light_color = Color(0.75, 0.92, 1, 1)
+ambient_light_energy = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh"]
+size = Vector3(24, 24, 24)
+
+[sub_resource type="StandardMaterial3D" id="Material"]
+albedo_color = Color(0.95, 0.55, 0.18, 1)
+roughness = 0.45
+
+[node name="MobileWebPrimitive" type="Node3D"]
+script = ExtResource("1_primitive")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, -36, 0)
+light_energy = 1.4
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 42, 72)
+current = true
+
+[node name="Primitive" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh")
+surface_material_override/0 = SubResource("Material")

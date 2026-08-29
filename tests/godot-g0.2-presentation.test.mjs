@@ -100,6 +100,25 @@ test("Kraken LOD policy is explicit without inventing generated candidates", asy
   assert.equal(policy.candidateGeneration["availableInG0.2Environment"], false);
 });
 
+test("quality manager disables directional light shadows when LOW profile turns atlas off", async () => {
+  const quality = await read("godot/scripts/quality/quality_manager.gd");
+  const world = await read("godot/scripts/world/world.gd");
+  assert.match(quality, /apply_directional_shadows/);
+  assert.match(quality, /directional_lights/);
+  assert.match(world, /directional_lights/);
+  assert.match(world, /fog_enabled = false/);
+});
+
+test("mobile web diagnostics expose boot telemetry and isolation controls", async () => {
+  const diagnostics = await read("godot/scripts/debug/mobile_web_diagnostics.gd");
+  const telemetry = await read("godot/scripts/debug/mobile_web_boot_telemetry.gd");
+  const primitive = await read("godot/scenes/debug/MobileWebPrimitive.tscn");
+  assert.match(diagnostics, /boot_mode\(\) == "primitive"/);
+  assert.match(diagnostics, /hide_kraken/);
+  assert.match(telemetry, /RENDER READY/);
+  assert.match(primitive, /MobileWebPrimitive/);
+});
+
 test("G0.2 keeps a documented conservative export policy", async () => {
   const exports = await read("godot/export_presets.cfg");
   const optimization = await read("docs/godot-migration/G0.2_KRAKEN_OPTIMIZATION.md");

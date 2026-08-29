@@ -13,9 +13,11 @@ boot_splash/bg_color=Color(0.015, 0.08, 0.12, 1)
 
 [autoload]
 
+MobileWebDiagnostics="*res://scripts/debug/mobile_web_diagnostics.gd"
 PlatformService="*res://scripts/platform/platform_service.gd"
 QualityManager="*res://scripts/quality/quality_manager.gd"
 GameState="*res://scripts/core/game_state.gd"
+MobileWebBootTelemetry="*res://scripts/debug/mobile_web_boot_telemetry.gd"
 
 [display]
 

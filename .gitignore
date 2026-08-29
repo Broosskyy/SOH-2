@@ -21,6 +21,7 @@
 .DS_Store
 *.pem
 /.dev-certs/
+/.tools/
 
 # debug
 npm-debug.log*
