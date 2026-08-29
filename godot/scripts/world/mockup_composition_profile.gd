@@ -5,14 +5,21 @@ extends RefCounted
 ## Internal region remains Azurwacht; HUD presentation strings follow reference mockups.
 
 const PLAYER_SPAWN := Vector3.ZERO
-const DEFAULT_CAMERA_ZOOM := 0.90
+const DEFAULT_CAMERA_ZOOM := 0.94
 
 const HUD_PLAYER_NAME := "BROSKY"
 const HUD_GUILD_TAG := "[LoL] LEGENDS"
 const HUD_PLAYER_LEVEL := 25
-const HUD_REGION_LABEL := "1 · CARIBBEAN SEA"
-const HUD_MISSION_TITLE := "ROTE SEGEL"
+const HUD_FLOATING_NAME := "[LoL] BROSKY"
+const HUD_MISSION_TITLE := "Rote Segel"
 const HUD_MISSION_OBJECTIVE := "Besiege den Elite-Korsaren"
+
+const HUD_EXP_CURRENT := 233000.0
+const HUD_EXP_MAX := 300000.0
+const HUD_RUMPF_CURRENT := 80000.0
+const HUD_RUMPF_MAX := 80000.0
+const HUD_SCHUTZ_CURRENT := 50000.0
+const HUD_SCHUTZ_MAX := 50000.0
 
 static func world_pos(x: float, z: float) -> Vector3:
 	return Vector3(x, 0.0, z)

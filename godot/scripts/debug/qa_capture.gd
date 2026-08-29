@@ -23,11 +23,11 @@ func _ready() -> void:
 	var args := OS.get_cmdline_args()
 	if not "--qa-capture" in args and OS.get_environment("ABYSSAL_QA_CAPTURE") != "1":
 		return
-	print("G0.4 QA capture started")
+	print("G0.4.1 QA capture started")
 	call_deferred("_capture_suite")
 
 func _capture_suite() -> void:
-	var output_dir := ProjectSettings.globalize_path("res://../artifacts/godot-g0.4")
+	var output_dir := ProjectSettings.globalize_path("res://../artifacts/godot-g0.4.1")
 	DirAccess.make_dir_recursive_absolute(output_dir)
 	var requested_aspect := OS.get_environment("ABYSSAL_QA_ASPECT")
 	var requested_quality := OS.get_environment("ABYSSAL_QA_QUALITY").to_upper()
@@ -43,7 +43,7 @@ func _capture_suite() -> void:
 			DirAccess.make_dir_recursive_absolute(suite_dir)
 			await _capture_presentation_suite(suite_dir, quality_name)
 	_write_manifest(output_dir, aspects, qualities)
-	print("G0.4 QA capture complete: %s" % output_dir)
+	print("G0.4.1 QA capture complete: %s" % output_dir)
 	get_tree().quit()
 
 func _capture_presentation_suite(output_dir: String, quality_name: String) -> void:
@@ -96,8 +96,8 @@ func _capture_presentation_suite(output_dir: String, quality_name: String) -> vo
 
 func _write_manifest(output_dir: String, aspects: Array, qualities: Array) -> void:
 	var manifest := {
-		"build": "G0.4",
-		"milestone": "MOCKUP-FIRST GAMEPLAY",
+		"build": "G0.4.1",
+		"milestone": "MASTER VISUAL PARITY RECOVERY",
 		"engine": Engine.get_version_info().get("string", "unknown"),
 		"platform": PlatformService.platform_name(),
 		"camera_profile": camera.profile_name(),

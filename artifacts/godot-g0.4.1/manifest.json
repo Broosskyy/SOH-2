@@ -1,0 +1,12 @@
+{
+  "milestone": "G0.4.1",
+  "build": "G0.4.1-VISUAL-PARITY",
+  "status": "READY_FOR_REAL_ANDROID_G0.4.1_ACCEPTANCE",
+  "hardware_verified": false,
+  "artifacts": {
+    "desktop-16x9.png": "NOT_CAPTURED_AUTOMATED",
+    "mobile-landscape-emulated.png": "NOT_CAPTURED_AUTOMATED",
+    "qa-state.png": "NOT_CAPTURED_AUTOMATED"
+  },
+  "note": "PNG side-by-side captures require Godot --qa-capture on target aspects. parity-matrix.json holds honest structural ratings. Web boot smoke passed at 1280x720."
+}

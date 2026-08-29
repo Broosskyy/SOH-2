@@ -36,18 +36,18 @@ static func semantic_scale(viewport: Vector2, semantic: Semantic) -> float:
 	if profile == HudLayoutProfile.Profile.MOBILE_LANDSCAPE:
 		normalized = maxf(normalized, short_edge / 607.0)
 		match semantic:
-			Semantic.PLAYER_STATUS, Semantic.MISSION, Semantic.NAVIGATION, Semantic.CHAT, Semantic.REGION:
-				return clampf(long_edge / 1920.0, 1.0, 1.35)
+			Semantic.PLAYER_STATUS, Semantic.MISSION, Semantic.NAVIGATION, Semantic.CHAT:
+				return clampf(long_edge / 1920.0, 0.92, 1.12)
 			Semantic.MINIMAP:
-				return clampf(viewport.y / 1080.0, 1.0, 1.25)
+				return clampf(viewport.y / 1080.0, 0.95, 1.15)
 			Semantic.PRIMARY_ACTION:
-				return clampf(viewport.y / 1080.0, 1.05, 1.3)
+				return clampf(viewport.y / 1080.0, 0.98, 1.18)
 			Semantic.SECONDARY_ACTION, Semantic.ZOOM:
-				return clampf(viewport.y / 1080.0, 1.0, 1.2)
+				return clampf(viewport.y / 1080.0, 0.95, 1.1)
 			Semantic.FLOATING_PLAYER, Semantic.FLOATING_NPC:
-				return clampf(viewport.x / 1920.0, 1.0, 1.2)
+				return clampf(viewport.x / 1920.0, 0.95, 1.12)
 			_:
-				return clampf(normalized * 1.15, 1.0, 1.3)
+				return clampf(normalized, 0.95, 1.15)
 	match semantic:
 		Semantic.FLOATING_PLAYER, Semantic.FLOATING_NPC:
 			return clampf(normalized * 1.05, 0.92, 1.18)
@@ -61,7 +61,7 @@ static func semantic_scale(viewport: Vector2, semantic: Semantic) -> float:
 			return clampf(normalized, 0.98, 1.1)
 		Semantic.PRIMARY_ACTION, Semantic.SECONDARY_ACTION:
 			return clampf(normalized, 1.0, 1.15)
-		Semantic.NAVIGATION, Semantic.REGION, Semantic.ZOOM, Semantic.CHAT:
+		Semantic.NAVIGATION, Semantic.ZOOM, Semantic.CHAT:
 			return clampf(normalized, 0.95, 1.12)
 		_:
 			return clampf(normalized, 0.95, 1.15)

@@ -5,21 +5,22 @@ extends RefCounted
 
 enum Profile { DESKTOP, MOBILE_LANDSCAPE, MOBILE_PORTRAIT }
 
-const BUILD_LABEL := "G0.4-RUNTIME-FIX"
-const GIT_SHA := "97ba9ca"
+const BUILD_LABEL := "G0.4.1-VISUAL-PARITY"
+const GIT_SHA := "G0.4.1"
 
-const RATIO_TOP_BAR_H := 0.092
-const RATIO_PROFILE_W := 0.14
-const RATIO_MISSION_W := 0.125
-const RATIO_MINIMAP_D := 0.19
-const RATIO_ZOOM_W := 0.045
-const RATIO_CAMERA_D := 0.17
-const RATIO_CHAT_W := 0.22
-const RATIO_REGION_W := 0.18
-const RATIO_CONSUMABLE_ROW_W := 0.24
-const RATIO_FIRE_D := 0.12
-const RATIO_ABILITY_D := 0.062
-const RATIO_FLOATING_PLAYER_W := 0.11
+const RATIO_TOP_BAR_H := 0.072
+const RATIO_PROFILE_W := 0.12
+const RATIO_STATUS_BAR_W := 0.14
+const RATIO_MISSION_W := 0.11
+const RATIO_MINIMAP_D := 0.17
+const RATIO_ZOOM_W := 0.042
+const RATIO_CAMERA_D := 0.15
+const RATIO_CHAT_W := 0.18
+const RATIO_CONSUMABLE_ROW_W := 0.16
+const RATIO_FIRE_D := 0.11
+const RATIO_ABILITY_D := 0.058
+const RATIO_FLOATING_PLAYER_W := 0.1
+const MAX_PANEL_COVERAGE := 0.22
 
 static func detect(viewport: Vector2) -> Profile:
 	if not PlatformService.mobile and minf(viewport.x, viewport.y) >= 620.0:

@@ -5,7 +5,7 @@ extends RefCounted
 
 const PLAYER_VISUAL_SCALE := 52.0
 const PLAYER_WATERLINE := 20.5
-const NPC_VISUAL_ROOT_SCALE := 0.62
+const NPC_VISUAL_ROOT_SCALE := 0.72
 const NPC_UI_ANCHOR_Y := 24.0
 
 static func island_visual_scale(size_class: IslandPresentationProfile.SizeClass) -> float:
@@ -19,7 +19,7 @@ static func island_visual_scale(size_class: IslandPresentationProfile.SizeClass)
 		IslandPresentationProfile.SizeClass.LARGE:
 			return 0.36
 		IslandPresentationProfile.SizeClass.XL, IslandPresentationProfile.SizeClass.LANDMARK:
-			return 0.38
+			return 0.42
 		_:
 			return 0.34
 

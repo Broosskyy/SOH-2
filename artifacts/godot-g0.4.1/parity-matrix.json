@@ -1,0 +1,32 @@
+{
+  "milestone": "G0.4.1",
+  "status": "READY_FOR_REAL_ANDROID_G0.4.1_ACCEPTANCE",
+  "hardware_verified": false,
+  "reference": "MASTER_VISUAL_REFERENCE",
+  "baseline": "CURRENT_HARDWARE_BASELINE",
+  "categories": {
+    "viewport": { "rating": "PARTIAL", "note": "Responsive landscape rules active; Samsung hardware not re-verified in this pass" },
+    "fullscreen": { "rating": "PASS", "note": "User-gesture fullscreen button present on GameplayHud" },
+    "safe-area": { "rating": "PASS", "note": "PlatformService.safe_rect applied to all anchor zones" },
+    "top-profile": { "rating": "PARTIAL", "note": "Content-sized profile zone; portrait avatar placeholder retained" },
+    "top-status": { "rating": "PASS", "note": "EXP/RUMPF/SCHUTZ with numeric values in top status zone only" },
+    "nav": { "rating": "PARTIAL", "note": "Compact icon row without full-width panel; buttons remain placeholders" },
+    "mission": { "rating": "PARTIAL", "note": "Compact left-upper panel sized to content" },
+    "minimap": { "rating": "PARTIAL", "note": "Circular data-driven minimap in top-right zone" },
+    "zoom": { "rating": "PASS", "note": "Compact +/MID/- stack left-middle" },
+    "chat": { "rating": "PARTIAL", "note": "Compact bottom-left panel with tabs" },
+    "player-hud": { "rating": "PARTIAL", "note": "Floating HUD shows name and bars without numeric values" },
+    "npc-hud": { "rating": "PARTIAL", "note": "World labels with hostile readability; proxy ships scaled up" },
+    "consumables": { "rating": "PASS", "note": "Individual round controls bottom-center without shared dock panel" },
+    "combat": { "rating": "PARTIAL", "note": "Compact cluster bottom-right; combat logic still placeholder" },
+    "region-selector": { "rating": "PASS", "note": "Removed from normal gameplay HUD; region architecture preserved" },
+    "player-scale": { "rating": "PARTIAL", "note": "Camera zoom 0.94 for greater player prominence; Kraken scale 52 unchanged" },
+    "npc-scale": { "rating": "PARTIAL", "note": "NPC visual root scale 0.62 -> 0.72" },
+    "island-scale": { "rating": "PARTIAL", "note": "Landmark proxy scale increased; still procedural fallback" },
+    "harbor": { "rating": "PARTIAL", "note": "Fortress harbor proxy improved silhouette; not final authored asset" },
+    "world-density": { "rating": "PARTIAL", "note": "G0.4 composition retained with brighter framing" },
+    "water": { "rating": "PARTIAL", "note": "Brighter marine-blue shader; mobile-web compatible" },
+    "lighting": { "rating": "NOT_HARDWARE_VERIFIED", "note": "No lighting system rewrite in this pass" },
+    "camera": { "rating": "PARTIAL", "note": "Naval perspective lock preserved; default zoom calibrated" }
+  }
+}

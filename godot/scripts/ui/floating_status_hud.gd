@@ -24,12 +24,12 @@ func _ready() -> void:
 		return
 	_build_hud()
 	set_status(
-		MockupCompositionProfile.HUD_PLAYER_NAME,
-		MockupCompositionProfile.HUD_PLAYER_LEVEL,
-		14250.0,
-		15000.0,
-		50000.0,
-		50000.0
+		MockupCompositionProfile.HUD_FLOATING_NAME,
+		0,
+		MockupCompositionProfile.HUD_RUMPF_CURRENT,
+		MockupCompositionProfile.HUD_RUMPF_MAX,
+		MockupCompositionProfile.HUD_SCHUTZ_CURRENT,
+		MockupCompositionProfile.HUD_SCHUTZ_MAX
 	)
 
 func _build_hud() -> void:
@@ -100,7 +100,7 @@ func set_status(name: String, level: int, hp: float, max_hp: float, shield: floa
 		return
 	player_name.text = name.to_upper()
 	level_label.text = "LV %d" % level
-	level_label.visible = level > 0
+	level_label.visible = level > 0 and not compact
 	hp_bar.max_value = maxf(1.0, max_hp)
 	hp_bar.value = clampf(hp, 0.0, hp_bar.max_value)
 	shield_bar.max_value = maxf(1.0, max_shield)

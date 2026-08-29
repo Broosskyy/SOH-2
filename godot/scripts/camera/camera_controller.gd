@@ -44,7 +44,7 @@ const PROFILES := {
 @export var min_zoom := 0.55
 @export var max_zoom := 1.38
 @export var initial_profile: CameraProfile = CameraProfile.PERSPECTIVE_NAVAL
-@export var initial_zoom := 0.90
+@export var initial_zoom := 0.94
 @export var boss_overview_multiplier := 1.30
 @export var event_overview_multiplier := 1.14
 @export var max_shake := 3.5
@@ -53,7 +53,7 @@ const PROFILES := {
 @export var pan_recenter_speed := 1.6
 
 @onready var target: Node3D = get_node(target_path)
-var zoom := 0.90
+var zoom := 0.94
 var current_profile: CameraProfile = CameraProfile.PERSPECTIVE_NAVAL
 var boss_overview := false
 var event_overview := false

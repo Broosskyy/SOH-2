@@ -11,7 +11,7 @@ test("G0.4 build marker and version", async () => {
   assert.match(project, /config\/version="0\.4\.[01]"/);
   assert.match(overlay, /BUILD: G0\.4/);
   assert.match(capture, /G0\.4/);
-  assert.match(capture, /artifacts\/godot-g0\.4/);
+  assert.match(capture, /artifacts\/godot-g0\.4\.1/);
 });
 
 test("mockup composition profile owns first-frame layout", async () => {
@@ -26,7 +26,7 @@ test("mockup composition profile owns first-frame layout", async () => {
 
 test("camera mockup default zoom without breaking naval lock", async () => {
   const camera = await read("godot/scripts/camera/camera_controller.gd");
-  assert.match(camera, /initial_zoom := 0\.90/);
+  assert.match(camera, /initial_zoom := 0\.94/);
   assert.match(camera, /"fov": 35\.0/);
   assert.match(camera, /"height": 560\.0/);
 });
@@ -34,7 +34,7 @@ test("camera mockup default zoom without breaking naval lock", async () => {
 test("mockup HUD hierarchy", async () => {
   const hud = await read("godot/scripts/ui/gameplay_hud.gd");
   assert.match(hud, /MockupCompositionProfile/);
-  assert.match(hud, /_bottom_dock/);
+  assert.match(hud, /_consumables_row/);
   assert.match(hud, /_chat_panel/);
   assert.match(hud, /CombatCluster/);
   assert.match(hud, /disabled = true/);
