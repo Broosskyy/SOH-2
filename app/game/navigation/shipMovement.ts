@@ -1,4 +1,5 @@
 import { clamp, distance, normalizeAngle } from "../core/math";
+import { applyNavalTurnInput, resolveNavalTurnProfile } from "./navalTurnProfile";
 
 export type Point = { x: number; y: number };
 export type IslandShape = { x: number; y: number; rx: number; ry: number };
@@ -31,6 +32,13 @@ export type ShipMovementResult = {
   player: Point & { angle: number; speed: number };
   destination: Point | null;
   navigation: NavigationState;
+  movementDebug?: {
+    relativeTargetAngle: number;
+    turnMode: string;
+    turnAuthority: number;
+    forwardThrustFactor: number;
+    targetDistance: number;
+  };
 };
 
 const ARRIVAL_RADIUS = 36;
@@ -139,14 +147,24 @@ export function stepShipMovement(config: ShipMovementConfig): ShipMovementResult
   let destination = config.destination;
   let turn = config.keyboardTurn;
   let thrust = config.keyboardThrust;
+  let movementDebug: ShipMovementResult["movementDebug"];
 
   if (destination) {
     const d = distance(player, destination);
     const targetAngle = Math.atan2(destination.y - player.y, destination.x - player.x);
     const angleDiff = normalizeAngle(targetAngle - player.angle);
-    turn = clamp(angleDiff * 2.4, -1, 1);
-    const turningFactor = clamp(1 - Math.abs(angleDiff) / Math.PI * 0.72, 0.28, 1);
+    const turnProfile = resolveNavalTurnProfile(player.angle, targetAngle);
+    const navalTurn = applyNavalTurnInput(angleDiff, turnProfile);
+    turn = navalTurn.turn;
+    const turningFactor = navalTurn.thrustScale;
     thrust = d > ARRIVAL_RADIUS ? turningFactor : 0;
+    movementDebug = {
+      relativeTargetAngle: turnProfile.relativeTargetAngleDeg,
+      turnMode: turnProfile.turnMode,
+      turnAuthority: turnProfile.turnAuthority,
+      forwardThrustFactor: turnProfile.forwardThrustFactor,
+      targetDistance: d,
+    };
     if (d < ARRIVAL_RADIUS) {
       if (navigation.detourWaypoint && navigation.ultimateDestination) {
         navigation.detourWaypoint = null;
@@ -209,5 +227,5 @@ export function stepShipMovement(config: ShipMovementConfig): ShipMovementResult
     }
   }
 
-  return { player, destination, navigation };
+  return { player, destination, navigation, movementDebug };
 }

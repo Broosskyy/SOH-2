@@ -12,6 +12,7 @@ import { clamp } from "./math";
 import type { Entity, Loot, Shot } from "./types";
 import type { GameAction } from "../input/actions";
 import type { NavigationState } from "../navigation/shipMovement";
+import type { ShipMovementResult } from "../navigation/shipMovement";
 import { createNavigationState } from "../navigation/shipMovement";
 
 export const MONSTER_KINDS = new Set<EntityKind>([
@@ -137,6 +138,7 @@ export type RuntimeGameState = {
   };
   destination: { x: number; y: number } | null;
   navigation: NavigationState;
+  movementDebug: ShipMovementResult["movementDebug"] | null;
   entities: Entity[];
   shots: Shot[];
   loot: Loot[];
@@ -181,6 +183,7 @@ export const createRuntimeState = (): RuntimeGameState => ({
   },
   destination: null,
   navigation: createNavigationState({ x: 680, y: 900 }),
+  movementDebug: null,
   entities: spawnMap("aster"),
   shots: [],
   loot: [],

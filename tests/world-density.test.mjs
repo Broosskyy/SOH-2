@@ -22,8 +22,8 @@ test("world density resolver scales with map area and quality", async () => {
   assert.match(source, /resolveWorldDensityCounts/);
   assert.match(source, /islandPropsPerIsland/);
   assert.match(source, /openOceanProps/);
-  assert.match(source, /LOW: \{ island: 4, open: 9/);
-  assert.match(source, /HIGH: \{ island: 7, open: 18/);
+  assert.match(source, /LOW: \{ island: 4, open: 8/);
+  assert.match(source, /HIGH: \{ island: 6, open: 12/);
   assert.match(source, /REFERENCE_MAP_AREA/);
 });
 

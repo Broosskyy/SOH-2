@@ -6,7 +6,7 @@ const root = resolve(import.meta.dirname, "..");
 const outDir = resolve(root, "app/generated");
 const outFile = resolve(outDir, "buildInfo.ts");
 
-const release = process.env.BUILD_RELEASE ?? "V20.3";
+const release = process.env.BUILD_RELEASE ?? "V20.3.1";
 let commit = "unknown";
 try {
   commit = execSync("git rev-parse --short HEAD", {

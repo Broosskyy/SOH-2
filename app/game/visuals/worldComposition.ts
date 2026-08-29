@@ -19,11 +19,13 @@ export type CompositionZone =
   | "portCluster"
   | "shoreline"
   | "coastalTransition"
+  | "navigationLane"
   | "openSea"
   | "openSeaCluster"
   | "encounter"
   | "lootSalvage"
-  | "islandRing";
+  | "islandRing"
+  | "macroLandmark";
 
 export type PlacedProp = {
   prop: THREE.Group;
@@ -71,6 +73,91 @@ export type CompositionPlan = {
     seed: number;
   }>;
 };
+
+export type CompositionClusterInfo = {
+  type: CompositionZone;
+  x: number;
+  z: number;
+  distance: number;
+};
+
+function pushLaneProps(
+  props: CompositionPlan["props"],
+  from: { x: number; z: number },
+  to: { x: number; z: number },
+  seedCursor: { value: number },
+  step = 180,
+) {
+  const dx = to.x - from.x;
+  const dz = to.z - from.z;
+  const len = Math.hypot(dx, dz);
+  const steps = Math.max(2, Math.floor(len / step));
+  for (let s = 1; s < steps; s++) {
+    const t = s / steps;
+    const x = from.x + dx * t;
+    const z = from.z + dz * t;
+    const side = seeded(seedCursor.value++) * Math.PI * 2;
+    const offset = 12 + seeded(seedCursor.value++) * 22;
+    const laneKinds: PropKind[] = ["buoy", "driftwood", "rock", "reef", "mast"];
+    props.push({
+      kind: laneKinds[s % laneKinds.length],
+      x: x + Math.cos(side) * offset,
+      z: z + Math.sin(side) * offset,
+      rotationY: side,
+      scale: 0.58 + seeded(seedCursor.value++) * 0.22,
+      zone: "navigationLane",
+      seed: seedCursor.value++,
+    });
+    if (s % 3 === 0) {
+      props.push({
+        kind: (["crate", "barrel", "wreck"] as PropKind[])[s % 3],
+        x: x + Math.cos(side + 1.2) * (offset + 16),
+        z: z + Math.sin(side + 1.2) * (offset + 16),
+        rotationY: side + 0.4,
+        scale: 0.62 + seeded(seedCursor.value++) * 0.2,
+        zone: "coastalTransition",
+        seed: seedCursor.value++,
+      });
+    }
+  }
+}
+
+export function queryNearestCompositionCluster(
+  plan: CompositionPlan,
+  x: number,
+  z: number,
+): CompositionClusterInfo | null {
+  const centers = new Map<string, { type: CompositionZone; x: number; z: number }>();
+  for (const prop of plan.props) {
+    if (
+      prop.zone === "openSeaCluster" ||
+      prop.zone === "portCluster" ||
+      prop.zone === "encounter" ||
+      prop.zone === "lootSalvage" ||
+      prop.zone === "macroLandmark"
+    ) {
+      const key = `${prop.zone}:${Math.round(prop.x / 80)}:${Math.round(prop.z / 80)}`;
+      if (!centers.has(key)) centers.set(key, { type: prop.zone, x: prop.x, z: prop.z });
+    }
+  }
+  let best: CompositionClusterInfo | null = null;
+  for (const center of centers.values()) {
+    const dist = Math.hypot(center.x - x, center.z - z);
+    if (!best || dist < best.distance) {
+      best = { type: center.type, x: center.x, z: center.z, distance: dist };
+    }
+  }
+  return best;
+}
+
+export function countVisibleCompositionNear(
+  plan: CompositionPlan,
+  x: number,
+  z: number,
+  radius = 520,
+) {
+  return plan.props.filter((prop) => Math.hypot(prop.x - x, prop.z - z) <= radius).length;
+}
 
 export function buildMapCompositionPlan(
   map: MapConfig,
@@ -152,17 +239,26 @@ export function buildMapCompositionPlan(
   }
 
   const lanes: Array<{ x: number; z: number }> = [];
-  for (let t = 0; t < Math.min(4, map.islands.length - 1); t++) {
-    const a = map.islands[t];
-    const b = map.islands[(t + 1) % map.islands.length];
-    lanes.push({ x: (a.x + b.x) * 0.5, z: (a.y + b.y) * 0.5 });
+  const seedRef = { value: seedCursor };
+  for (let a = 0; a < map.islands.length; a++) {
+    for (let b = a + 1; b < map.islands.length; b++) {
+      const from = { x: map.islands[a].x, z: map.islands[a].y };
+      const to = { x: map.islands[b].x, z: map.islands[b].y };
+      lanes.push({ x: (from.x + to.x) * 0.5, z: (from.z + to.z) * 0.5 });
+      pushLaneProps(props, from, to, seedRef, 165);
+    }
+  }
+  seedCursor = seedRef.value;
+
+  for (let t = 0; t < Math.min(6, lanes.length); t++) {
+    const lane = lanes[t];
     for (let c = 0; c < 2; c++) {
       const angle = seeded(t * 11 + c) * Math.PI * 2;
       const radius = 34 + seeded(t * 13 + c) * 48;
       props.push({
         kind: (["wreck", "driftwood", "crate", "barrel"] as PropKind[])[(t + c) % 4],
-        x: lanes[lanes.length - 1].x + Math.cos(angle) * radius,
-        z: lanes[lanes.length - 1].z + Math.sin(angle) * radius,
+        x: lane.x + Math.cos(angle) * radius,
+        z: lane.z + Math.sin(angle) * radius,
         rotationY: angle,
         scale: 0.66 + seeded(t * 15 + c) * 0.24,
         zone: "coastalTransition",
@@ -228,6 +324,51 @@ export function buildMapCompositionPlan(
           rotationY: a,
           scale: 0.72 + seeded(idx * 51 + s) * 0.22,
           zone: "lootSalvage",
+          seed: seedCursor++,
+        });
+      }
+    }
+    for (let c = 0; c < 2; c++) {
+      const angle = seeded(idx * 61 + c) * Math.PI * 2;
+      props.push({
+        kind: (["rock", "reef", "buoy"] as PropKind[])[c],
+        x: spawn.x + Math.cos(angle) * (70 + c * 18),
+        z: spawn.y + Math.sin(angle) * (70 + c * 18),
+        rotationY: angle,
+        scale: 0.64 + seeded(idx * 71 + c) * 0.2,
+        zone: "encounter",
+        seed: seedCursor++,
+      });
+    }
+  }
+
+  const gridX = Math.max(3, Math.round(map.width / 680));
+  const gridZ = Math.max(3, Math.round(map.height / 580));
+  const macroKinds: PropKind[] = ["buoy", "mast", "rock", "driftwood", "wreck", "reef"];
+  for (let gx = 1; gx < gridX; gx++) {
+    for (let gz = 1; gz < gridZ; gz++) {
+      const x = (map.width * gx) / gridX + (seeded(gx * 17 + gz) - 0.5) * 110;
+      const z = (map.height * gz) / gridZ + (seeded(gx * 23 + gz) - 0.5) * 110;
+      const dist = nearestIslandDistance(x, z, map.islands);
+      if (dist < 1.02 || dist > 3.4) continue;
+      props.push({
+        kind: macroKinds[(gx + gz) % macroKinds.length],
+        x,
+        z,
+        rotationY: seeded(gx * 31 + gz) * Math.PI * 2,
+        scale: 0.6 + seeded(gx * 37 + gz) * 0.26,
+        zone: "macroLandmark",
+        seed: seedCursor++,
+      });
+      if ((gx + gz) % 3 === 0) {
+        const a = seeded(gx * 41 + gz) * Math.PI * 2;
+        props.push({
+          kind: (["crate", "barrel", "driftwood"] as PropKind[])[gz % 3],
+          x: x + Math.cos(a) * 28,
+          z: z + Math.sin(a) * 28,
+          rotationY: a,
+          scale: 0.58 + seeded(gx * 43 + gz) * 0.18,
+          zone: "openSea",
           seed: seedCursor++,
         });
       }

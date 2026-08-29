@@ -16,7 +16,7 @@
     "sync:game-data": "node scripts/sync-game-data.mjs",
     "sync:web-build": "node scripts/sync-web-build.mjs",
     "test": "npm run build && node --test tests/*.test.mjs",
-    "test:architecture": "node --test tests/cross-platform-architecture.test.mjs",
+    "test:architecture": "node --test tests/cross-platform-architecture.test.mjs tests/v20.*.test.mjs tests/ship-movement.test.mjs tests/world-density.test.mjs",
     "validate:artifact": "bash scripts/validate-artifact.sh",
     "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate"

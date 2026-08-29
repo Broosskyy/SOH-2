@@ -3,39 +3,45 @@ import { PLAYER_SHIP_VISUALS, type ShipVisualDefinition } from "./shipVisuals";
 import type { ShipId } from "../../gameData";
 
 const EXCLUDED_ANCESTOR_NAMES = new Set(["HullWaterInteraction", "ShipVisualDebug"]);
+const EXCLUDED_MESH_NAME_RE =
+  /sail|mast|rig|rope|cord|line|flag|lantern|light|wake|foam|aura|vfx|debug|collision|helper/i;
 
 export type PlayerLabelAnchorDebug = {
   anchor: { x: number; y: number; z: number };
   shipScreenBottomY: number;
+  projectedVisualBottom: number;
+  statusVisualTop: number;
   labelCenterScreenY: number;
   gapCss: number;
+  visualGapCss: number;
   headingDeg: number;
   usedProjectedBounds: boolean;
-  hullCornerCount: number;
+  anchorSource: "visualHullSamples" | "fallbackFootprint";
+  hullSampleCount: number;
+  statusScale: number;
 };
 
 function isHullMesh(object: THREE.Object3D): object is THREE.Mesh {
   if (!(object instanceof THREE.Mesh)) return false;
+  if (!object.visible) return false;
   if (object.userData.visualFallback) return false;
   if (object.userData.visualEffectType) return false;
+  if (EXCLUDED_MESH_NAME_RE.test(object.name)) return false;
   let node: THREE.Object3D | null = object;
   while (node) {
     if (EXCLUDED_ANCESTOR_NAMES.has(node.name)) return false;
+    if (EXCLUDED_MESH_NAME_RE.test(node.name)) return false;
     node = node.parent;
   }
+  const materials = Array.isArray(object.material) ? object.material : [object.material];
+  for (const material of materials) {
+    if (!material) continue;
+    if ("visible" in material && material.visible === false) return false;
+    if ("opacity" in material && typeof material.opacity === "number" && material.opacity < 0.08) {
+      return false;
+    }
+  }
   return true;
-}
-
-function boxCorners(box: THREE.Box3, target: THREE.Vector3[]) {
-  const { min, max } = box;
-  target[0].set(min.x, min.y, min.z);
-  target[1].set(max.x, min.y, min.z);
-  target[2].set(min.x, max.y, min.z);
-  target[3].set(max.x, max.y, min.z);
-  target[4].set(min.x, min.y, max.z);
-  target[5].set(max.x, min.y, max.z);
-  target[6].set(min.x, max.y, max.z);
-  target[7].set(max.x, max.y, max.z);
 }
 
 function projectScreenY(point: THREE.Vector3, camera: THREE.Camera, canvasHeight: number) {
@@ -77,14 +83,46 @@ function fallbackFootprintCorners(
     new THREE.Vector3(halfForward, 0, -halfLateral),
     new THREE.Vector3(-halfForward, 0, halfLateral),
     new THREE.Vector3(-halfForward, 0, -halfLateral),
-    new THREE.Vector3(halfForward, definition.waterlineOffset * 0.35, 0),
-    new THREE.Vector3(-halfForward, definition.waterlineOffset * 0.35, 0),
+    new THREE.Vector3(halfForward * 0.55, definition.waterlineOffset * 0.22, 0),
+    new THREE.Vector3(-halfForward * 0.55, definition.waterlineOffset * 0.22, 0),
   ];
   player.updateMatrixWorld(true);
   for (let i = 0; i < local.length; i++) {
     corners[i].copy(local[i]).applyMatrix4(player.matrixWorld);
   }
   return local.length;
+}
+
+function collectVisualHullScreenSamples(
+  playerVisualRoot: THREE.Object3D,
+  camera: THREE.Camera,
+  canvasHeight: number,
+  out: THREE.Vector3[],
+) {
+  const samplePoint = new THREE.Vector3();
+  const meshBox = new THREE.Box3();
+
+  playerVisualRoot.updateMatrixWorld(true);
+  playerVisualRoot.traverse((object) => {
+    if (!isHullMesh(object)) return;
+    const geometry = object.geometry;
+    if (!geometry?.attributes?.position) return;
+
+    meshBox.setFromBufferAttribute(geometry.attributes.position as THREE.BufferAttribute);
+    if (meshBox.isEmpty()) return;
+
+    const spanY = meshBox.max.y - meshBox.min.y;
+    const hullCeiling = meshBox.min.y + spanY * 0.38;
+    const positions = geometry.attributes.position;
+    const stride = Math.max(1, Math.floor(positions.count / 48));
+
+    for (let i = 0; i < positions.count; i += stride) {
+      samplePoint.fromBufferAttribute(positions, i);
+      if (samplePoint.y > hullCeiling) continue;
+      samplePoint.applyMatrix4(object.matrixWorld);
+      out.push(samplePoint.clone());
+    }
+  });
 }
 
 export function computeRotationSafePlayerLabelAnchor(options: {
@@ -98,6 +136,7 @@ export function computeRotationSafePlayerLabelAnchor(options: {
   labelTotalHeightCss: number;
   gapCss?: number;
   groundY?: number;
+  statusScale?: number;
 }): { position: THREE.Vector3; debug: PlayerLabelAnchorDebug } {
   const {
     player,
@@ -108,31 +147,19 @@ export function computeRotationSafePlayerLabelAnchor(options: {
     canvasWidth,
     canvasHeight,
     labelTotalHeightCss,
-    gapCss = 5,
+    gapCss = 8,
     groundY = 8,
+    statusScale = 1,
   } = options;
 
-  const cornerPool = Array.from({ length: 8 }, () => new THREE.Vector3());
   const hullWorld: THREE.Vector3[] = [];
-  const hullBox = new THREE.Box3();
-  let hasHull = false;
+  let anchorSource: PlayerLabelAnchorDebug["anchorSource"] = "visualHullSamples";
 
-  player.updateMatrixWorld(true);
-  playerVisualRoot.updateMatrixWorld(true);
-  playerVisualRoot.traverse((object) => {
-    if (!isHullMesh(object)) return;
-    const meshBox = new THREE.Box3().setFromObject(object);
-    if (meshBox.isEmpty()) return;
-    hullBox.union(meshBox);
-    hasHull = true;
-  });
+  collectVisualHullScreenSamples(playerVisualRoot, camera, canvasHeight, hullWorld);
 
-  if (hasHull && !hullBox.isEmpty()) {
-    boxCorners(hullBox, cornerPool);
-    for (const corner of cornerPool) {
-      hullWorld.push(corner.clone());
-    }
-  } else {
+  if (!hullWorld.length) {
+    anchorSource = "fallbackFootprint";
+    const cornerPool = Array.from({ length: 8 }, () => new THREE.Vector3());
     const definition = PLAYER_SHIP_VISUALS[shipId];
     const count = fallbackFootprintCorners(player, definition, cornerPool);
     for (let i = 0; i < count; i++) hullWorld.push(cornerPool[i].clone());
@@ -148,9 +175,11 @@ export function computeRotationSafePlayerLabelAnchor(options: {
     }
   }
 
+  const projectedVisualBottom = bestScreenY;
+  const statusVisualTop = projectedVisualBottom + gapCss;
   const bestScreenX =
     ((best.clone().project(camera).x + 1) * 0.5 * canvasWidth) || canvasWidth * 0.5;
-  const labelCenterScreenY = bestScreenY + gapCss + labelTotalHeightCss * 0.5;
+  const labelCenterScreenY = statusVisualTop + labelTotalHeightCss * 0.5;
   const position = unprojectScreenToGround(
     camera,
     bestScreenX,
@@ -164,12 +193,17 @@ export function computeRotationSafePlayerLabelAnchor(options: {
     position,
     debug: {
       anchor: { x: position.x, y: position.y, z: position.z },
-      shipScreenBottomY: bestScreenY,
+      shipScreenBottomY: projectedVisualBottom,
+      projectedVisualBottom,
+      statusVisualTop,
       labelCenterScreenY,
       gapCss,
+      visualGapCss: statusVisualTop - projectedVisualBottom,
       headingDeg: Math.round((heading * 180) / Math.PI) % 360,
-      usedProjectedBounds: hasHull,
-      hullCornerCount: hullWorld.length,
+      usedProjectedBounds: anchorSource === "visualHullSamples",
+      anchorSource,
+      hullSampleCount: hullWorld.length,
+      statusScale,
     },
   };
 }

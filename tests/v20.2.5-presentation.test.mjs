@@ -48,8 +48,8 @@ test("camera control group and default mid zoom", async () => {
 
 test("world composition encounter clusters", async () => {
   const source = await readFile(join(root, "app/threeRenderer.ts"), "utf8");
-  assert.match(source, /compositionZone="encounter"/);
-  assert.match(source, /compositionZone="transition"/);
+  assert.match(source, /compositionZone=entry\.zone/);
+  assert.match(source, /buildMapCompositionPlan/);
 });
 
 test("player aura no large additive ring", async () => {

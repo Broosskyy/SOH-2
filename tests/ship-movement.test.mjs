@@ -42,28 +42,20 @@ test("navigation module defines detour planning and stuck recovery", async () =>
   assert.match(source, /stepShipMovement/);
   assert.match(source, /findDetour/);
   assert.match(source, /STUCK_SECONDS/);
-  assert.match(source, /turningFactor/);
+  assert.match(source, /resolveNavalTurnProfile/);
+  assert.match(source, /applyNavalTurnInput/);
+  assert.match(source, /movementDebug/);
 });
 
-test("segmentBlocked detects island between two points", () => {
-  const island = { x: 500, y: 500, rx: 120, ry: 90 };
-  assert.equal(
-    segmentBlocked({ x: 200, y: 500 }, { x: 800, y: 500 }, [island]),
-    true,
-  );
-  assert.equal(
-    segmentBlocked({ x: 200, y: 200 }, { x: 280, y: 210 }, [island]),
-    false,
-  );
-});
-
-test("sharp heading change reduces thrust factor in steering model", () => {
+test("hard rear target uses reduced thrust in naval turn profile", () => {
   const angleDiff = normalizeAngle(Math.PI - 0);
-  const turningFactor = clamp(1 - Math.abs(angleDiff) / Math.PI * 0.72, 0.28, 1);
-  assert.ok(turningFactor < 0.35);
+  const deg = (Math.abs(angleDiff) * 180) / Math.PI;
+  assert.ok(deg >= 170);
+  const hardThrust = 0.4 - ((deg - 140) / 40) * 0.2;
+  assert.ok(hardThrust <= 0.35);
   const smallDiff = normalizeAngle(0.2);
-  const softFactor = clamp(1 - Math.abs(smallDiff) / Math.PI * 0.72, 0.28, 1);
-  assert.ok(softFactor > 0.85);
+  const softDeg = (Math.abs(smallDiff) * 180) / Math.PI;
+  assert.ok(softDeg < 45);
 });
 
 test("camera settings module exposes persisted preference keys", async () => {

@@ -449,6 +449,7 @@ export default function Home() {
                     g.player.speed = movement.player.speed;
                     g.destination = movement.destination;
                     g.navigation = movement.navigation;
+                    g.movementDebug = movement.movementDebug ?? null;
                     if (Math.abs(g.player.speed) > 40 && Math.random() < clamp(Math.abs(g.player.speed) / 520, .07, .24)) {
                         const wakeOffset = PLAYER_SHIP_VISUALS[g.shipId]?.wakeOffset ?? { forward: -43, lateral: 0 }, wakeOrigin = worldOffset(g.player, g.player.angle, wakeOffset);
                         g.wake.push({ x: wakeOrigin.x, y: wakeOrigin.y, ttl: 0.92, angle: g.player.angle, strength: clamp(Math.abs(g.player.speed) / shipStats.speed, .14, .82) });
