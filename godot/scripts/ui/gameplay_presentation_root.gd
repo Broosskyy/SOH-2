@@ -336,39 +336,49 @@ func _bar(color: Color) -> ProgressBar:
 
 func _apply_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
-	var scale := PresentationLayout.ui_scale(viewport)
 	_fit(_profile, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.TOP_LEFT))
 	_fit(_status, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.TOP_STATUS))
 	_fit(_nav, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.TOP_NAV))
 	var currency_rect := PresentationLayout.safe(viewport)
-	_currency.position = Vector2(currency_rect.end.x - 120.0 * scale - PresentationLayout.margin(viewport), currency_rect.position.y + 8.0)
+	var currency_w := HudLayoutProfile.length(viewport, 0.08, "x")
+	_currency.position = Vector2(currency_rect.end.x - currency_w - PresentationLayout.margin(viewport), currency_rect.position.y + 8.0)
 	_fit(_mission, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.MISSION))
 	_fit(_target, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.TARGET))
 	_fit(_chat, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.BOTTOM_LEFT))
 	_fit(_consumables, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.BOTTOM_CENTER))
 	_layout_combat(viewport)
 	_fit(_zoom, PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.ZOOM))
-	var fs := 34.0 * scale
+	_minimap.apply_zone_rect(PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.MINIMAP))
+	var fs := HudLayout.touch_size(viewport, 40.0, HudLayout.Semantic.NAVIGATION)
 	_fullscreen.custom_minimum_size = Vector2(fs, fs)
-	_fullscreen.position = Vector2(PresentationLayout.safe(viewport).end.x - fs - PresentationLayout.margin(viewport), PresentationLayout.safe(viewport).position.y + PresentationLayout.top_bar_height(viewport) + 4.0)
-	var bar_h := 7.0 * scale
+	_fullscreen.position = Vector2(
+		PresentationLayout.safe(viewport).end.x - fs - PresentationLayout.margin(viewport),
+		PresentationLayout.safe(viewport).position.y + PresentationLayout.top_bar_height(viewport) + 4.0
+	)
+	var bar_h := maxf(8.0, viewport.y * 0.0085)
 	for bar in [_exp_bar, _hull_bar, _shield_bar, _target_hp, _mission_progress]:
 		if bar != null:
 			bar.custom_minimum_size.y = bar_h
-	var nav_size := Vector2(28.0 * scale, 24.0 * scale)
+	var nav_h := PresentationLayout.top_bar_height(viewport) * 0.82
+	var nav_w := HudLayout.touch_size(viewport, viewport.x * 0.034, HudLayout.Semantic.NAVIGATION)
 	for child in _nav.get_children():
 		if child is Button:
-			child.custom_minimum_size = nav_size
-			child.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 5.0))
+			child.custom_minimum_size = Vector2(nav_w, nav_h)
+			child.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 8.0, HudLayout.Semantic.NAVIGATION))
 	for slot in _consumables.get_children():
 		if slot is Button:
-			slot.custom_minimum_size = Vector2(42.0 * scale, 42.0 * scale)
-	_captain_name.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 11.0))
-	_captain_level.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 9.0))
-	_guild_label.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 8.0))
+			var consumable_size := HudLayout.touch_size(viewport, viewport.y * HudLayoutProfile.RATIO_ABILITY_D, HudLayout.Semantic.SECONDARY_ACTION)
+			slot.custom_minimum_size = Vector2(consumable_size, consumable_size)
+	var avatar := _profile.get_child(0).get_child(0) as PanelContainer if _profile.get_child_count() > 0 else null
+	if avatar != null:
+		var avatar_size := HudLayout.touch_size(viewport, viewport.y * 0.055, HudLayout.Semantic.PLAYER_STATUS)
+		avatar.custom_minimum_size = Vector2(avatar_size, avatar_size)
+	_captain_name.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 13.0, HudLayout.Semantic.PLAYER_STATUS))
+	_captain_level.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 11.0, HudLayout.Semantic.PLAYER_STATUS))
+	_guild_label.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
 	for value in [_exp_value, _hull_value, _shield_value]:
 		if value != null:
-			value.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 8.0))
+			value.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
 
 func _fit(control: Control, rect: Rect2) -> void:
 	if control == null:
@@ -380,15 +390,26 @@ func _fit(control: Control, rect: Rect2) -> void:
 func _layout_combat(viewport: Vector2) -> void:
 	var rect := PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.BOTTOM_RIGHT)
 	var fire := _combat.get_node_or_null("FireButton") as Button
-	var fire_size := minf(rect.size.x * 0.48, 84.0 * PresentationLayout.ui_scale(viewport))
+	var fire_size := HudLayout.touch_size(
+		viewport,
+		HudLayoutProfile.length(viewport, HudLayoutProfile.RATIO_FIRE_D, "y"),
+		HudLayout.Semantic.PRIMARY_ACTION
+	)
 	if fire != null:
 		fire.custom_minimum_size = Vector2(fire_size, fire_size)
-		fire.position = Vector2(fire_size * 0.15, fire_size * 0.2)
-	for ability_name in ["Ability8", "Ability14", "Ability11"]:
+		fire.position = Vector2(rect.size.x - fire_size * 0.92, rect.size.y - fire_size * 0.88)
+		fire.add_theme_font_size_override("font_size", PresentationTheme.font_px(viewport, 12.0, HudLayout.Semantic.PRIMARY_ACTION))
+	for i in range(3):
+		var ability_name := ["Ability8", "Ability14", "Ability11"][i]
 		var ability := _combat.get_node_or_null(ability_name) as Button
 		if ability != null:
-			var ability_size := fire_size * 0.42
+			var ability_size := HudLayout.touch_size(
+				viewport,
+				HudLayoutProfile.length(viewport, HudLayoutProfile.RATIO_ABILITY_D, "y"),
+				HudLayout.Semantic.SECONDARY_ACTION
+			)
 			ability.custom_minimum_size = Vector2(ability_size, ability_size)
+			ability.position = Vector2(rect.size.x - fire_size * 1.05, rect.size.y - fire_size * (1.35 + i * 0.42))
 	_combat.position = rect.position
 	_combat.size = rect.size
 

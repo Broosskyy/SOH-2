@@ -73,7 +73,7 @@ static func font_size(viewport: Vector2, desktop_px: float, semantic: Semantic =
 	return maxi(9, int(round(desktop_px * semantic_scale(viewport, semantic))))
 
 static func touch_size(viewport: Vector2, desired: float, semantic: Semantic = Semantic.PRIMARY_ACTION) -> float:
-	return maxf(desired * semantic_scale(viewport, semantic), MIN_TOUCH_PX)
+	return maxf(desired * semantic_scale(viewport, semantic), UiMetrics.min_touch_render_px(viewport))
 
 static func panel_margin(viewport: Vector2) -> float:
 	return maxf(8.0, 10.0 * semantic_scale(viewport, Semantic.PLAYER_STATUS))

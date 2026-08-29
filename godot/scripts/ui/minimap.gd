@@ -11,20 +11,30 @@ extends Control
 var _panel: PanelContainer
 var _canvas: MinimapCanvas
 var _region_label: Label
+var _managed_layout := false
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	clip_contents = false
 	_build_ui()
-	_apply_layout()
 
 func _process(_delta: float) -> void:
 	if _canvas != null:
 		_canvas.queue_redraw()
-	_apply_layout()
+	if not _managed_layout:
+		_apply_legacy_layout()
+
+func apply_zone_rect(rect: Rect2) -> void:
+	_managed_layout = true
+	position = rect.position
+	size = rect.size
+	custom_minimum_size = rect.size
+	call_deferred("_resize_canvas")
 
 func _build_ui() -> void:
 	_panel = PanelContainer.new()
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.02, 0.07, 0.09, 0.88)
 	style.border_color = Color(0.72, 0.57, 0.27, 0.82)
@@ -37,6 +47,9 @@ func _build_ui() -> void:
 	_panel.add_theme_stylebox_override("panel", style)
 	add_child(_panel)
 	var stack := VBoxContainer.new()
+	stack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stack.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	stack.add_theme_constant_override("separation", 3)
 	_panel.add_child(stack)
 	var heading := Label.new()
@@ -48,6 +61,8 @@ func _build_ui() -> void:
 	heading.visible = false
 	_canvas = MinimapCanvas.new()
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_canvas.region_runtime = region_runtime
 	_canvas.player = player
 	_canvas.map_radius = map_radius
@@ -56,28 +71,18 @@ func _build_ui() -> void:
 	_region_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_region_label.add_theme_color_override("font_color", Color(0.72, 0.82, 0.78))
 	stack.add_child(_region_label)
+	_region_label.visible = false
 
-func _apply_layout() -> void:
+func _resize_canvas() -> void:
+	if _canvas == null:
+		return
+	var inner := maxf(32.0, minf(size.x, size.y) - 14.0)
+	_canvas.custom_minimum_size = Vector2(inner, inner)
+	_canvas.size = _canvas.custom_minimum_size
+
+func _apply_legacy_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
-	var diameter := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_MINIMAP_D)
-	custom_minimum_size = Vector2(diameter, diameter)
-	size = custom_minimum_size
-	anchor_left = 1.0
-	anchor_right = 1.0
-	anchor_top = 0.0
-	var margin := HudLayout.panel_margin(viewport)
-	var top_offset := HudLayoutProfile.touch_floor(viewport, HudLayoutProfile.RATIO_TOP_BAR_H) + margin + 8.0
-	offset_left = -diameter - margin - HudLayout.touch_size(viewport, 44.0, HudLayout.Semantic.NAVIGATION)
-	offset_right = -margin
-	offset_top = top_offset
-	offset_bottom = offset_top + diameter
-	if _canvas != null:
-		_canvas.custom_minimum_size = Vector2(diameter - 16.0, diameter - 16.0)
-	var heading := _panel.get_child(0).get_child(0) as Label
-	if heading != null:
-		heading.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.MINIMAP))
-	if _region_label != null:
-		_region_label.visible = false
+	apply_zone_rect(PresentationLayout.zone_rect(viewport, PresentationLayout.Zone.MINIMAP))
 
 func map_data() -> Dictionary:
 	return {
@@ -92,7 +97,7 @@ class MinimapCanvas extends Control:
 	var map_radius := 520.0
 
 	func _draw() -> void:
-		if player == null:
+		if player == null or size.x < 8.0 or size.y < 8.0:
 			return
 		var center := size * 0.5
 		var radius := minf(size.x, size.y) * 0.44
@@ -101,14 +106,14 @@ class MinimapCanvas extends Control:
 		draw_arc(center, radius, 0.0, TAU, 56, Color(0.72, 0.57, 0.27, 0.75), 2.0)
 		draw_line(center + Vector2(0, -radius + 4), center + Vector2(0, -radius + 12), Color(0.92, 0.82, 0.48), 2.0)
 		var scale := radius / map_radius
-		_draw_islands(center, scale)
-		_draw_harbors(center, scale)
-		_draw_pois(center, scale)
-		_draw_npcs(center, scale)
+		_draw_islands(center, scale, radius)
+		_draw_harbors(center, scale, radius)
+		_draw_pois(center, scale, radius)
+		_draw_npcs(center, scale, radius)
 		var player_points := PackedVector2Array([
-			center + Vector2(0.0, -7.0),
-			center + Vector2(-5.0, 5.0),
-			center + Vector2(5.0, 5.0),
+			center + Vector2(0.0, -9.0),
+			center + Vector2(-6.0, 6.0),
+			center + Vector2(6.0, 6.0),
 		])
 		draw_colored_polygon(player_points, Color(0.95, 0.82, 0.32))
 
@@ -116,7 +121,7 @@ class MinimapCanvas extends Control:
 		var relative := Vector2(world_pos.x - player.global_position.x, world_pos.z - player.global_position.z)
 		return center + relative * scale
 
-	func _draw_islands(center: Vector2, scale: float) -> void:
+	func _draw_islands(center: Vector2, scale: float, radius: float) -> void:
 		for island in get_tree().get_nodes_in_group("island_entities"):
 			if not island is IslandEntity:
 				continue
@@ -124,33 +129,37 @@ class MinimapCanvas extends Control:
 			if entity.profile == null:
 				continue
 			var pos := _world_to_map(entity.global_position, center, scale)
-			if pos.distance_to(center) > minf(size.x, size.y) * 0.42:
+			if pos.distance_to(center) > radius * 0.95:
 				continue
-			var island_radius := 4.0 + entity.profile.footprint_radius() * scale * 0.06
-			draw_circle(pos, clampf(island_radius, 3.0, 10.0), Color(0.28, 0.62, 0.38, 0.9))
+			var island_radius := 5.0 + entity.profile.footprint_radius() * scale * 0.08
+			draw_circle(pos, clampf(island_radius, 4.0, 14.0), Color(0.28, 0.62, 0.38, 0.9))
 
-	func _draw_harbors(center: Vector2, scale: float) -> void:
+	func _draw_harbors(center: Vector2, scale: float, radius: float) -> void:
 		for harbor in get_tree().get_nodes_in_group("harbors"):
 			var pos := _world_to_map(harbor.global_position, center, scale)
-			draw_circle(pos, 5.0, Color(0.92, 0.78, 0.32, 0.95))
+			if pos.distance_to(center) > radius * 0.95:
+				continue
+			draw_circle(pos, 6.0, Color(0.92, 0.78, 0.32, 0.95))
 
-	func _draw_pois(center: Vector2, scale: float) -> void:
+	func _draw_pois(center: Vector2, scale: float, radius: float) -> void:
 		if region_runtime == null:
 			return
 		for poi in region_runtime.pois:
 			if poi == null:
 				continue
 			var pos := _world_to_map(poi.world_position, center, scale)
+			if pos.distance_to(center) > radius * 0.95:
+				continue
 			var color := Color(0.88, 0.72, 0.95) if poi.poi_type == PoiDefinition.PoiType.LANDMARK else Color(0.92, 0.78, 0.32)
-			draw_circle(pos, 3.5, color)
+			draw_circle(pos, 4.0, color)
 
-	func _draw_npcs(center: Vector2, scale: float) -> void:
+	func _draw_npcs(center: Vector2, scale: float, radius: float) -> void:
 		for npc in get_tree().get_nodes_in_group("npc_ships"):
 			if not npc is ShipEntity:
 				continue
 			var ship := npc as ShipEntity
 			var pos := _world_to_map(ship.global_position, center, scale)
-			if pos.distance_to(center) > minf(size.x, size.y) * 0.42:
+			if pos.distance_to(center) > radius * 0.95:
 				continue
 			var hostile := ship.faction() == UnitFaction.Allegiance.HOSTILE
-			draw_circle(pos, 4.0, Color(0.92, 0.28, 0.22) if hostile else Color(0.42, 0.82, 0.95))
+			draw_circle(pos, 5.0, Color(0.92, 0.28, 0.22) if hostile else Color(0.42, 0.82, 0.95))

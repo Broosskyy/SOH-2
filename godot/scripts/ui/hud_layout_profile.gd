@@ -5,7 +5,7 @@ extends RefCounted
 
 enum Profile { DESKTOP, MOBILE_LANDSCAPE, MOBILE_PORTRAIT }
 
-const BUILD_LABEL := "G0.4.1-VISUAL-PARITY"
+const BUILD_LABEL := "G0.5.1-MOBILE-WEB-UI-METRICS"
 const GIT_SHA := "21b570d"
 
 const RATIO_TOP_BAR_H := 0.072
@@ -66,4 +66,4 @@ static func length(viewport: Vector2, ratio: float, axis := "y") -> float:
 	return viewport.y * ratio
 
 static func touch_floor(viewport: Vector2, ratio: float, axis := "y") -> float:
-	return maxf(HudLayout.MIN_TOUCH_PX, length(viewport, ratio, axis))
+	return maxf(UiMetrics.min_touch_render_px(viewport), length(viewport, ratio, axis))
