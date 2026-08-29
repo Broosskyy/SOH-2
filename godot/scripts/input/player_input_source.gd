@@ -1,15 +1,16 @@
 class_name PlayerInputSource
 extends Node
 
-const NavalNavigationLogic = preload("res://scripts/navigation/naval_navigation.gd")
-
 @export var player_path := NodePath("..")
+@export var region_runtime_path: NodePath
 
 @onready var player: PlayerShip = get_node(player_path)
+@onready var region_runtime: Node = get_node_or_null(region_runtime_path)
 
 var _command := PlayerCommand.new()
 var _destination := Vector3.ZERO
 var _has_destination := false
+var _blocked_notice := ""
 
 func _physics_process(_delta: float) -> void:
 	var desktop_steering := Input.get_axis("steerLeft", "steerRight")
@@ -19,15 +20,21 @@ func _physics_process(_delta: float) -> void:
 		_command.steering = desktop_steering
 		_command.thrust = desktop_thrust
 	elif _has_destination:
-		var navigation: Vector2 = NavalNavigationLogic.command_to_destination(
+		var navigation := NavigationController.command_to_destination(
 			player.global_position,
 			player.global_basis,
-			_destination
+			_destination,
+			_navigation_boundaries()
 		)
-		_command.steering = navigation.x
-		_command.thrust = navigation.y
-		if navigation == Vector2.ZERO:
+		if navigation.rejected:
+			_blocked_notice = navigation.rejection_reason
 			cancel_navigation()
+		else:
+			_blocked_notice = ""
+			_command.steering = navigation.steering
+			_command.thrust = navigation.thrust
+			if not navigation.has_destination:
+				cancel_navigation()
 	else:
 		_command.steering = 0.0
 		_command.thrust = 0.0
@@ -49,5 +56,13 @@ func cancel_navigation() -> void:
 func destination_active() -> bool:
 	return _has_destination
 
+func navigation_blocked_reason() -> String:
+	return _blocked_notice
+
 func input_mode_name() -> String:
 	return "HYBRID_TAP_NAV"
+
+func _navigation_boundaries() -> Array:
+	if region_runtime != null and region_runtime.has_method("navigation_boundaries"):
+		return region_runtime.call("navigation_boundaries")
+	return []

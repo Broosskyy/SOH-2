@@ -9,26 +9,39 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const godotProject = path.join(rootDir, "godot", "project.godot");
 const exportPreset = "Web";
 
-export function resolveGodotBinary() {
+export async function resolveGodotBinary() {
   const candidates = [
     process.env.GODOT_BIN,
     process.env.GODOT4_BIN,
+    path.join(rootDir, ".tools", "Godot_v4.7.2-stable_win64_console.exe"),
+    path.join(rootDir, ".tools", "Godot_v4.7.2-stable_win64.exe"),
     "godot",
     "godot4",
     "C:\\Program Files\\Godot\\Godot_v4.7.2-stable_win64.exe",
-    path.join(rootDir, ".tools", "Godot_v4.7.2-stable_win64.exe"),
   ].filter(Boolean);
-  return candidates[0] ?? "godot";
+  for (const candidate of candidates) {
+    if (candidate.includes(path.sep) || candidate.includes("/") || candidate.includes("\\")) {
+      try {
+        await access(candidate);
+        return candidate;
+      } catch {
+        continue;
+      }
+    }
+    return candidate;
+  }
+  return "godot";
 }
 
 export async function exportGodotWeb({
-  godotBinary = resolveGodotBinary(),
+  godotBinary,
   projectPath = godotProject,
   preset = exportPreset,
 } = {}) {
+  const resolvedBinary = godotBinary ?? await resolveGodotBinary();
   await access(projectPath);
   const args = ["--headless", "--path", path.dirname(projectPath), "--export-release", preset];
-  const { stdout, stderr } = await execFileAsync(godotBinary, args, {
+  const { stdout, stderr } = await execFileAsync(resolvedBinary, args, {
     cwd: rootDir,
     maxBuffer: 16 * 1024 * 1024,
   });

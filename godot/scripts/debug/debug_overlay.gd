@@ -7,12 +7,14 @@ const QA_HEADINGS := [0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0]
 @export var input_source_path: NodePath
 @export var hud_path: NodePath
 @export var world_path: NodePath
+@export var region_runtime_path: NodePath
 
 @onready var player: PlayerShip = get_node(player_path)
 @onready var camera: NavalCameraController = get_node(camera_path)
 @onready var input_source: PlayerInputSource = get_node(input_source_path)
 @onready var hud: FloatingStatusHud = get_node(hud_path)
 @onready var world: Node3D = get_node(world_path)
+@onready var region_runtime: Node = get_node_or_null(region_runtime_path)
 
 var label: Label
 var heading_index := 0
@@ -47,22 +49,26 @@ func _process(_delta: float) -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	var safe := PlatformService.safe_rect(viewport_size)
 	var lines := [
-		"BUILD: G0.2",
-		"MILESTONE: NAVAL PRESENTATION LOCK",
+		"BUILD: G0.3",
+		"MILESTONE: WORLD DOMAIN + GAME UNIT",
 		"REFERENCE: V20.3.2",
 		"ENGINE: Godot %s" % Engine.get_version_info().get("string", "unknown"),
 		"RENDERER: %s" % renderer,
 		"PLATFORM: %s" % PlatformService.platform_name(),
+		"REGION: %s" % _region_id(),
 		"PLAYER X/Z: %.1f / %.1f" % [player.global_position.x, player.global_position.z],
 		"HEADING: %.1f°" % player.heading_degrees(),
 		"SPEED: %.1f" % player.speed(),
+		"NAV DESTINATION: %s" % ("ACTIVE" if input_source.destination_active() else "NONE"),
+		"CURRENT TARGET: %s" % _target_name(),
+		"HARBOR STATE: %s" % _harbor_state(),
 		"CAMERA PROFILE: %s" % camera.profile_name(),
 		"CAMERA FOV / ORTHO SIZE: %.1f  ZOOM: %.2f" % [camera_value, camera.zoom],
 		"QUALITY PROFILE: %s" % QualityManager.profile_name(),
-		"KRAKEN LOD: IMPORTED AUTO (BIAS %.2f)" % QualityManager.lod_bias(),
 		"INPUT MODE: %s" % input_source.input_mode_name(),
-		"WEB BUILD ID: G0.2-134b4b4",
+		"ISLANDS: %d  POIS: %d  NPCS: %d" % [_island_count(), _poi_count(), _npc_count()],
 		"VIEWPORT: %dx%d  ASPECT: %.2f" % [viewport_size.x, viewport_size.y, viewport_size.x / maxf(1.0, viewport_size.y)],
+		"DPR: %.2f" % _device_pixel_ratio(),
 		"SAFE AREA: %.0f,%.0f %.0fx%.0f" % [safe.position.x, safe.position.y, safe.size.x, safe.size.y],
 		"",
 		"F1 OVERLAY  F2 8-WAY  F3 CAMERA  F4 QUALITY",
@@ -109,3 +115,30 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			world.call("set_debug_island_bounds_visible", island_bounds_visible)
 		KEY_F10:
 			performance_visible = not performance_visible
+
+func _region_id() -> String:
+	return region_runtime.region_id() if region_runtime != null and region_runtime.has_method("region_id") else "unknown"
+
+func _island_count() -> int:
+	return region_runtime.island_count() if region_runtime != null and region_runtime.has_method("island_count") else 0
+
+func _poi_count() -> int:
+	return region_runtime.poi_count() if region_runtime != null and region_runtime.has_method("poi_count") else 0
+
+func _npc_count() -> int:
+	return region_runtime.npc_count() if region_runtime != null and region_runtime.has_method("npc_count") else 0
+
+func _harbor_state() -> String:
+	return region_runtime.harbor_phase() if region_runtime != null and region_runtime.has_method("harbor_phase") else "unknown"
+
+func _target_name() -> String:
+	if TargetingSystem.current_target == null:
+		return "none"
+	if TargetingSystem.current_target is ShipEntity:
+		return (TargetingSystem.current_target as ShipEntity).display_name()
+	return TargetingSystem.current_target.name
+
+func _device_pixel_ratio() -> float:
+	if OS.get_name() == "Web" and ClassDB.class_exists("JavaScriptBridge"):
+		return float(JavaScriptBridge.eval("window.devicePixelRatio || 1"))
+	return 1.0

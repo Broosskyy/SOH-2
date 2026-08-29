@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/harbor/harbor_entity.gd" id="1_harbor"]
+
+[sub_resource type="CylinderMesh" id="ApproachMesh"]
+top_radius = 180.0
+bottom_radius = 180.0
+height = 1.0
+
+[node name="HarborRoot" type="Node3D"]
+script = ExtResource("1_harbor")
+
+[node name="ApproachArea" type="MeshInstance3D" parent="."]
+visible = false
+mesh = SubResource("ApproachMesh")
+
+[node name="InteractionArea" type="MeshInstance3D" parent="."]
+visible = false
+
+[node name="LabelAnchor" type="Marker3D" parent="."]
+position = Vector3(0, 48, 0)

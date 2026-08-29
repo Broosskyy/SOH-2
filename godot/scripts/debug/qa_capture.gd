@@ -18,19 +18,16 @@ const QA_QUALITIES := ["LOW", "HIGH"]
 @onready var player: PlayerShip = get_node(player_path)
 @onready var camera: NavalCameraController = get_node(camera_path)
 @onready var mobile_controls: CanvasLayer = get_node(mobile_controls_path)
-@onready var small_island: Node3D = get_node(small_island_path)
-@onready var medium_island: Node3D = get_node(medium_island_path)
-@onready var poi: Node3D = get_node(poi_path)
 
 func _ready() -> void:
 	var args := OS.get_cmdline_args()
 	if not "--qa-capture" in args and OS.get_environment("ABYSSAL_QA_CAPTURE") != "1":
 		return
-	print("G0.2 QA capture started")
+	print("G0.3 QA capture started")
 	call_deferred("_capture_suite")
 
 func _capture_suite() -> void:
-	var output_dir := ProjectSettings.globalize_path("res://../artifacts/godot-g0.2")
+	var output_dir := ProjectSettings.globalize_path("res://../artifacts/godot-g0.3")
 	DirAccess.make_dir_recursive_absolute(output_dir)
 	var requested_aspect := OS.get_environment("ABYSSAL_QA_ASPECT")
 	var requested_quality := OS.get_environment("ABYSSAL_QA_QUALITY").to_upper()
@@ -46,7 +43,7 @@ func _capture_suite() -> void:
 			DirAccess.make_dir_recursive_absolute(suite_dir)
 			await _capture_presentation_suite(suite_dir)
 	_write_manifest(output_dir, aspects, qualities)
-	print("G0.2 QA capture complete: %s" % output_dir)
+	print("G0.3 QA capture complete: %s" % output_dir)
 	get_tree().quit()
 
 func _capture_presentation_suite(output_dir: String) -> void:
@@ -69,15 +66,15 @@ func _capture_presentation_suite(output_dir: String) -> void:
 	await _settle()
 	_capture(output_dir.path_join("kraken_far.png"))
 	camera.zoom = 1.0
-	player.global_position = small_island.global_position + Vector3(0, 0, 150)
+	player.global_position = _island_position("glass_reef") + Vector3(0, 0, 150)
 	camera.set_camera_profile(NavalCameraController.CameraProfile.PERSPECTIVE_NAVAL, true)
 	await _settle()
 	_capture(output_dir.path_join("small_island.png"))
-	player.global_position = medium_island.global_position + Vector3(150, 0, 175)
+	player.global_position = _island_position("sun_rest") + Vector3(150, 0, 175)
 	camera.set_camera_profile(NavalCameraController.CameraProfile.PERSPECTIVE_NAVAL, true)
 	await _settle()
 	_capture(output_dir.path_join("medium_island.png"))
-	player.global_position = poi.global_position + Vector3(150, 0, 150)
+	player.global_position = _harbor_position("harbor_aster") + Vector3(150, 0, 150)
 	camera.set_camera_profile(NavalCameraController.CameraProfile.PERSPECTIVE_NAVAL, true)
 	await _settle()
 	_capture(output_dir.path_join("poi_harbor.png"))
@@ -95,8 +92,8 @@ func _capture_presentation_suite(output_dir: String) -> void:
 
 func _write_manifest(output_dir: String, aspects: Array, qualities: Array) -> void:
 	var manifest := {
-		"build": "G0.2",
-		"milestone": "NAVAL PRESENTATION LOCK",
+		"build": "G0.3",
+		"milestone": "WORLD DOMAIN + GAME UNIT",
 		"engine": Engine.get_version_info().get("string", "unknown"),
 		"platform": PlatformService.platform_name(),
 		"camera_profile": camera.profile_name(),
@@ -109,6 +106,18 @@ func _write_manifest(output_dir: String, aspects: Array, qualities: Array) -> vo
 	var file := FileAccess.open(output_dir.path_join("manifest.json"), FileAccess.WRITE)
 	if file != null:
 		file.store_string(JSON.stringify(manifest, "\t"))
+
+func _island_position(island_id: String) -> Vector3:
+	for node in get_tree().get_nodes_in_group("island_entities"):
+		if node is IslandEntity and node.island_id() == island_id:
+			return node.global_position
+	return Vector3.ZERO
+
+func _harbor_position(harbor_id: String) -> Vector3:
+	for node in get_tree().get_nodes_in_group("harbors"):
+		if node.name == harbor_id:
+			return node.global_position
+	return Vector3.ZERO
 
 func _settle() -> void:
 	for frame in 8:

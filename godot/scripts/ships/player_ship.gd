@@ -1,33 +1,40 @@
 class_name PlayerShip
-extends CharacterBody3D
+extends ShipEntity
 
 @export var max_speed := 42.0
 @export var acceleration := 30.0
 @export var turn_speed := 1.45
 @export var drag := 1.7
-@export var presentation_profile: ShipPresentationProfile
 
 var forward_speed := 0.0
 var _command := PlayerCommand.new()
 
-@onready var visual_root: Node3D = $VisualRoot
 @onready var kraken_model: Node3D = $VisualRoot/KrakenModel
-@onready var ui_anchor: Marker3D = $UIAnchor
 @onready var wake_anchor: Marker3D = $VFXAnchors/Wake
 @onready var debug_ui_anchor: GeometryInstance3D = $Debug/UIAnchorMarker
 @onready var debug_forward: GeometryInstance3D = $Debug/ForwardVector
 @onready var debug_collision: GeometryInstance3D = $Debug/CollisionEnvelope
 
 func _ready() -> void:
+	add_to_group("player_ship")
+	add_to_group("targetable_units")
+	if identity == null:
+		identity = UnitIdentity.new()
+		identity.unit_id = "player_kraken"
+		identity.unit_type = "player_ship"
+		identity.display_name = str(GameState.save_data.get("playerName", "Captain Rowan"))
+		identity.faction = UnitFaction.Allegiance.PLAYER
 	if presentation_profile == null:
 		push_error("PlayerShip requires a ShipPresentationProfile")
 		MobileWebBootTelemetry.report_error("PlayerShip missing profile")
 		return
-	visual_root.scale = Vector3.ONE * presentation_profile.visual_scale
-	visual_root.rotation_degrees.y = presentation_profile.visual_yaw_degrees
-	visual_root.position.y = presentation_profile.waterline_offset
-	ui_anchor.position.y = presentation_profile.ui_anchor_height
+	apply_presentation_profile()
 	wake_anchor.position.z = presentation_profile.wake_stern_offset
+	if health != null:
+		var ship_id := str(GameState.save_data.get("shipId", "sovereign"))
+		var ship_data: Dictionary = GameState.catalog.get("ships", {}).get(ship_id, {})
+		health.max_health = float(ship_data.get("hp", 1250.0))
+		health.current_health = health.max_health
 	if MobileWebDiagnostics.hide_kraken():
 		kraken_model.visible = false
 		MobileWebBootTelemetry.mark_stage("KRAKEN READY", "hidden")
@@ -67,15 +74,6 @@ func _physics_process(delta: float) -> void:
 
 func apply_command(command: PlayerCommand) -> void:
 	_command.copy_from(command)
-
-func set_heading_degrees(value: float) -> void:
-	rotation.y = -deg_to_rad(wrapf(value, 0.0, 360.0))
-
-func heading_degrees() -> float:
-	return wrapf(-rad_to_deg(rotation.y), 0.0, 360.0)
-
-func speed() -> float:
-	return absf(forward_speed)
 
 func set_debug_ui_anchor_visible(enabled: bool) -> void:
 	debug_ui_anchor.visible = enabled

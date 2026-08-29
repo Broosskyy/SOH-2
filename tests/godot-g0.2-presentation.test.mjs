@@ -33,15 +33,15 @@ test("mobile hybrid input separates destination navigation and camera pan", asyn
   const source = await read("godot/scripts/input/player_input_source.gd");
   const mobile = await read("godot/scripts/input/mobile_controls.gd");
   const picker = await read("godot/scripts/input/world_pick_input.gd");
-  const navigation = await read("godot/scripts/navigation/naval_navigation.gd");
+  const navigation = await read("godot/scripts/navigation/navigation_controller.gd");
   assert.match(source, /HYBRID_TAP_NAV/);
-  assert.match(source, /NavalNavigationLogic\.command_to_destination/);
+  assert.match(source, /NavigationController\.command_to_destination/);
   assert.match(mobile, /camera\.set_pan_input/);
   assert.match(mobile, /camera\.adjust_zoom/);
   assert.doesNotMatch(mobile, /set_touch_vector/);
   assert.match(picker, /project_ray_origin/);
   assert.match(picker, /GameplayPlane\.WATER_Y/);
-  assert.match(navigation, /ARRIVAL_RADIUS/);
+  assert.match(navigation, /is_destination_blocked/);
 });
 
 test("HUD and controls share safe-area policy", async () => {
@@ -56,8 +56,10 @@ test("HUD and controls share safe-area policy", async () => {
   assert.match(mobile, /PlatformService\.safe_margins/);
 });
 
-test("authored island presentation replaces the pure-proxy baseline", async () => {
+test("G0.3 region uses proxy island geometry instead of authored WebP billboards", async () => {
   const world = await read("godot/scenes/world/World.tscn");
+  const islandRoot = await read("godot/scripts/islands/island_root.gd");
+  const factory = await read("godot/scripts/region/aster_region_factory.gd");
   for (const asset of [
     "storm-ruins-island-v1.webp",
     "tropical-port-island-v1.webp",
@@ -65,13 +67,15 @@ test("authored island presentation replaces the pure-proxy baseline", async () =
   ]) {
     assert.ok(
       (await stat(new URL(`../godot/assets/world/islands/${asset}`, import.meta.url))).size > 100_000,
-      asset,
+      `${asset} remains a design reference asset`,
     );
   }
-  assert.match(world, /name="AuthoredPresentation"/);
-  assert.match(world, /storm-ruins-island-v1\.webp/);
-  assert.match(world, /tropical-port-island-v1\.webp/);
-  assert.match(world, /POI_Harbor/);
+  assert.doesNotMatch(world, /AuthoredPresentation/);
+  assert.doesNotMatch(world, /storm-ruins-island-v1\.webp/);
+  assert.match(world, /RegionRuntime/);
+  assert.match(islandRoot, /_build_proxy_geometry/);
+  assert.match(factory, /glass_reef/);
+  assert.match(factory, /harbor_aster/);
 });
 
 test("G0.2 QA covers aspects, quality tiers, headings and performance evidence", async () => {
@@ -82,8 +86,9 @@ test("G0.2 QA covers aspects, quality tiers, headings and performance evidence",
   assert.match(capture, /1920x1080/);
   assert.match(capture, /2400x1080/);
   assert.match(capture, /QA_QUALITIES := \["LOW", "HIGH"\]/);
-  assert.match(capture, /artifacts\/godot-g0\.2/);
-  assert.match(overlay, /KRAKEN LOD/);
+  assert.match(capture, /artifacts\/godot-g0\.3/);
+  assert.match(overlay, /BUILD: G0\.3/);
+  assert.match(overlay, /REGION:/);
   assert.match(overlay, /INPUT MODE/);
   assert.match(overlay, /SAFE AREA/);
   assert.match(quality, /mesh_lod_threshold/);
@@ -132,5 +137,6 @@ test("world navigation owns primary pointer input without target-action collisio
   const picker = await read("godot/scripts/input/world_pick_input.gd");
   assert.match(project, /selectTarget=\{\s*"deadzone": 0\.2,\s*"events": \[\]\s*\}/);
   assert.match(picker, /MOUSE_BUTTON_LEFT/);
-  assert.match(picker, /_set_destination_from_screen/);
+  assert.match(picker, /_handle_pick/);
+  assert.match(picker, /input_source\.set_destination/);
 });

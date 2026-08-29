@@ -1,0 +1,47 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/npc/npc_ship.gd" id="1_npc"]
+[ext_resource type="Script" path="res://scripts/units/health_component.gd" id="2_health"]
+[ext_resource type="Script" path="res://scripts/units/targetable_component.gd" id="3_targetable"]
+
+[sub_resource type="CapsuleShape3D" id="Collision"]
+radius = 5.0
+height = 28.0
+
+[sub_resource type="BoxMesh" id="HullMesh"]
+size = Vector3(16, 8, 34)
+
+[sub_resource type="StandardMaterial3D" id="HullMaterial"]
+albedo_color = Color(0.72, 0.28, 0.22, 1)
+
+[node name="NpcShip" type="CharacterBody3D"]
+script = ExtResource("1_npc")
+
+[node name="GameplayRoot" type="Node3D" parent="."]
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="ProxyHull" type="MeshInstance3D" parent="VisualRoot"]
+mesh = SubResource("HullMesh")
+surface_material_override/0 = SubResource("HullMaterial")
+
+[node name="CollisionRoot" type="Node3D" parent="."]
+
+[node name="Collision" type="CollisionShape3D" parent="CollisionRoot"]
+rotation_degrees = Vector3(90, 0, 0)
+shape = SubResource("Collision")
+
+[node name="UIAnchor" type="Marker3D" parent="."]
+position = Vector3(0, 24, 0)
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("2_health")
+
+[node name="TargetableComponent" type="Node" parent="."]
+script = ExtResource("3_targetable")
+
+[node name="NpcController" type="Node" parent="."]
+
+[node name="WeaponAnchors" type="Node3D" parent="."]
+
+[node name="VFXRoot" type="Node3D" parent="."]

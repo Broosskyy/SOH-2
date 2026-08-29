@@ -1,9 +1,11 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/ships/player_ship.gd" id="1_ship"]
 [ext_resource type="Script" path="res://scripts/input/player_input_source.gd" id="2_input"]
 [ext_resource type="PackedScene" path="res://assets/ships/player/kraken/Kraken_ship_player_30k.glb" id="3_kraken"]
 [ext_resource type="Resource" path="res://data/kraken_presentation_profile.tres" id="4_profile"]
+[ext_resource type="Script" path="res://scripts/units/health_component.gd" id="5_health"]
+[ext_resource type="Script" path="res://scripts/units/targetable_component.gd" id="6_targetable"]
 
 [sub_resource type="CapsuleShape3D" id="ShipCollision"]
 radius = 7.0
@@ -29,7 +31,11 @@ albedo_color = Color(0.2, 1, 0.78, 0.45)
 script = ExtResource("1_ship")
 presentation_profile = ExtResource("4_profile")
 
-[node name="Collision" type="CollisionShape3D" parent="."]
+[node name="GameplayRoot" type="Node3D" parent="."]
+
+[node name="CollisionRoot" type="Node3D" parent="."]
+
+[node name="Collision" type="CollisionShape3D" parent="CollisionRoot"]
 rotation_degrees = Vector3(90, 0, 0)
 shape = SubResource("ShipCollision")
 
@@ -44,11 +50,19 @@ shape = SubResource("ShipCollision")
 [node name="Wake" type="Marker3D" parent="VFXAnchors"]
 position = Vector3(0, 0, 58)
 
-[node name="CannonPort" type="Marker3D" parent="VFXAnchors"]
+[node name="WeaponAnchors" type="Node3D" parent="."]
+
+[node name="CannonPort" type="Marker3D" parent="WeaponAnchors"]
 position = Vector3(-17, 10, 0)
 
-[node name="CannonStarboard" type="Marker3D" parent="VFXAnchors"]
+[node name="CannonStarboard" type="Marker3D" parent="WeaponAnchors"]
 position = Vector3(17, 10, 0)
+
+[node name="HealthComponent" type="Node" parent="."]
+script = ExtResource("5_health")
+
+[node name="TargetableComponent" type="Node" parent="."]
+script = ExtResource("6_targetable")
 
 [node name="InputSource" type="Node" parent="."]
 process_physics_priority = -10
@@ -73,4 +87,3 @@ visible = false
 rotation_degrees = Vector3(90, 0, 0)
 mesh = SubResource("CollisionMesh")
 material_override = SubResource("DebugMaterial")
-
