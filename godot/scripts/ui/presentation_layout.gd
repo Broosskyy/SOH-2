@@ -15,7 +15,7 @@ enum Zone {
 }
 
 const BUILD_LABEL := "G0.5.1-MOBILE-WEB-UI-METRICS"
-const GIT_SHA := "pending"
+const GIT_SHA := "c3db31f"
 
 static func ui_scale(viewport: Vector2) -> float:
 	return UiMetrics.effective_ui_scale(viewport)
