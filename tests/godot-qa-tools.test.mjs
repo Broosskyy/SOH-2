@@ -71,6 +71,23 @@ test("Android smoke remains export-only when adb is unavailable", async () => {
   }
 });
 
+test("godot web serve detects private LAN IPv4 and certificate SANs", async () => {
+  const serve = await import("../scripts/godot-web-serve.mjs");
+  assert.equal(serve.isPrivateIpv4("192.168.178.144"), true);
+  assert.equal(serve.isPrivateIpv4("8.8.8.8"), false);
+  assert.deepEqual(
+    serve.buildCertificateSubjectAltNames({ lanIp: "192.168.178.144" }),
+    "DNS:localhost,IP:127.0.0.1,IP:::1,IP:192.168.178.144",
+  );
+  const lanIp = serve.detectLanIpv4({
+    wlan0: [
+      { family: "IPv4", internal: false, address: "192.168.178.144" },
+      { family: "IPv6", internal: false, address: "fe80::1" },
+    ],
+  });
+  assert.equal(lanIp, "192.168.178.144");
+});
+
 test("runtime QA preserves boot checks and grades black captures", async () => {
   const source = await read("scripts/godot-web-runtime-qa.mjs");
   assert.match(source, /GODOT_WEB_WIDTH/);

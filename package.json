@@ -18,6 +18,7 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:architecture": "node --test tests/cross-platform-architecture.test.mjs tests/v20.*.test.mjs tests/ship-movement.test.mjs tests/world-density.test.mjs",
     "test:godot-qa-tools": "node --test tests/godot-qa-tools.test.mjs",
+    "serve:godot:web": "node scripts/godot-web-serve.mjs",
     "qa:godot:web": "node scripts/godot-web-runtime-qa.mjs",
     "qa:godot:web:matrix": "node scripts/godot-web-runtime-matrix.mjs",
     "qa:godot:web:breakdown": "node scripts/godot-web-build-breakdown.mjs",
