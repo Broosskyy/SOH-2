@@ -6,7 +6,9 @@ config_version=5
 
 config/name="Abyssal Dominion"
 run/main_scene="res://scenes/main/Main.tscn"
-config/features=PackedStringArray("4.3", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/version="0.1.0"
+config/icon="res://assets/ui/app_icon.svg"
 boot_splash/bg_color=Color(0.015, 0.08, 0.12, 1)
 
 [autoload]
@@ -100,6 +102,7 @@ openShipyard={
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
 textures/default_filters/use_nearest_mipmap_filter=false
 environment/defaults/default_clear_color=Color(0.08, 0.32, 0.42, 1)
 

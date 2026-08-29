@@ -98,7 +98,9 @@ test("Web and Godot enforce fixed-oblique 2.5D naval gameplay", async () => {
   assert.doesNotMatch(await read("app/game/input/actions.ts"), /orbit|rotateCamera/i);
   assert.match(webRenderer, /resolveCameraPresentation/);
   assert.match(webRenderer, /new THREE\.Plane\(new THREE\.Vector3\(0,1,0\),0\)/);
-  assert.match(godotCamera, /fixed_lateral_offset/);
+  assert.match(godotCamera, /PERSPECTIVE_NAVAL/);
+  assert.match(godotCamera, /LOW_FOV_PERSPECTIVE/);
+  assert.match(godotCamera, /ORTHOGRAPHIC/);
   assert.match(godotCamera, /GameState\.catalog/);
   assert.match(godotCamera, /set_boss_overview/);
   assert.doesNotMatch(godotCamera, /orbit/i);

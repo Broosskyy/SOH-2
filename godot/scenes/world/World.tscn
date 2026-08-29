@@ -1,13 +1,16 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/ships/PlayerShip.tscn" id="2_ship"]
 [ext_resource type="Script" path="res://scripts/camera/camera_controller.gd" id="3_camera"]
 [ext_resource type="Script" path="res://scripts/input/mobile_controls.gd" id="4_mobile"]
+[ext_resource type="Script" path="res://scripts/ui/floating_status_hud.gd" id="5_hud"]
+[ext_resource type="Script" path="res://scripts/debug/debug_overlay.gd" id="6_debug"]
+[ext_resource type="Script" path="res://scripts/debug/qa_capture.gd" id="7_capture"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
 sky_top_color = Color(0.14, 0.48, 0.62, 1)
-sky_horizon_color = Color(0.63, 0.84, 0.85, 1)
+sky_horizon_color = Color(0.4, 0.67, 0.72, 1)
 ground_bottom_color = Color(0.02, 0.12, 0.17, 1)
 ground_horizon_color = Color(0.22, 0.48, 0.52, 1)
 
@@ -21,8 +24,8 @@ ambient_light_source = 3
 ambient_light_color = Color(0.75, 0.92, 1, 1)
 ambient_light_energy = 0.72
 fog_enabled = true
-fog_light_color = Color(0.32, 0.63, 0.68, 1)
-fog_density = 0.0012
+fog_light_color = Color(0.18, 0.45, 0.52, 1)
+fog_density = 0.00025
 
 [sub_resource type="PlaneMesh" id="OceanMesh"]
 size = Vector2(3000, 2200)
@@ -30,9 +33,70 @@ subdivide_width = 80
 subdivide_depth = 60
 
 [sub_resource type="StandardMaterial3D" id="OceanMaterial"]
-albedo_color = Color(0.025, 0.38, 0.51, 1)
-metallic = 0.18
-roughness = 0.27
+albedo_color = Color(0.012, 0.18, 0.27, 1)
+metallic = 0.12
+roughness = 0.36
+
+[sub_resource type="StandardMaterial3D" id="ShoreMaterial"]
+albedo_color = Color(0.34, 0.31, 0.19, 1)
+roughness = 0.92
+
+[sub_resource type="StandardMaterial3D" id="IslandMaterial"]
+albedo_color = Color(0.16, 0.31, 0.16, 1)
+roughness = 0.96
+
+[sub_resource type="StandardMaterial3D" id="RockMaterial"]
+albedo_color = Color(0.19, 0.23, 0.22, 1)
+roughness = 0.98
+
+[sub_resource type="StandardMaterial3D" id="HarborMaterial"]
+albedo_color = Color(0.25, 0.12, 0.055, 1)
+roughness = 0.78
+
+[sub_resource type="StandardMaterial3D" id="BeaconMaterial"]
+albedo_color = Color(0.64, 0.49, 0.22, 1)
+emission_enabled = true
+emission = Color(1, 0.48, 0.12, 1)
+emission_energy_multiplier = 1.4
+
+[sub_resource type="CylinderMesh" id="SmallShoreMesh"]
+top_radius = 73.0
+bottom_radius = 82.0
+height = 7.0
+radial_segments = 14
+
+[sub_resource type="CylinderMesh" id="SmallIslandMesh"]
+top_radius = 54.0
+bottom_radius = 69.0
+height = 18.0
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="MediumShoreMesh"]
+top_radius = 135.0
+bottom_radius = 151.0
+height = 9.0
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="MediumIslandMesh"]
+top_radius = 103.0
+bottom_radius = 132.0
+height = 28.0
+radial_segments = 15
+
+[sub_resource type="SphereMesh" id="RockMesh"]
+radius = 20.0
+height = 40.0
+radial_segments = 10
+rings = 6
+
+[sub_resource type="BoxMesh" id="DockMesh"]
+size = Vector3(18, 5, 96)
+
+[sub_resource type="CylinderMesh" id="BeaconMesh"]
+top_radius = 5.0
+bottom_radius = 8.0
+height = 38.0
+radial_segments = 10
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
@@ -50,15 +114,94 @@ shadow_enabled = true
 mesh = SubResource("OceanMesh")
 material_override = SubResource("OceanMaterial")
 
+[node name="Region_Aster" type="Node3D" parent="."]
+
+[node name="IslandGroup" type="Node3D" parent="Region_Aster"]
+
+[node name="SmallIsland" type="Node3D" parent="Region_Aster/IslandGroup"]
+position = Vector3(390, 0, -190)
+rotation_degrees = Vector3(0, 18, 0)
+
+[node name="Shore" type="MeshInstance3D" parent="Region_Aster/IslandGroup/SmallIsland"]
+position = Vector3(0, 2, 0)
+scale = Vector3(1.25, 1, 0.82)
+mesh = SubResource("SmallShoreMesh")
+material_override = SubResource("ShoreMaterial")
+
+[node name="Land" type="MeshInstance3D" parent="Region_Aster/IslandGroup/SmallIsland"]
+position = Vector3(-5, 9, 1)
+scale = Vector3(1.2, 1, 0.78)
+mesh = SubResource("SmallIslandMesh")
+material_override = SubResource("IslandMaterial")
+
+[node name="LocalProps" type="Node3D" parent="Region_Aster/IslandGroup/SmallIsland"]
+
+[node name="Rock" type="MeshInstance3D" parent="Region_Aster/IslandGroup/SmallIsland/LocalProps"]
+position = Vector3(19, 27, -8)
+scale = Vector3(1.2, 0.75, 0.9)
+mesh = SubResource("RockMesh")
+material_override = SubResource("RockMaterial")
+
+[node name="MediumIsland" type="Node3D" parent="Region_Aster/IslandGroup"]
+position = Vector3(-430, 0, -285)
+rotation_degrees = Vector3(0, -12, 0)
+
+[node name="Shore" type="MeshInstance3D" parent="Region_Aster/IslandGroup/MediumIsland"]
+position = Vector3(0, 3, 0)
+scale = Vector3(1.25, 1, 0.74)
+mesh = SubResource("MediumShoreMesh")
+material_override = SubResource("ShoreMaterial")
+
+[node name="Land" type="MeshInstance3D" parent="Region_Aster/IslandGroup/MediumIsland"]
+position = Vector3(-8, 14, 0)
+scale = Vector3(1.18, 1, 0.72)
+mesh = SubResource("MediumIslandMesh")
+material_override = SubResource("IslandMaterial")
+
+[node name="POI_Harbor" type="Node3D" parent="Region_Aster/IslandGroup/MediumIsland"]
+position = Vector3(118, 4, 24)
+
+[node name="Dock" type="MeshInstance3D" parent="Region_Aster/IslandGroup/MediumIsland/POI_Harbor"]
+rotation_degrees = Vector3(0, -68, 0)
+mesh = SubResource("DockMesh")
+material_override = SubResource("HarborMaterial")
+
+[node name="Beacon" type="MeshInstance3D" parent="Region_Aster/IslandGroup/MediumIsland/POI_Harbor"]
+position = Vector3(-13, 20, 15)
+mesh = SubResource("BeaconMesh")
+material_override = SubResource("BeaconMaterial")
+
+[node name="LocalProps" type="Node3D" parent="Region_Aster/IslandGroup/MediumIsland/POI_Harbor"]
+
+[node name="HarborRock" type="MeshInstance3D" parent="Region_Aster/IslandGroup/MediumIsland/POI_Harbor/LocalProps"]
+position = Vector3(-32, 11, -24)
+scale = Vector3(0.8, 0.45, 1.25)
+mesh = SubResource("RockMesh")
+material_override = SubResource("RockMaterial")
+
 [node name="PlayerShip" parent="." instance=ExtResource("2_ship")]
 
 [node name="Camera" type="Camera3D" parent="."]
-position = Vector3(-42, 185, 235)
+position = Vector3(-58, 560, 360)
 current = true
-fov = 39.0
 script = ExtResource("3_camera")
 target_path = NodePath("../PlayerShip")
 
 [node name="MobileControls" type="CanvasLayer" parent="."]
 script = ExtResource("4_mobile")
+input_source_path = NodePath("../PlayerShip/InputSource")
+
+[node name="FloatingPlayerHUD" type="CanvasLayer" parent="."]
+script = ExtResource("5_hud")
+target_path = NodePath("../PlayerShip")
+camera_path = NodePath("../Camera")
+
+[node name="DebugOverlay" type="CanvasLayer" parent="."]
+script = ExtResource("6_debug")
 player_path = NodePath("../PlayerShip")
+camera_path = NodePath("../Camera")
+
+[node name="QACapture" type="Node" parent="."]
+script = ExtResource("7_capture")
+player_path = NodePath("../PlayerShip")
+camera_path = NodePath("../Camera")

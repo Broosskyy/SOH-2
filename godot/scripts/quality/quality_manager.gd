@@ -1,9 +1,10 @@
 extends Node
 
 enum QualityLevel { LOW, MEDIUM, HIGH, ULTRA }
+const PROFILE_NAMES := ["LOW", "MEDIUM", "HIGH", "ULTRA"]
 
 const PROFILES := {
-	QualityLevel.LOW: {"scale": 0.75, "shadows": false, "lod": 2.0, "particles": 0.35},
+	QualityLevel.LOW: {"scale": 1.0, "shadows": false, "lod": 2.0, "particles": 0.35},
 	QualityLevel.MEDIUM: {"scale": 1.0, "shadows": true, "lod": 1.35, "particles": 0.65},
 	QualityLevel.HIGH: {"scale": 1.15, "shadows": true, "lod": 1.0, "particles": 1.0},
 	QualityLevel.ULTRA: {"scale": 1.35, "shadows": true, "lod": 0.75, "particles": 1.35}
@@ -18,9 +19,9 @@ func _ready() -> void:
 func _recommended_level() -> QualityLevel:
 	if OS.get_name() in ["Android", "iOS"]:
 		return QualityLevel.MEDIUM
-	if OS.get_name() == "Web" and DisplayServer.is_touchscreen_available():
-		return QualityLevel.LOW
-	return QualityLevel.HIGH
+	if OS.get_name() == "Web":
+		return QualityLevel.LOW if DisplayServer.is_touchscreen_available() else QualityLevel.HIGH
+	return QualityLevel.ULTRA
 
 func apply(level: QualityLevel) -> void:
 	current_level = level
@@ -30,4 +31,10 @@ func apply(level: QualityLevel) -> void:
 
 func profile() -> Dictionary:
 	return PROFILES[current_level].duplicate(true)
+
+func cycle_profile() -> void:
+	apply(((current_level + 1) % PROFILES.size()) as QualityLevel)
+
+func profile_name() -> String:
+	return PROFILE_NAMES[current_level]
 

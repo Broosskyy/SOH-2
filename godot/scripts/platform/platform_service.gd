@@ -23,3 +23,6 @@ func _ready() -> void:
 func safe_area() -> Rect2i:
 	return DisplayServer.get_display_safe_area()
 
+func platform_name() -> String:
+	return OS.get_name() + (" Touch" if mobile else "")
+

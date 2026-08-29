@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ShipPresentationProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ships/ship_presentation_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+visual_scale = 52.0
+visual_yaw_degrees = 180.0
+waterline_offset = 20.5
+ui_anchor_height = 59.0
+ui_safe_gap = 8.0
+nameplate_offset = Vector2(0, -4)
+half_length = 52.0
+half_width = 18.0
+visual_top_height = 55.0
+camera_profile = 0

@@ -1,46 +1,76 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/ships/player_ship.gd" id="1_ship"]
+[ext_resource type="Script" path="res://scripts/input/player_input_source.gd" id="2_input"]
+[ext_resource type="PackedScene" path="res://assets/ships/player/kraken/Kraken_ship_player_30k.glb" id="3_kraken"]
+[ext_resource type="Resource" path="res://data/kraken_presentation_profile.tres" id="4_profile"]
 
 [sub_resource type="CapsuleShape3D" id="ShipCollision"]
-radius = 4.0
-height = 18.0
+radius = 7.0
+height = 54.0
 
-[sub_resource type="BoxMesh" id="HullMesh"]
-size = Vector3(9, 3, 24)
+[sub_resource type="SphereMesh" id="AnchorMesh"]
+radius = 1.5
+height = 3.0
 
-[sub_resource type="StandardMaterial3D" id="HullMaterial"]
-albedo_color = Color(0.24, 0.10, 0.045, 1)
-roughness = 0.72
+[sub_resource type="BoxMesh" id="ForwardMesh"]
+size = Vector3(1.2, 1.2, 34.0)
+
+[sub_resource type="CapsuleMesh" id="CollisionMesh"]
+radius = 7.0
+height = 54.0
+
+[sub_resource type="StandardMaterial3D" id="DebugMaterial"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.2, 1, 0.78, 0.45)
 
 [node name="PlayerShip" type="CharacterBody3D"]
 script = ExtResource("1_ship")
+presentation_profile = ExtResource("4_profile")
 
 [node name="Collision" type="CollisionShape3D" parent="."]
 rotation_degrees = Vector3(90, 0, 0)
 shape = SubResource("ShipCollision")
 
-[node name="Hull" type="MeshInstance3D" parent="."]
-position = Vector3(0, 2.4, 0)
-mesh = SubResource("HullMesh")
-material_override = SubResource("HullMaterial")
+[node name="VisualRoot" type="Node3D" parent="."]
 
-[node name="Bow" type="MeshInstance3D" parent="."]
-position = Vector3(0, 2.4, -13)
-rotation_degrees = Vector3(0, 0, 45)
-mesh = SubResource("HullMesh")
-material_override = SubResource("HullMaterial")
-scale = Vector3(0.55, 0.55, 0.45)
+[node name="KrakenModel" parent="VisualRoot" instance=ExtResource("3_kraken")]
 
-[node name="Mast" type="MeshInstance3D" parent="."]
-position = Vector3(0, 10, 0)
-mesh = SubResource("HullMesh")
-material_override = SubResource("HullMaterial")
-scale = Vector3(0.12, 2.6, 0.12)
+[node name="UIAnchor" type="Marker3D" parent="."]
 
-[node name="Sail" type="MeshInstance3D" parent="."]
-position = Vector3(0, 12, -1)
-mesh = SubResource("HullMesh")
-material_override = SubResource("HullMaterial")
-scale = Vector3(0.08, 1.5, 0.75)
+[node name="VFXAnchors" type="Node3D" parent="."]
+
+[node name="Wake" type="Marker3D" parent="VFXAnchors"]
+position = Vector3(0, 0, 49)
+
+[node name="CannonPort" type="Marker3D" parent="VFXAnchors"]
+position = Vector3(-17, 10, 0)
+
+[node name="CannonStarboard" type="Marker3D" parent="VFXAnchors"]
+position = Vector3(17, 10, 0)
+
+[node name="InputSource" type="Node" parent="."]
+process_physics_priority = -10
+script = ExtResource("2_input")
+
+[node name="Debug" type="Node3D" parent="."]
+
+[node name="UIAnchorMarker" type="MeshInstance3D" parent="Debug"]
+visible = false
+position = Vector3(0, 59, 0)
+mesh = SubResource("AnchorMesh")
+material_override = SubResource("DebugMaterial")
+
+[node name="ForwardVector" type="MeshInstance3D" parent="Debug"]
+visible = false
+position = Vector3(0, 2, -21)
+mesh = SubResource("ForwardMesh")
+material_override = SubResource("DebugMaterial")
+
+[node name="CollisionEnvelope" type="MeshInstance3D" parent="Debug"]
+visible = false
+rotation_degrees = Vector3(90, 0, 0)
+mesh = SubResource("CollisionMesh")
+material_override = SubResource("DebugMaterial")
 
