@@ -17,6 +17,12 @@
     "sync:web-build": "node scripts/sync-web-build.mjs",
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:architecture": "node --test tests/cross-platform-architecture.test.mjs tests/v20.*.test.mjs tests/ship-movement.test.mjs tests/world-density.test.mjs",
+    "test:godot-qa-tools": "node --test tests/godot-qa-tools.test.mjs",
+    "qa:godot:web": "node scripts/godot-web-runtime-qa.mjs",
+    "qa:godot:web:matrix": "node scripts/godot-web-runtime-matrix.mjs",
+    "qa:godot:web:breakdown": "node scripts/godot-web-build-breakdown.mjs",
+    "qa:godot:windows": "node scripts/godot-windows-smoke.mjs",
+    "qa:godot:android": "node scripts/godot-android-smoke.mjs",
     "validate:artifact": "bash scripts/validate-artifact.sh",
     "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate"

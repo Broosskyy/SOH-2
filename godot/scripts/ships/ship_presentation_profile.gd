@@ -7,10 +7,11 @@ extends Resource
 @export var visual_scale := 52.0
 @export var visual_yaw_degrees := 180.0
 @export var waterline_offset := 20.5
+@export var wake_stern_offset := 58.0
 
 @export_group("Floating HUD")
-@export var ui_anchor_height := 59.0
-@export var ui_safe_gap := 8.0
+@export var ui_anchor_height := 68.0
+@export var ui_safe_gap := 10.0
 @export var nameplate_offset := Vector2(0.0, -4.0)
 
 @export_group("Presentation Envelope")

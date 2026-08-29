@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "assetId": "kraken-player-30k",
+  "status": "STRATEGY",
+  "sourcePreserved": true,
+  "godotImporterGeneratesInternalLods": true,
+  "levels": [
+    {
+      "id": "LOD0",
+      "triangles": 30744,
+      "textureMax": 4096,
+      "usage": ["desktop-close", "high", "ultra"]
+    },
+    {
+      "id": "LOD1",
+      "targetTriangles": [12000, 18000],
+      "textureMax": 2048,
+      "switchDistance": 700,
+      "usage": ["normal-gameplay", "medium", "high"]
+    },
+    {
+      "id": "LOD2",
+      "targetTriangles": [4000, 8000],
+      "textureMax": 1024,
+      "switchDistance": 1200,
+      "usage": ["far", "low", "mobile-web"]
+    }
+  ],
+  "qualityLodBias": {
+    "LOW": 2.0,
+    "MEDIUM": 1.35,
+    "HIGH": 1.0,
+    "ULTRA": 0.75
+  },
+  "candidateGeneration": {
+    "requiredTools": ["Blender or gltfpack"],
+    "availableInG0.2Environment": false,
+    "visualApproval": ["close", "default", "far", "eight-way"]
+  }
+}

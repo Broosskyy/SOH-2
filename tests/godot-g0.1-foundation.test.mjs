@@ -8,7 +8,7 @@ test("G0.1 targets Godot 4.7 with GL Compatibility", async () => {
   const project = await read("godot/project.godot");
   assert.match(project, /PackedStringArray\("4\.7", "GL Compatibility"\)/);
   assert.match(project, /renderer\/rendering_method="gl_compatibility"/);
-  assert.match(project, /config\/version="0\.1\.0"/);
+  assert.match(project, /config\/version="0\.2\.0"/);
 });
 
 test("Kraken is a visual-only child of the gameplay ship", async () => {
@@ -37,8 +37,9 @@ test("input source is separated from ship movement", async () => {
   assert.doesNotMatch(controller, /Input\./);
   assert.match(controller, /apply_command/);
   assert.match(source, /Input\.get_axis/);
-  assert.match(source, /set_touch_vector/);
-  assert.match(mobile, /input_source\.set_touch_vector/);
+  assert.match(source, /set_destination/);
+  assert.doesNotMatch(mobile, /set_touch_vector/);
+  assert.match(mobile, /camera\.set_pan_input/);
 });
 
 test("naval camera, floating HUD and eight-way QA are present", async () => {
@@ -53,7 +54,7 @@ test("naval camera, floating HUD and eight-way QA are present", async () => {
   assert.match(hud, /camera\.unproject_position/);
   assert.match(hud, /ui_safe_gap/);
   assert.match(debug, /0\.0, 45\.0, 90\.0, 135\.0, 180\.0, 225\.0, 270\.0, 315\.0/);
-  assert.match(debug, /BUILD: G0\.1/);
+  assert.match(debug, /BUILD: G0\.2/);
 });
 
 test("test world and all Tier-1 export presets are configured", async () => {

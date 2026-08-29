@@ -27,7 +27,16 @@ func apply(level: QualityLevel) -> void:
 	current_level = level
 	var profile: Dictionary = PROFILES[level]
 	get_viewport().scaling_3d_scale = profile.scale
+	get_viewport().mesh_lod_threshold = profile.lod
 	RenderingServer.directional_shadow_atlas_set_size(2048 if profile.shadows else 0, true)
+
+func apply_forced(level: QualityLevel) -> void:
+	apply(level)
+
+func level_from_name(value: String) -> QualityLevel:
+	var normalized := value.strip_edges().to_upper()
+	var index := PROFILE_NAMES.find(normalized)
+	return (index if index >= 0 else QualityLevel.HIGH) as QualityLevel
 
 func profile() -> Dictionary:
 	return PROFILES[current_level].duplicate(true)
@@ -37,4 +46,10 @@ func cycle_profile() -> void:
 
 func profile_name() -> String:
 	return PROFILE_NAMES[current_level]
+
+func lod_bias() -> float:
+	return float(PROFILES[current_level].lod)
+
+func particle_multiplier() -> float:
+	return float(PROFILES[current_level].particles)
 

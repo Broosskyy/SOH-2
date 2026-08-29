@@ -12,6 +12,7 @@ var _command := PlayerCommand.new()
 
 @onready var visual_root: Node3D = $VisualRoot
 @onready var ui_anchor: Marker3D = $UIAnchor
+@onready var wake_anchor: Marker3D = $VFXAnchors/Wake
 @onready var debug_ui_anchor: GeometryInstance3D = $Debug/UIAnchorMarker
 @onready var debug_forward: GeometryInstance3D = $Debug/ForwardVector
 @onready var debug_collision: GeometryInstance3D = $Debug/CollisionEnvelope
@@ -24,6 +25,8 @@ func _ready() -> void:
 	visual_root.rotation_degrees.y = presentation_profile.visual_yaw_degrees
 	visual_root.position.y = presentation_profile.waterline_offset
 	ui_anchor.position.y = presentation_profile.ui_anchor_height
+	# Gameplay forward is -Z, therefore the stern/wake sits on local +Z.
+	wake_anchor.position.z = presentation_profile.wake_stern_offset
 	_tune_visual_materials()
 
 func _tune_visual_materials() -> void:

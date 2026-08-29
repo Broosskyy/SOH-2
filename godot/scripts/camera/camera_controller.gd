@@ -39,6 +39,7 @@ const PROFILES := {
 }
 
 @export var target_path: NodePath
+@export var presentation_profile: ShipPresentationProfile
 @export var follow_smoothing := 5.5
 @export var min_zoom := 0.55
 @export var max_zoom := 1.38
@@ -46,6 +47,9 @@ const PROFILES := {
 @export var boss_overview_multiplier := 1.30
 @export var event_overview_multiplier := 1.14
 @export var max_shake := 3.5
+@export var max_pan_distance := 190.0
+@export var pan_speed := 220.0
+@export var pan_recenter_speed := 1.6
 
 @onready var target: Node3D = get_node(target_path)
 var zoom := 1.0
@@ -54,6 +58,8 @@ var boss_overview := false
 var event_overview := false
 var shake_strength := 0.0
 var shake_remaining := 0.0
+var pan_offset := Vector2.ZERO
+var _pan_input := Vector2.ZERO
 
 func _ready() -> void:
 	# Read the engine-neutral policy; distances stay engine-specific scene tuning.
@@ -63,6 +69,8 @@ func _ready() -> void:
 	max_zoom = float(camera_policy.get("zoomMax", max_zoom))
 	boss_overview_multiplier = float(camera_policy.get("bossOverviewMultiplier", boss_overview_multiplier))
 	event_overview_multiplier = float(camera_policy.get("eventOverviewMultiplier", event_overview_multiplier))
+	if presentation_profile != null:
+		initial_profile = presentation_profile.camera_profile as CameraProfile
 	set_camera_profile(initial_profile, true)
 
 func _process(delta: float) -> void:
@@ -71,7 +79,13 @@ func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("zoomOut"):
 		zoom = clampf(zoom - 0.08, min_zoom, max_zoom)
 	var overview := boss_overview_multiplier if boss_overview else (event_overview_multiplier if event_overview else 1.0)
+	if _pan_input.length_squared() > 0.01:
+		pan_offset += _pan_input.limit_length(1.0) * pan_speed * delta
+		pan_offset = pan_offset.limit_length(max_pan_distance)
+	else:
+		pan_offset = pan_offset.lerp(Vector2.ZERO, 1.0 - exp(-pan_recenter_speed * delta))
 	var target_on_plane := GameplayPlane.flatten(target.global_position)
+	target_on_plane += Vector3(pan_offset.x, 0.0, pan_offset.y)
 	var shake := Vector3.ZERO
 	if shake_remaining > 0.0:
 		shake_remaining = maxf(0.0, shake_remaining - delta)
@@ -123,6 +137,8 @@ func set_camera_profile(profile_index: CameraProfile, snap_to_target := false) -
 	profile_changed.emit(current_profile, profile_name())
 
 func cycle_camera_profile() -> void:
+	if not OS.is_debug_build():
+		return
 	set_camera_profile(((current_profile + 1) % PROFILES.size()) as CameraProfile)
 
 func profile_name() -> String:
@@ -130,3 +146,13 @@ func profile_name() -> String:
 
 func profile_value() -> float:
 	return size if projection == PROJECTION_ORTHOGONAL else fov
+
+func set_pan_input(value: Vector2) -> void:
+	_pan_input = value.limit_length(1.0)
+
+func reset_pan() -> void:
+	_pan_input = Vector2.ZERO
+	pan_offset = Vector2.ZERO
+
+func adjust_zoom(delta: float) -> void:
+	zoom = clampf(zoom + delta, min_zoom, max_zoom)

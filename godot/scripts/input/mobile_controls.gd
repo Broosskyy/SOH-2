@@ -1,8 +1,8 @@
 extends CanvasLayer
 
-@export var input_source_path: NodePath
+@export var camera_path: NodePath
 
-var input_source: PlayerInputSource
+var camera: NavalCameraController
 var joystick_center := Vector2.ZERO
 var joystick_pointer := -1
 var joystick_radius := 110.0
@@ -11,9 +11,11 @@ var joystick_area: Panel
 var fire_button: Button
 var ability_buttons: Array[Button] = []
 var _last_viewport_size := Vector2.ZERO
+var _pinch_touches: Dictionary = {}
+var _pinch_distance := 0.0
 
 func _ready() -> void:
-	input_source = get_node(input_source_path)
+	camera = get_node(camera_path)
 	visible = PlatformService.mobile
 	_build_touch_hud()
 	get_viewport().size_changed.connect(_layout_touch_hud)
@@ -53,12 +55,10 @@ func _layout_touch_hud() -> void:
 	if root == null:
 		return
 	var viewport_size := get_viewport().get_visible_rect().size
-	var safe := PlatformService.safe_area()
-	if safe.size == Vector2i.ZERO:
-		safe = Rect2i(Vector2i.ZERO, Vector2i(viewport_size))
-	var left := maxf(24.0, float(safe.position.x) + 20.0)
-	var right_safe := maxf(0.0, viewport_size.x - float(safe.end.x))
-	var bottom_safe := maxf(0.0, viewport_size.y - float(safe.end.y))
+	var margins := PlatformService.safe_margins(viewport_size)
+	var left := maxf(24.0, margins.x + 20.0)
+	var right_safe := margins.z
+	var bottom_safe := margins.w
 	joystick_area.position = Vector2(left, viewport_size.y - bottom_safe - 244.0)
 	fire_button.position = Vector2(viewport_size.x - right_safe - 174.0, viewport_size.y - bottom_safe - 184.0)
 	for index in ability_buttons.size():
@@ -74,14 +74,37 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.pressed and event.position.x < get_viewport().get_visible_rect().size.x * 0.42:
 			joystick_pointer = event.index
 			joystick_center = event.position
+			camera.reset_pan()
+		elif event.pressed:
+			_pinch_touches[event.index] = event.position
+			_update_pinch_distance()
 		elif not event.pressed and event.index == joystick_pointer:
 			joystick_pointer = -1
-			input_source.set_touch_vector(Vector2.ZERO)
-	elif event is InputEventScreenDrag and event.index == joystick_pointer:
-		input_source.set_touch_vector((event.position - joystick_center) / joystick_radius)
+			camera.set_pan_input(Vector2.ZERO)
+		elif not event.pressed:
+			_pinch_touches.erase(event.index)
+			_update_pinch_distance()
+	elif event is InputEventScreenDrag:
+		if event.index == joystick_pointer:
+			camera.set_pan_input((event.position - joystick_center) / joystick_radius)
+		elif _pinch_touches.has(event.index):
+			_pinch_touches[event.index] = event.position
+			if _pinch_touches.size() == 2:
+				var points := _pinch_touches.values()
+				var distance := (points[0] as Vector2).distance_to(points[1] as Vector2)
+				if _pinch_distance > 0.0:
+					camera.adjust_zoom((distance - _pinch_distance) / 560.0)
+				_pinch_distance = distance
 
 func _pulse_action(action: StringName) -> void:
 	Input.action_press(action)
 	await get_tree().process_frame
 	Input.action_release(action)
+
+func _update_pinch_distance() -> void:
+	if _pinch_touches.size() != 2:
+		_pinch_distance = 0.0
+		return
+	var points := _pinch_touches.values()
+	_pinch_distance = (points[0] as Vector2).distance_to(points[1] as Vector2)
 

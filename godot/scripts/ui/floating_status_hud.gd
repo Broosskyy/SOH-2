@@ -15,6 +15,7 @@ var player_name: Label
 var hp_bar: ProgressBar
 var shield_bar: ProgressBar
 var _profile: ShipPresentationProfile
+var _panel_style: StyleBoxFlat
 
 func _ready() -> void:
 	_profile = target.get("presentation_profile") as ShipPresentationProfile
@@ -36,16 +37,16 @@ func _build_hud() -> void:
 	panel = PanelContainer.new()
 	panel.custom_minimum_size = Vector2(188, 58) if compact else Vector2(220, 66)
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var panel_style := StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.01, 0.055, 0.075, 0.78)
-	panel_style.border_color = Color(0.72, 0.57, 0.27, 0.72)
-	panel_style.set_border_width_all(1)
-	panel_style.set_corner_radius_all(5)
-	panel_style.content_margin_left = 8
-	panel_style.content_margin_right = 8
-	panel_style.content_margin_top = 4
-	panel_style.content_margin_bottom = 5
-	panel.add_theme_stylebox_override("panel", panel_style)
+	_panel_style = StyleBoxFlat.new()
+	_panel_style.bg_color = Color(0.01, 0.055, 0.075, 0.78)
+	_panel_style.border_color = Color(0.72, 0.57, 0.27, 0.72)
+	_panel_style.set_border_width_all(1)
+	_panel_style.set_corner_radius_all(5)
+	_panel_style.content_margin_left = 8
+	_panel_style.content_margin_right = 8
+	_panel_style.content_margin_top = 4
+	_panel_style.content_margin_bottom = 5
+	panel.add_theme_stylebox_override("panel", _panel_style)
 	var stack := VBoxContainer.new()
 	stack.add_theme_constant_override("separation", 2)
 	panel.add_child(stack)
@@ -85,9 +86,19 @@ func _process(_delta: float) -> void:
 	var desired := screen_position + _profile.nameplate_offset
 	desired -= Vector2(panel.size.x * 0.5, panel.size.y + _profile.ui_safe_gap)
 	var viewport_size := get_viewport().get_visible_rect().size
+	var safe_rect := PlatformService.safe_rect(viewport_size)
+	var inset := 8.0
 	panel.position = Vector2(
-		clampf(desired.x, 8.0, maxf(8.0, viewport_size.x - panel.size.x - 8.0)),
-		clampf(desired.y, 8.0, maxf(8.0, viewport_size.y - panel.size.y - 8.0))
+		clampf(
+			desired.x,
+			safe_rect.position.x + inset,
+			maxf(safe_rect.position.x + inset, safe_rect.end.x - panel.size.x - inset)
+		),
+		clampf(
+			desired.y,
+			safe_rect.position.y + inset,
+			maxf(safe_rect.position.y + inset, safe_rect.end.y - panel.size.y - inset)
+		)
 	)
 
 func set_status(name: String, hp: float, max_hp: float, shield: float, max_shield: float) -> void:
@@ -98,3 +109,9 @@ func set_status(name: String, hp: float, max_hp: float, shield: float, max_shiel
 	hp_bar.value = clampf(hp, 0.0, hp_bar.max_value)
 	shield_bar.max_value = maxf(1.0, max_shield)
 	shield_bar.value = clampf(shield, 0.0, shield_bar.max_value)
+
+func set_debug_bounds_visible(enabled: bool) -> void:
+	if _panel_style == null:
+		return
+	_panel_style.border_color = Color(1.0, 0.2, 0.85, 1.0) if enabled else Color(0.72, 0.57, 0.27, 0.72)
+	_panel_style.set_border_width_all(3 if enabled else 1)

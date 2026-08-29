@@ -2,15 +2,17 @@
 
 This directory is the Godot 4.7.2 Stable cross-platform migration client. Open
 `project.godot`, run `Main.tscn`, and use WASD/arrow keys to sail. Mouse wheel
-zooms. On touch devices the mobile control layer activates automatically.
+zooms. On touch devices, tap sets a destination, the left joystick pans the
+camera and pinch controls zoom.
 
 ## Current status
 
-- MIGRATED: X/Z ship movement, exact Kraken player visual, three fixed naval
-  camera profiles, bounded zoom, floating player name/HP/shield, quality
-  manager, debug overlay and Web/Windows export proof.
-- PARTIAL/PREPARED: touch actions, save repository, platform detection, shared
-  data, Android/iOS export paths and macro-first proxy world.
+- MIGRATED: X/Z ship movement, exact Kraken player visual, locked Perspective
+  Naval camera, bounded zoom, floating player name/HP/shield, hybrid touch
+  semantics, quality manager, debug overlay and Web/Windows export proof.
+- PARTIAL/PREPARED: authored island WebP presentation over proxy landmasses,
+  explicit Kraken LOD/texture strategy, save repository, shared data, Android
+  export-only and iOS readiness.
 - NOT YET MIGRATED: complete V20.3.2 combat, AI, maps, missions, economy and
   progression. See
   `../docs/godot-migration/V20_3_2_FEATURE_MIGRATION_MATRIX.md`.
@@ -24,5 +26,6 @@ The camera is intentionally not an orbit or third-person chase controller.
 enforce the shared 2.5D contract described in
 `../docs/GAMEPLAY_CAMERA_CONTRACT.md`.
 
-Debug builds use F1–F7 for overlay, eight-way heading, camera/quality cycling
-and presentation-anchor/forward/collision visualization.
+Debug builds use F1–F10 for overlay, eight-way heading, camera/quality cycling,
+presentation-anchor/forward/collision visualization, HUD/island bounds and
+performance details.

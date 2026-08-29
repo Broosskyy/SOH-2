@@ -45,6 +45,7 @@ next-env.d.ts
 /godot/build/*
 !/godot/build/.gdignore
 /artifacts/godot-g0.1/
+/artifacts/godot-g0.2/
 /godot/assets/ships/player/kraken/Kraken_ship_player_30k_Baked_*.png
 *.apk
 *.aab

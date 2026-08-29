@@ -9,11 +9,21 @@ const chrome =
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 const output =
   process.env.GODOT_WEB_SCREENSHOT ??
-  path.resolve("artifacts/godot-g0.1/web_runtime.png");
+  path.resolve("artifacts/godot-g0.2/web_runtime.png");
 const mobile = process.env.GODOT_WEB_MOBILE === "1";
+const width = parseDimension("GODOT_WEB_WIDTH", 1280);
+const height = parseDimension("GODOT_WEB_HEIGHT", 720);
 const port = 9300 + Math.floor(Math.random() * 500);
 const profile = await mkdtemp(path.join(os.tmpdir(), "abyssal-godot-web-"));
 await mkdir(path.dirname(output), { recursive: true });
+
+function parseDimension(name, fallback) {
+  const value = Number.parseInt(process.env[name] ?? `${fallback}`, 10);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`${name} must be a positive integer`);
+  }
+  return value;
+}
 
 const browser = spawn(
   chrome,
@@ -25,7 +35,7 @@ const browser = spawn(
     "--use-angle=swiftshader",
     `--remote-debugging-port=${port}`,
     `--user-data-dir=${profile}`,
-    "--window-size=1280,720",
+    `--window-size=${width},${height}`,
     "about:blank",
   ],
   { stdio: ["ignore", "ignore", "pipe"] },
@@ -97,6 +107,12 @@ function send(method, params = {}) {
 try {
   await send("Page.enable");
   await send("Runtime.enable");
+  await send("Emulation.setDeviceMetricsOverride", {
+    width,
+    height,
+    deviceScaleFactor: 1,
+    mobile,
+  });
   if (mobile) {
     await send("Emulation.setTouchEmulationEnabled", {
       enabled: true,
@@ -129,12 +145,47 @@ try {
     captureBeyondViewport: false,
   });
   await writeFile(output, Buffer.from(screenshot.data, "base64"));
+  const luminanceResult = await send("Runtime.evaluate", {
+    expression: `(async () => {
+      const image = new Image();
+      image.src = "data:image/png;base64,${screenshot.data}";
+      await image.decode();
+      const sampleWidth = Math.min(image.width, 256);
+      const sampleHeight = Math.min(image.height, 256);
+      const surface = document.createElement("canvas");
+      surface.width = sampleWidth;
+      surface.height = sampleHeight;
+      const context = surface.getContext("2d", { willReadFrequently: true });
+      context.drawImage(image, 0, 0, sampleWidth, sampleHeight);
+      const pixels = context.getImageData(0, 0, sampleWidth, sampleHeight).data;
+      let sum = 0;
+      let opaquePixels = 0;
+      for (let index = 0; index < pixels.length; index += 4) {
+        if (pixels[index + 3] === 0) continue;
+        sum += (0.2126 * pixels[index] + 0.7152 * pixels[index + 1] + 0.0722 * pixels[index + 2]) / 255;
+        opaquePixels += 1;
+      }
+      return { average: opaquePixels ? sum / opaquePixels : 0, sampledPixels: opaquePixels };
+    })()`,
+    awaitPromise: true,
+    returnByValue: true,
+  });
+  const luminance = luminanceResult.result.value;
+  const blackCapture = luminance.average <= 0.01;
   if (consoleErrors.length) {
     throw new Error(`Web runtime console errors:\n${consoleErrors.join("\n")}`);
+  }
+  if (blackCapture && !mobile) {
+    throw new Error(
+      `Desktop screenshot is effectively black (average luminance ${luminance.average.toFixed(6)})`,
+    );
   }
   console.log(`GODOT_WEB_RUNTIME_PASS ${url}`);
   console.log(`RUNTIME_STATE ${runtimeState.result.value}`);
   if (mobile) console.log(`CONSOLE ${JSON.stringify(consoleMessages)}`);
+  console.log(`SCREENSHOT_LUMINANCE ${JSON.stringify(luminance)}`);
+  console.log(`EVIDENCE_TIER ${mobile ? "EMULATED" : "VERIFIED"}`);
+  console.log(`CAPTURE_UNRELIABLE ${blackCapture && mobile}`);
   console.log(`SCREENSHOT ${output}`);
 } finally {
   socket.close();

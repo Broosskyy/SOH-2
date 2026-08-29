@@ -25,10 +25,11 @@ npm run validate:artifact
 
 ## Godot
 
-Öffne `godot/project.godot` mit Godot 4.7.2 Stable. G0.1 enthält Kraken-
-Spielerschiff, drei feste Naval-Kameraprofile, Floating HUD, Testwelt,
-Desktop-/Touchgrundlage und validierte Web-/Windows-Exports. Der vollständige
-V20.3.2-Port ist noch nicht behauptet.
+Öffne `godot/project.godot` mit Godot 4.7.2 Stable. G0.2 lockt Perspective
+Naval als Production-Kamera, Kraken- und Floating-HUD-Kalibrierung, hybrides
+Tap-/Kamera-Pan-Touch-Input, erste authored Island Presentations sowie
+validierte Web-/Windows- und Android-Exports. Der vollständige V20.3.2-Port ist
+noch nicht behauptet.
 
 Die Perspektive ist verbindlich: Schiffe spielen auf X/Z, die Kamera folgt aus
 einer festen schrägen Richtung und erlaubt Zoom, aber keine freie Orbit-, Ego-

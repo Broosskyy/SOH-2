@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/world.gd" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/ships/PlayerShip.tscn" id="2_ship"]
@@ -7,6 +7,10 @@
 [ext_resource type="Script" path="res://scripts/ui/floating_status_hud.gd" id="5_hud"]
 [ext_resource type="Script" path="res://scripts/debug/debug_overlay.gd" id="6_debug"]
 [ext_resource type="Script" path="res://scripts/debug/qa_capture.gd" id="7_capture"]
+[ext_resource type="Resource" path="res://data/kraken_presentation_profile.tres" id="8_profile"]
+[ext_resource type="Script" path="res://scripts/input/world_pick_input.gd" id="9_picker"]
+[ext_resource type="Texture2D" path="res://assets/world/islands/storm-ruins-island-v1.webp" id="10_small_island"]
+[ext_resource type="Texture2D" path="res://assets/world/islands/tropical-port-island-v1.webp" id="11_medium_island"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
 sky_top_color = Color(0.14, 0.48, 0.62, 1)
@@ -33,16 +37,16 @@ subdivide_width = 80
 subdivide_depth = 60
 
 [sub_resource type="StandardMaterial3D" id="OceanMaterial"]
-albedo_color = Color(0.012, 0.18, 0.27, 1)
-metallic = 0.12
-roughness = 0.36
+albedo_color = Color(0.008, 0.145, 0.235, 1)
+metallic = 0.18
+roughness = 0.3
 
 [sub_resource type="StandardMaterial3D" id="ShoreMaterial"]
-albedo_color = Color(0.34, 0.31, 0.19, 1)
+albedo_color = Color(0.25, 0.27, 0.2, 1)
 roughness = 0.92
 
 [sub_resource type="StandardMaterial3D" id="IslandMaterial"]
-albedo_color = Color(0.16, 0.31, 0.16, 1)
+albedo_color = Color(0.07, 0.19, 0.13, 1)
 roughness = 0.96
 
 [sub_resource type="StandardMaterial3D" id="RockMaterial"]
@@ -98,6 +102,17 @@ bottom_radius = 8.0
 height = 38.0
 radial_segments = 10
 
+[sub_resource type="BoxMesh" id="SmallIslandBoundsMesh"]
+size = Vector3(190, 70, 135)
+
+[sub_resource type="BoxMesh" id="MediumIslandBoundsMesh"]
+size = Vector3(330, 100, 220)
+
+[sub_resource type="StandardMaterial3D" id="BoundsMaterial"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.2, 0.85, 0.16)
+
 [node name="World" type="Node3D"]
 script = ExtResource("1_world")
 
@@ -134,6 +149,18 @@ scale = Vector3(1.2, 1, 0.78)
 mesh = SubResource("SmallIslandMesh")
 material_override = SubResource("IslandMaterial")
 
+[node name="AuthoredPresentation" type="Sprite3D" parent="Region_Aster/IslandGroup/SmallIsland"]
+position = Vector3(0, 42, 0)
+pixel_size = 0.17
+billboard = 1
+texture = ExtResource("10_small_island")
+
+[node name="PresentationBounds" type="MeshInstance3D" parent="Region_Aster/IslandGroup/SmallIsland" groups=["island_bounds"]]
+visible = false
+position = Vector3(0, 35, 0)
+mesh = SubResource("SmallIslandBoundsMesh")
+material_override = SubResource("BoundsMaterial")
+
 [node name="LocalProps" type="Node3D" parent="Region_Aster/IslandGroup/SmallIsland"]
 
 [node name="Rock" type="MeshInstance3D" parent="Region_Aster/IslandGroup/SmallIsland/LocalProps"]
@@ -157,6 +184,18 @@ position = Vector3(-8, 14, 0)
 scale = Vector3(1.18, 1, 0.72)
 mesh = SubResource("MediumIslandMesh")
 material_override = SubResource("IslandMaterial")
+
+[node name="AuthoredPresentation" type="Sprite3D" parent="Region_Aster/IslandGroup/MediumIsland"]
+position = Vector3(0, 58, 0)
+pixel_size = 0.27
+billboard = 1
+texture = ExtResource("11_medium_island")
+
+[node name="PresentationBounds" type="MeshInstance3D" parent="Region_Aster/IslandGroup/MediumIsland" groups=["island_bounds"]]
+visible = false
+position = Vector3(0, 50, 0)
+mesh = SubResource("MediumIslandBoundsMesh")
+material_override = SubResource("BoundsMaterial")
 
 [node name="POI_Harbor" type="Node3D" parent="Region_Aster/IslandGroup/MediumIsland"]
 position = Vector3(118, 4, 24)
@@ -186,9 +225,15 @@ position = Vector3(-58, 560, 360)
 current = true
 script = ExtResource("3_camera")
 target_path = NodePath("../PlayerShip")
+presentation_profile = ExtResource("8_profile")
 
 [node name="MobileControls" type="CanvasLayer" parent="."]
 script = ExtResource("4_mobile")
+camera_path = NodePath("../Camera")
+
+[node name="WorldPickInput" type="Node" parent="."]
+script = ExtResource("9_picker")
+camera_path = NodePath("../Camera")
 input_source_path = NodePath("../PlayerShip/InputSource")
 
 [node name="FloatingPlayerHUD" type="CanvasLayer" parent="."]
@@ -200,8 +245,15 @@ camera_path = NodePath("../Camera")
 script = ExtResource("6_debug")
 player_path = NodePath("../PlayerShip")
 camera_path = NodePath("../Camera")
+input_source_path = NodePath("../PlayerShip/InputSource")
+hud_path = NodePath("../FloatingPlayerHUD")
+world_path = NodePath("..")
 
 [node name="QACapture" type="Node" parent="."]
 script = ExtResource("7_capture")
 player_path = NodePath("../PlayerShip")
 camera_path = NodePath("../Camera")
+mobile_controls_path = NodePath("../MobileControls")
+small_island_path = NodePath("../Region_Aster/IslandGroup/SmallIsland")
+medium_island_path = NodePath("../Region_Aster/IslandGroup/MediumIsland")
+poi_path = NodePath("../Region_Aster/IslandGroup/MediumIsland/POI_Harbor")
