@@ -6,7 +6,7 @@ extends RefCounted
 enum Profile { DESKTOP, MOBILE_LANDSCAPE, MOBILE_PORTRAIT }
 
 const BUILD_LABEL := "G0.4-RUNTIME-FIX"
-const GIT_SHA := "02e99ea"
+const GIT_SHA := "97ba9ca"
 
 const RATIO_TOP_BAR_H := 0.092
 const RATIO_PROFILE_W := 0.14
