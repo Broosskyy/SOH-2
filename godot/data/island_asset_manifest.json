@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "milestone": "G0.3.3",
+  "policy": "GLB drop-in via IslandVisualRoot — procedural mesh is PROCEDURAL_FALLBACK only",
+  "families": [
+    {
+      "id": "tiny_palm_islet",
+      "size_class": "XS",
+      "shape_class": "TINY_PALM_ISLET",
+      "asset_status": "MISSING",
+      "visual_scene": "",
+      "scale": 1.0,
+      "waterline_offset": 0.0
+    },
+    {
+      "id": "glass_reef",
+      "size_class": "MEDIUM",
+      "shape_class": "CRESCENT_COVE",
+      "asset_status": "MISSING",
+      "visual_scene": "",
+      "scale": 1.0,
+      "waterline_offset": 0.0
+    },
+    {
+      "id": "harbor_aster",
+      "size_class": "LARGE",
+      "shape_class": "HARBOR",
+      "asset_status": "MISSING",
+      "visual_scene": "",
+      "scale": 1.0,
+      "waterline_offset": 0.0,
+      "harbor_sockets": ["dock_main", "tower", "warehouse"]
+    }
+  ]
+}

@@ -27,6 +27,8 @@ enum ShapeClass {
 	GENERIC,
 }
 
+enum AssetStatus { FINAL_ASSET, TEMP_PRODUCTION_SAFE, PROCEDURAL_FALLBACK, MISSING }
+
 @export_group("Identity")
 @export var island_id: String = ""
 @export var display_name: String = ""
@@ -35,6 +37,8 @@ enum ShapeClass {
 @export var size_class: SizeClass = SizeClass.MEDIUM
 @export var shape_class: ShapeClass = ShapeClass.GENERIC
 @export var world_position: Vector3 = Vector3.ZERO
+
+@export var asset_status: AssetStatus = AssetStatus.PROCEDURAL_FALLBACK
 
 @export_group("Visual")
 @export var visual_scene: PackedScene

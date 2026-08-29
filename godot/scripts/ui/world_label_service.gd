@@ -14,7 +14,21 @@ func register_anchor(anchor_id: String, anchor: Node3D, text: String, color: Col
 	var label := LABEL_SCENE.instantiate()
 	label.configure(text, color)
 	add_child(label)
-	_labels[anchor_id] = {"node": label, "anchor": anchor, "priority": _priority_for_id(anchor_id)}
+	_labels[anchor_id] = {"node": label, "anchor": anchor, "priority": _priority_for_id(anchor_id), "npc": false}
+
+func register_npc_anchor(
+		anchor_id: String,
+		anchor: Node3D,
+		text: String,
+		color: Color,
+		max_hp: float
+	) -> void:
+	if _labels.has(anchor_id):
+		return
+	var label := LABEL_SCENE.instantiate()
+	label.configure_npc(text, color, max_hp)
+	add_child(label)
+	_labels[anchor_id] = {"node": label, "anchor": anchor, "priority": _priority_for_id(anchor_id), "npc": true, "unit_id": anchor_id}
 
 func _process(_delta: float) -> void:
 	var camera := get_viewport().get_camera_3d()
@@ -36,6 +50,11 @@ func _process(_delta: float) -> void:
 			label.visible = false
 			continue
 		label.update_projection(camera, anchor.global_position)
+		if entry.get("npc", false) and label.has_method("update_hp"):
+			var unit := _resolve_unit(str(entry.get("unit_id", "")))
+			if unit != null and unit.get("health") != null:
+				var health: HealthComponent = unit.health
+				label.update_hp(health.current_health, health.max_health)
 		if distance > DECLUTTER_DISTANCE and _overlaps_existing(label, occupied):
 			label.visible = false
 			continue
@@ -57,3 +76,9 @@ func _overlaps_existing(label: Control, occupied: Array[Rect2]) -> bool:
 		if rect.intersects(other):
 			return true
 	return false
+
+func _resolve_unit(unit_id: String) -> Node:
+	for npc in get_tree().get_nodes_in_group("npc_ships"):
+		if npc is ShipEntity and npc.unit_id() == unit_id:
+			return npc
+	return null

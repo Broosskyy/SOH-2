@@ -4,14 +4,11 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("G0.3.2 build marker and version", async () => {
-  const project = await read("godot/project.godot");
-  const overlay = await read("godot/scripts/debug/debug_overlay.gd");
+test("G0.3.2 build marker and version (historical)", async () => {
+  const report = await read("docs/godot-migration/G0.3.2_REPORT.md");
   const capture = await read("godot/scripts/debug/qa_capture.gd");
-  assert.match(project, /config\/version="0\.3\.2"/);
-  assert.match(overlay, /BUILD: G0\.3\.2/);
-  assert.match(capture, /G0\.3\.2/);
-  assert.match(capture, /artifacts\/godot-g0\.3\.2/);
+  assert.match(report, /G0\.3\.2/);
+  assert.match(capture, /artifacts\/godot-g0\.3\.3/);
 });
 
 test("diagnostic overlay gated on diag query flag for Web", async () => {
@@ -38,12 +35,12 @@ test("HudLayout responsive scaling contract", async () => {
   const floating = await read("godot/scripts/ui/floating_status_hud.gd");
   assert.match(layout, /class_name HudLayout/);
   assert.match(layout, /MIN_TOUCH_PX/);
-  assert.match(layout, /scale_factor/);
-  assert.match(hud, /HudLayout\.scale_factor/);
+  assert.match(layout, /semantic_scale/);
+  assert.match(hud, /HudLayout\.semantic_scale/);
   assert.match(hud, /_nav_row\.visible = not mobile/);
-  assert.match(hud, /_action_cluster\.visible = not mobile/);
-  assert.match(minimap, /HudLayout\.scale_factor/);
-  assert.match(floating, /HudLayout\.scale_factor/);
+  assert.match(hud, /_mobile_combat_cluster/);
+  assert.match(minimap, /HudLayout\.semantic_scale/);
+  assert.match(floating, /HudLayout\.semantic_scale/);
 });
 
 test("single mobile control owner — no combat buttons in mobile layer", async () => {
@@ -73,7 +70,7 @@ test("harbor visual readability", async () => {
 
 test("island visual scale calibrated for composition", async () => {
   const factory = await read("godot/scripts/region/aster_region_factory.gd");
-  assert.match(factory, /visual_scale = 0\.58/);
+  assert.match(factory, /WorldScaleProfile\.island_visual_scale/);
 });
 
 test("Mobile Web shadow regression remains", async () => {

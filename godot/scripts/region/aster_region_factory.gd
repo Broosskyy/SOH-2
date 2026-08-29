@@ -1,14 +1,14 @@
 class_name AsterRegionFactory
 extends RefCounted
 
-## Azurwacht (aster_g03) — positions and radii recovered from V20.3.2 `gameData.ts` / `catalog.v1.json`.
+## Azurwacht — V20.3.2 catalog positions with G0.3.3 composition calibration.
 
 static func create() -> RegionDefinition:
 	var region := RegionDefinition.new()
 	region.region_id = "aster_g03"
 	region.display_name = "Azurwacht"
 	region.world_bounds = Vector2(3000, 2200)
-	region.player_spawn = Vector3.ZERO
+	region.player_spawn = WorldScaleProfile.gameplay_spawn_corridor()
 
 	region.islands = [
 		_island(
@@ -102,20 +102,33 @@ static func create() -> RegionDefinition:
 		),
 	]
 	region.pois = [
-		_poi("storm_beacon", "Sturmwacht", PoiDefinition.PoiType.LANDMARK, _catalog(1540, 650)),
+		_poi("storm_beacon", "Sturmwacht", PoiDefinition.PoiType.LANDMARK, _catalog(1480, 780)),
 		_poi("loot_crate_a", "Treibgut", PoiDefinition.PoiType.LOOT, _catalog(680, 480)),
 		_poi("loot_crate_b", "Treibgut", PoiDefinition.PoiType.LOOT, _catalog(1920, 820)),
+		_poi("wreck_field", "Wrack", PoiDefinition.PoiType.LANDMARK, _catalog(1120, 520)),
+		_poi("nav_buoy_lane", "Leuchtfeuer", PoiDefinition.PoiType.LANDMARK, _catalog(920, 760)),
 	]
 	region.npc_spawn_groups = [
-		_npc_group("hostile_raider_a", "raider", "Scherben-Plünderer", 1, UnitFaction.Allegiance.HOSTILE, _catalog(1050, 1040), Color(0.82, 0.24, 0.18)),
-		_npc_group("hostile_scout", "scout", "Nox-Kundschafter", 2, UnitFaction.Allegiance.HOSTILE, _catalog(1540, 650), Color(0.72, 0.22, 0.2)),
-		_npc_group("neutral_escort", "escort", "Kupfer-Eskorte", 3, UnitFaction.Allegiance.FRIENDLY, _catalog(2050, 550), Color(0.35, 0.78, 0.92)),
+		_npc_group("hostile_raider_a", "raider", "Scherben-Plünderer", 1, UnitFaction.Allegiance.HOSTILE, _catalog(1180, 920), Color(0.82, 0.24, 0.18)),
+		_npc_group("hostile_scout", "scout", "Nox-Kundschafter", 2, UnitFaction.Allegiance.HOSTILE, _catalog(1380, 720), Color(0.72, 0.22, 0.2)),
+		_npc_group("neutral_escort", "escort", "Kupfer-Eskorte", 3, UnitFaction.Allegiance.FRIENDLY, _catalog(1720, 680), Color(0.35, 0.78, 0.92)),
 		_npc_group("hostile_raider_b", "raider", "Scherben-Plünderer", 1, UnitFaction.Allegiance.HOSTILE, _catalog(2450, 1450), Color(0.78, 0.2, 0.16)),
 	]
+	region.set_meta("world_props", _world_props())
 	return region
 
 static func _catalog(x: float, y: float) -> Vector3:
 	return Vector3(x - 1500.0, 0.0, y - 1100.0)
+
+static func _world_props() -> Array:
+	return [
+		{"kind": WorldPropBuilder.PropKind.BUOY, "position": _catalog(760, 820), "seed": 1},
+		{"kind": WorldPropBuilder.PropKind.BUOY, "position": _catalog(540, 640), "seed": 2},
+		{"kind": WorldPropBuilder.PropKind.WRECK, "position": _catalog(1120, 520), "seed": 3},
+		{"kind": WorldPropBuilder.PropKind.BARREL, "position": _catalog(980, 610), "seed": 4},
+		{"kind": WorldPropBuilder.PropKind.CRATE, "position": _catalog(680, 480), "seed": 5},
+		{"kind": WorldPropBuilder.PropKind.BEACON, "position": _catalog(920, 760), "seed": 6},
+	]
 
 static func _island(
 		id: String,
@@ -140,8 +153,9 @@ static func _island(
 	profile.gameplay_radius_z = radius_z
 	profile.navigation_block_radius = maxf(radius_x, radius_z) * 0.92
 	profile.world_label_height = label_height
-	profile.visual_scale = 0.58
+	profile.visual_scale = WorldScaleProfile.island_visual_scale(size_class)
 	profile.use_proxy_geometry = true
+	profile.asset_status = IslandPresentationProfile.AssetStatus.PROCEDURAL_FALLBACK
 	profile.harbor_anchor = Vector3(0, 0, radius_z * 0.42) if shape_class == IslandPresentationProfile.ShapeClass.HARBOR else Vector3.ZERO
 	return profile
 
@@ -181,7 +195,7 @@ static func _npc_group(
 	definition.max_health = 300.0 + level * 110.0
 	definition.max_speed = 34.0 + level * 4.0
 	definition.visual_color = color
-	definition.behaviour = _patrol_profile(_patrol_ring(spawn_center, 120.0, 3))
+	definition.behaviour = _patrol_profile(_patrol_ring(spawn_center, WorldScaleProfile.patrol_radius_for_npc(), 3))
 	var group := NpcSpawnGroup.new()
 	group.group_id = group_id
 	group.npc_definition = definition

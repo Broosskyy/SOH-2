@@ -21,10 +21,10 @@ func _ready() -> void:
 	apply_presentation_profile()
 	if npc_definition != null:
 		NpcShipVisualBuilder.build_into(visual_root_node, npc_definition)
-		visual_root.scale = Vector3.ONE * 0.42
+		visual_root.scale = Vector3.ONE * WorldScaleProfile.NPC_VISUAL_ROOT_SCALE
 		visual_root.position.y = 2.5
 		if ui_anchor != null:
-			ui_anchor.position.y = 24.0
+			ui_anchor.position.y = WorldScaleProfile.NPC_UI_ANCHOR_Y
 	if wake != null:
 		wake.follow_target = self
 	add_to_group("npc_ships")
@@ -89,12 +89,11 @@ func level_label() -> String:
 
 func _register_world_label() -> void:
 	var service := get_tree().get_first_node_in_group("world_label_service") as Node
-	if service == null or identity == null:
+	if service == null or identity == null or npc_definition == null:
 		return
-	var color := Color(0.45, 0.86, 1.0) if faction() == UnitFaction.Allegiance.FRIENDLY else Color(1.0, 0.45, 0.32)
-	var label_text := display_name()
-	if npc_definition != null and npc_definition.level > 0:
-		label_text = "%s  LV %d" % [display_name(), npc_definition.level]
-	service.call("register_anchor", unit_id(), ui_anchor, label_text, color)
+	var hostile := faction() == UnitFaction.Allegiance.HOSTILE
+	var color := Color(1.0, 0.45, 0.32) if hostile else Color(0.45, 0.86, 1.0)
+	var label_text := "%s  LV %d" % [display_name(), npc_definition.level]
+	service.call("register_npc_anchor", unit_id(), ui_anchor, label_text, color, npc_definition.max_health)
 
 const NavalNavigation = preload("res://scripts/navigation/naval_navigation.gd")

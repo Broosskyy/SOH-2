@@ -47,9 +47,9 @@ func _layout_touch_hud() -> void:
 	if root == null:
 		return
 	var viewport_size := get_viewport().get_visible_rect().size
-	var scale := HudLayout.scale_factor(viewport_size)
+	var scale := HudLayout.semantic_scale(viewport_size, HudLayout.Semantic.NAVIGATION)
 	var margins := PlatformService.safe_margins(viewport_size)
-	var size := HudLayout.touch_size(viewport_size, 200.0)
+	var size := HudLayout.touch_size(viewport_size, 180.0, HudLayout.Semantic.NAVIGATION)
 	joystick_area.custom_minimum_size = Vector2(size, size)
 	joystick_area.size = Vector2(size, size)
 	joystick_style_radius(joystick_area, size * 0.5)
@@ -58,7 +58,7 @@ func _layout_touch_hud() -> void:
 		viewport_size.y - margins.w - size - 12.0
 	)
 	joystick_radius = size * 0.42
-	joystick_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 11.0))
+	joystick_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 10.0, HudLayout.Semantic.NAVIGATION))
 	joystick_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 func joystick_style_radius(panel: Panel, radius: float) -> void:

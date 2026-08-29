@@ -12,8 +12,11 @@ extends CanvasLayer
 var _root: Control
 var _top_bar: PanelContainer
 var _mission_panel: PanelContainer
+var _target_panel: PanelContainer
 var _action_cluster: Control
+var _mobile_combat_cluster: Control
 var _nav_row: HBoxContainer
+var _menu_button: Button
 var _hp_bar: ProgressBar
 var _shield_bar: ProgressBar
 var _gold_label: Label
@@ -24,16 +27,22 @@ var _mission_progress: ProgressBar
 var _region_label: Label
 var _captain_name: Label
 var _captain_level: Label
+var _target_name: Label
+var _target_level: Label
+var _target_hp: ProgressBar
 
 func _ready() -> void:
 	layer = 5
 	_build_layout()
 	_refresh_status()
+	TargetingSystem.target_changed.connect(func(_t): _refresh_target())
+	TargetingSystem.target_cleared.connect(func(): _refresh_target())
 
 func _process(_delta: float) -> void:
 	_apply_responsive_layout()
 	if Engine.get_frames_drawn() % 15 == 0:
 		_refresh_status()
+		_refresh_target()
 
 func _build_layout() -> void:
 	_root = Control.new()
@@ -43,13 +52,12 @@ func _build_layout() -> void:
 	_top_bar = _make_panel()
 	_root.add_child(_top_bar)
 	var top_row := HBoxContainer.new()
-	top_row.add_theme_constant_override("separation", 10)
+	top_row.add_theme_constant_override("separation", 8)
 	_top_bar.add_child(top_row)
-	var captain := _make_captain_chip()
-	top_row.add_child(captain)
+	top_row.add_child(_make_captain_chip())
 	var bars := VBoxContainer.new()
 	bars.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	bars.add_theme_constant_override("separation", 5)
+	bars.add_theme_constant_override("separation", 4)
 	_hp_bar = _make_bar(Color(0.78, 0.22, 0.2))
 	_shield_bar = _make_bar(Color(0.28, 0.72, 0.95))
 	bars.add_child(_wrap_labeled_bar("RUMPF", _hp_bar))
@@ -58,16 +66,21 @@ func _build_layout() -> void:
 	_nav_row = _make_nav_buttons()
 	top_row.add_child(_nav_row)
 	var currency := VBoxContainer.new()
-	currency.add_theme_constant_override("separation", 3)
+	currency.add_theme_constant_override("separation", 2)
 	_gold_label = _make_currency_label("◆ 0")
 	_pearl_label = _make_currency_label("◇ 0")
 	currency.add_child(_gold_label)
 	currency.add_child(_pearl_label)
 	top_row.add_child(currency)
+	_menu_button = Button.new()
+	_menu_button.text = "☰"
+	_menu_button.disabled = true
+	_menu_button.tooltip_text = "Menü (G0.4+)"
+	top_row.add_child(_menu_button)
 	_mission_panel = _make_panel()
 	_root.add_child(_mission_panel)
 	var mission_box := VBoxContainer.new()
-	mission_box.add_theme_constant_override("separation", 4)
+	mission_box.add_theme_constant_override("separation", 3)
 	_mission_panel.add_child(mission_box)
 	_mission_heading = Label.new()
 	_mission_heading.text = "AKTIVE MISSION"
@@ -81,41 +94,43 @@ func _build_layout() -> void:
 	_mission_progress.max_value = 1.0
 	_mission_progress.value = 0.35
 	mission_box.add_child(_mission_progress)
-	_action_cluster = _build_action_cluster()
+	_target_panel = _make_panel()
+	_target_panel.visible = false
+	_root.add_child(_target_panel)
+	var target_box := VBoxContainer.new()
+	target_box.add_theme_constant_override("separation", 2)
+	_target_panel.add_child(target_box)
+	var target_heading := Label.new()
+	target_heading.text = "ZIEL"
+	target_heading.add_theme_color_override("font_color", Color(0.82, 0.62, 0.38))
+	target_box.add_child(target_heading)
+	_target_name = Label.new()
+	_target_name.add_theme_color_override("font_color", Color(0.95, 0.72, 0.58))
+	target_box.add_child(_target_name)
+	_target_level = Label.new()
+	_target_level.add_theme_color_override("font_color", Color(0.78, 0.72, 0.58))
+	target_box.add_child(_target_level)
+	_target_hp = _make_bar(Color(0.92, 0.28, 0.22))
+	target_box.add_child(_target_hp)
+	_action_cluster = _build_action_cluster("Desktop")
 	_root.add_child(_action_cluster)
+	_mobile_combat_cluster = _build_action_cluster("Mobile")
+	_root.add_child(_mobile_combat_cluster)
 	_region_label = Label.new()
-	_region_label.text = "1 · Azurwacht"
+	_region_label.text = "1-A · Azurwacht"
 	_region_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_region_label.add_theme_color_override("font_color", Color(0.86, 0.78, 0.58))
 	_root.add_child(_region_label)
 
-func _make_panel() -> PanelContainer:
-	var panel := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.02, 0.06, 0.08, 0.86)
-	style.border_color = Color(0.72, 0.57, 0.27, 0.78)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(5)
-	style.content_margin_left = 10
-	style.content_margin_right = 10
-	style.content_margin_top = 7
-	style.content_margin_bottom = 7
-	panel.add_theme_stylebox_override("panel", style)
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return panel
-
 func _make_captain_chip() -> PanelContainer:
 	var panel := _make_panel()
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", 6)
 	panel.add_child(row)
 	var mark := Label.new()
 	mark.text = "AD"
-	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	mark.add_theme_color_override("font_color", Color(0.92, 0.76, 0.38))
 	row.add_child(mark)
-	mark.name = "Mark"
 	var copy := VBoxContainer.new()
 	_captain_name = Label.new()
 	_captain_name.text = str(GameState.save_data.get("playerName", "Captain Rowan")).to_upper()
@@ -128,14 +143,30 @@ func _make_captain_chip() -> PanelContainer:
 	row.add_child(copy)
 	return panel
 
+func _make_panel() -> PanelContainer:
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.06, 0.08, 0.84)
+	style.border_color = Color(0.72, 0.57, 0.27, 0.78)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(5)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	panel.add_theme_stylebox_override("panel", style)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return panel
+
 func _make_nav_buttons() -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 5)
+	row.add_theme_constant_override("separation", 4)
 	for entry in [
 		["⚓", "WERFT", false],
 		["✦", "MISSION", true],
 		["◎", "SEEKARTE", false],
 		["◆", "GESCHÄFT", false],
+		["✧", "EREIGNIS", false],
 	]:
 		row.add_child(_make_nav_button(entry[0], entry[1], entry[2]))
 	return row
@@ -171,12 +202,11 @@ func _make_bar(color: Color) -> ProgressBar:
 
 func _wrap_labeled_bar(title: String, bar: ProgressBar) -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", 6)
 	var label := Label.new()
 	label.text = title
 	label.add_theme_color_override("font_color", Color(0.78, 0.72, 0.58))
 	row.add_child(label)
-	label.name = title
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(bar)
 	return row
@@ -188,24 +218,25 @@ func _make_currency_label(text: String) -> Label:
 	label.add_theme_color_override("font_color", Color(0.92, 0.82, 0.48))
 	return label
 
-func _build_action_cluster() -> Control:
+func _build_action_cluster(suffix: String) -> Control:
 	var cluster := Control.new()
+	cluster.name = "CombatCluster%s" % suffix
 	cluster.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fire := Button.new()
-	fire.text = "FEUER\nZIEL WÄHLEN"
+	fire.text = "FEUER"
 	fire.disabled = true
 	fire.name = "FireButton"
 	var fire_style := StyleBoxFlat.new()
 	fire_style.bg_color = Color(0.45, 0.18, 0.1, 0.55)
 	fire_style.border_color = Color(0.72, 0.48, 0.22, 0.45)
 	fire_style.set_border_width_all(2)
-	fire_style.set_corner_radius_all(48)
+	fire_style.set_corner_radius_all(40)
 	fire.add_theme_stylebox_override("disabled", fire_style)
 	fire.add_theme_color_override("font_disabled_color", Color(0.62, 0.58, 0.54))
 	cluster.add_child(fire)
 	for index in 3:
 		var ability := Button.new()
-		ability.text = str(3 - index)
+		ability.text = str(index + 1)
 		ability.disabled = true
 		ability.name = "Ability%d" % index
 		cluster.add_child(ability)
@@ -215,46 +246,59 @@ func _apply_responsive_layout() -> void:
 	var viewport := get_viewport().get_visible_rect().size
 	var safe := PlatformService.safe_rect(viewport)
 	var mobile := HudLayout.is_mobile_layout(viewport)
-	var scale := HudLayout.scale_factor(viewport)
+	var status_scale := HudLayout.semantic_scale(viewport, HudLayout.Semantic.PLAYER_STATUS)
+	var mission_scale := HudLayout.semantic_scale(viewport, HudLayout.Semantic.MISSION)
 	var margin := HudLayout.panel_margin(viewport)
-	var top_height := 64.0 * scale
+	var top_height := 58.0 * status_scale
 	_top_bar.position = Vector2(safe.position.x + margin, safe.position.y + margin)
 	_top_bar.size = Vector2(safe.size.x, top_height)
 	_top_bar.custom_minimum_size = Vector2(safe.size.x, top_height)
-	_mission_panel.position = Vector2(safe.position.x + margin, safe.position.y + margin + top_height + 8.0)
-	_mission_panel.custom_minimum_size = Vector2(280.0 * scale if not mobile else 240.0 * scale, 72.0 * scale)
+	_mission_panel.position = Vector2(safe.position.x + margin, safe.position.y + margin + top_height + 6.0)
+	_mission_panel.custom_minimum_size = Vector2(220.0 * mission_scale, 64.0 * mission_scale)
+	_target_panel.position = Vector2(safe.position.x + safe.size.x * 0.5 - 90.0 * mission_scale, safe.position.y + margin + top_height + 6.0)
+	_target_panel.custom_minimum_size = Vector2(180.0 * mission_scale, 58.0 * mission_scale)
 	_nav_row.visible = not mobile
+	_menu_button.visible = mobile
 	_action_cluster.visible = not mobile
-	_region_label.visible = not mobile
-	if not mobile:
-		var fire := _action_cluster.get_node_or_null("FireButton") as Button
-		if fire != null:
-			var fire_size := HudLayout.touch_size(viewport, 92.0)
-			fire.custom_minimum_size = Vector2(fire_size, fire_size)
-			fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0))
-			fire.position = Vector2.ZERO
-		for index in 3:
-			var ability := _action_cluster.get_node_or_null("Ability%d" % index) as Button
-			if ability != null:
-				var ability_size := HudLayout.touch_size(viewport, 42.0)
-				ability.custom_minimum_size = Vector2(ability_size, ability_size)
-				ability.position = Vector2(-58.0 * scale + index * 50.0 * scale, -52.0 * scale)
-		_action_cluster.position = Vector2(safe.end.x - 110.0 * scale, safe.end.y - 110.0 * scale)
-		_region_label.position = Vector2(viewport.x * 0.5 - 80.0 * scale, safe.end.y - 32.0 * scale)
-		_region_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0))
-	_captain_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 13.0))
-	_captain_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0))
-	_mission_heading.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0))
-	_mission_title.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 14.0))
-	_gold_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0))
-	_pearl_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0))
-	_hp_bar.custom_minimum_size = Vector2(140.0 * scale, 10.0 * scale)
-	_shield_bar.custom_minimum_size = Vector2(140.0 * scale, 8.0 * scale)
-	_mission_progress.custom_minimum_size.y = 10.0 * scale
+	_mobile_combat_cluster.visible = mobile
+	_region_label.visible = true
+	_captain_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0, HudLayout.Semantic.PLAYER_STATUS))
+	_captain_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
+	_mission_heading.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.MISSION))
+	_mission_title.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 13.0, HudLayout.Semantic.MISSION))
+	_gold_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.PLAYER_STATUS))
+	_pearl_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.PLAYER_STATUS))
+	_hp_bar.custom_minimum_size = Vector2(120.0 * status_scale, 8.0 * status_scale)
+	_shield_bar.custom_minimum_size = Vector2(120.0 * status_scale, 6.0 * status_scale)
+	_mission_progress.custom_minimum_size.y = 8.0 * mission_scale
+	_target_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0, HudLayout.Semantic.TARGET_STATUS))
+	_target_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.TARGET_STATUS))
+	_target_hp.custom_minimum_size.y = 7.0 * mission_scale
 	for nav_button in _nav_row.get_children():
 		if nav_button is Button:
-			nav_button.custom_minimum_size = Vector2(58.0 * scale, 50.0 * scale)
-			nav_button.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0))
+			nav_button.custom_minimum_size = Vector2(52.0 * status_scale, 46.0 * status_scale)
+			nav_button.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 8.0, HudLayout.Semantic.NAVIGATION))
+	_layout_combat_cluster(_action_cluster, viewport, safe, false)
+	_layout_combat_cluster(_mobile_combat_cluster, viewport, safe, true)
+	_region_label.position = Vector2(viewport.x * 0.5 - 70.0 * status_scale, safe.end.y - 28.0 * status_scale)
+	_region_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.REGION))
+
+func _layout_combat_cluster(cluster: Control, viewport: Vector2, safe: Rect2, mobile: bool) -> void:
+	if not cluster.visible:
+		return
+	var fire := cluster.get_node_or_null("FireButton") as Button
+	if fire != null:
+		var fire_size := HudLayout.touch_size(viewport, 72.0 if mobile else 88.0, HudLayout.Semantic.PRIMARY_ACTION)
+		fire.custom_minimum_size = Vector2(fire_size, fire_size)
+		fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.PRIMARY_ACTION))
+		fire.position = Vector2.ZERO
+	for index in 3:
+		var ability := cluster.get_node_or_null("Ability%d" % index) as Button
+		if ability != null:
+			var ability_size := HudLayout.touch_size(viewport, 36.0 if mobile else 40.0, HudLayout.Semantic.SECONDARY_ACTION)
+			ability.custom_minimum_size = Vector2(ability_size, ability_size)
+			ability.position = Vector2(-48.0 + index * 44.0, -44.0)
+	cluster.position = Vector2(safe.end.x - (78.0 if mobile else 100.0), safe.end.y - (78.0 if mobile else 100.0))
 
 func _refresh_status() -> void:
 	var ship_id := str(GameState.save_data.get("shipId", "sovereign"))
@@ -268,7 +312,23 @@ func _refresh_status() -> void:
 	_gold_label.text = "◆ %s" % _format_number(int(GameState.save_data.get("gold", 5010)))
 	_pearl_label.text = "◇ %d" % int(GameState.save_data.get("pearls", 94))
 	if region_runtime != null and region_runtime.region_definition != null:
-		_region_label.text = "1 · %s" % region_runtime.region_definition.display_name
+		_region_label.text = "1-A · %s" % region_runtime.region_definition.display_name
+
+func _refresh_target() -> void:
+	var target := TargetingSystem.current_target
+	if target == null or not target is ShipEntity:
+		_target_panel.visible = false
+		return
+	var ship := target as ShipEntity
+	_target_panel.visible = true
+	_target_name.text = ship.display_name().to_upper()
+	if ship is NpcShip and (ship as NpcShip).npc_definition != null:
+		_target_level.text = "LV %d" % (ship as NpcShip).npc_definition.level
+	else:
+		_target_level.text = ""
+	if ship.health != null:
+		_target_hp.max_value = ship.health.max_health
+		_target_hp.value = ship.health.current_health
 
 func _format_number(value: int) -> String:
 	if value >= 1000:

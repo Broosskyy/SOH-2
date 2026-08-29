@@ -76,6 +76,32 @@ func _build_region() -> void:
 	_spawn_poi_markers()
 	if npc_spawner != null and npc_spawner.has_method("spawn_groups"):
 		active_npcs = npc_spawner.call("spawn_groups", region_definition.npc_spawn_groups, navigation_boundaries())
+	_spawn_world_props()
+	_apply_player_spawn.call_deferred()
+
+func _apply_player_spawn() -> void:
+	if region_definition == null:
+		return
+	var player := get_tree().get_first_node_in_group("player_ship") as Node3D
+	if player == null:
+		return
+	player.global_position = region_definition.player_spawn
+
+func _spawn_world_props() -> void:
+	if region_definition == null or not region_definition.has_meta("world_props"):
+		return
+	var props: Array = region_definition.get_meta("world_props")
+	for entry in props:
+		if entry is Dictionary:
+			var prop_root := Node3D.new()
+			prop_root.name = "prop_%s" % str(entry.get("seed", 0))
+			prop_root.position = entry.get("position", Vector3.ZERO)
+			add_child(prop_root)
+			WorldPropBuilder.build_into(
+				prop_root,
+				entry.get("kind", WorldPropBuilder.PropKind.BUOY),
+				int(entry.get("seed", 0))
+			)
 
 func _catalog_to_world(catalog_position: Vector3) -> Vector3:
 	return Vector3(catalog_position.x - 1500.0, 0.0, catalog_position.z - 1100.0)

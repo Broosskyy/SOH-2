@@ -34,7 +34,7 @@ func _ready() -> void:
 		return
 	layer = 100
 	label = Label.new()
-	label.position = Vector2(12, 12)
+	label.position = Vector2(12, get_viewport().get_visible_rect().size.y - 280)
 	label.add_theme_font_size_override("font_size", 14)
 	label.add_theme_color_override("font_color", Color(0.82, 0.96, 1.0))
 	label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
@@ -50,8 +50,8 @@ func _process(_delta: float) -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	var safe := PlatformService.safe_rect(viewport_size)
 	var lines := [
-		"BUILD: G0.3.2",
-		"MILESTONE: MOBILE TARGET PRESENTATION",
+		"BUILD: G0.3.3",
+		"MILESTONE: FULL PRESENTATION PARITY",
 		"REFERENCE: V20.3.2",
 		"ENGINE: Godot %s" % Engine.get_version_info().get("string", "unknown"),
 		"RENDERER: %s" % renderer,
