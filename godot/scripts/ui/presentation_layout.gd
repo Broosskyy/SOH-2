@@ -17,7 +17,7 @@ enum Zone {
 }
 
 const BUILD_LABEL := "G0.5.2-NATIVE-RESPONSIVE-HUD"
-const GIT_SHA := "pending"
+const GIT_SHA := "1030cfe"
 
 static func zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
 	var area := ResponsiveHudMetrics.safe_rect(viewport)
