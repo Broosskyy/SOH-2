@@ -50,7 +50,7 @@ func _process(_delta: float) -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	var safe := PlatformService.safe_rect(viewport_size)
 	var lines := [
-		"BUILD: G0.5.2-NATIVE-RESPONSIVE-HUD",
+		"BUILD: G0.5.3-WEB-CANVAS-RECOVERY",
 		"MILESTONE: MOBILE RUNTIME HUD REPAIR",
 		"REFERENCE: V20.3.2",
 		"ENGINE: Godot %s" % Engine.get_version_info().get("string", "unknown"),

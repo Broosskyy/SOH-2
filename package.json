@@ -21,6 +21,7 @@
     "export:godot:web": "node scripts/godot-web-export.mjs",
     "serve:godot:web": "node scripts/godot-web-serve.mjs",
     "qa:godot:web": "node scripts/godot-web-runtime-qa.mjs",
+    "qa:godot:web:canvas": "node scripts/godot-web-canvas-qa.mjs",
     "qa:godot:web:matrix": "node scripts/godot-web-runtime-matrix.mjs",
     "qa:godot:web:breakdown": "node scripts/godot-web-build-breakdown.mjs",
     "qa:godot:windows": "node scripts/godot-windows-smoke.mjs",

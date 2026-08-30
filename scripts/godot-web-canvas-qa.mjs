@@ -7,15 +7,12 @@ const url = process.env.GODOT_WEB_URL ?? "http://127.0.0.1:8061/index.html";
 const chrome =
   process.env.CHROME_PATH ??
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
-const output =
-  process.env.GODOT_WEB_SCREENSHOT ??
-  path.resolve("artifacts/godot-g0.2/web_runtime.png");
 const mobile = process.env.GODOT_WEB_MOBILE === "1";
-const width = parseDimension("GODOT_WEB_WIDTH", 1280);
-const height = parseDimension("GODOT_WEB_HEIGHT", 720);
+const width = parseDimension("GODOT_WEB_WIDTH", 915);
+const height = parseDimension("GODOT_WEB_HEIGHT", 412);
+const minCoverage = Number.parseFloat(process.env.GODOT_WEB_MIN_COVERAGE ?? "90");
 const port = 9300 + Math.floor(Math.random() * 500);
-const profile = await mkdtemp(path.join(os.tmpdir(), "abyssal-godot-web-"));
-await mkdir(path.dirname(output), { recursive: true });
+const profile = await mkdtemp(path.join(os.tmpdir(), "abyssal-godot-canvas-"));
 
 function parseDimension(name, fallback) {
   const value = Number.parseInt(process.env[name] ?? `${fallback}`, 10);
@@ -72,7 +69,6 @@ await new Promise((resolve, reject) => {
 let sequence = 0;
 const pending = new Map();
 const consoleErrors = [];
-const consoleMessages = [];
 socket.addEventListener("message", (event) => {
   const message = JSON.parse(event.data);
   if (message.id && pending.has(message.id)) {
@@ -85,14 +81,10 @@ socket.addEventListener("message", (event) => {
   if (message.method === "Runtime.exceptionThrown") {
     consoleErrors.push(message.params.exceptionDetails.text);
   }
-  if (
-    message.method === "Runtime.consoleAPICalled"
-  ) {
-    const text = message.params.args
-      .map((argument) => argument.value ?? argument.description)
-      .join(" ");
-    consoleMessages.push(`${message.params.type}: ${text}`);
-    if (message.params.type === "error") consoleErrors.push(text);
+  if (message.method === "Runtime.consoleAPICalled" && message.params.type === "error") {
+    consoleErrors.push(
+      message.params.args.map((argument) => argument.value ?? argument.description).join(" "),
+    );
   }
 });
 
@@ -135,85 +127,64 @@ try {
   }
   if (!booted) throw new Error("Godot splash did not clear within 30 seconds");
   await sleep(1500);
-  const canvasMetrics = await send("Runtime.evaluate", {
+
+  const metricsResult = await send("Runtime.evaluate", {
     expression: `(() => {
       const metrics = window.AbyssalWebViewport?.readMetrics?.() || {};
       const canvas = document.getElementById('canvas');
       const rect = canvas?.getBoundingClientRect?.();
       return JSON.stringify({
-        coverage: metrics.coverage || { x: 0, y: 0 },
-        canvas: metrics.canvas || (rect ? { w: rect.width, h: rect.height, x: rect.x, y: rect.y } : null),
-        inner: metrics.inner || { w: window.innerWidth, h: window.innerHeight },
+        build: document.querySelector('meta[name="abyssal-build"]')?.content || metrics.build || '',
+        metrics,
+        canvasRect: rect ? { x: rect.x, y: rect.y, w: rect.width, h: rect.height } : null,
+        page: {
+          innerWidth: window.innerWidth,
+          innerHeight: window.innerHeight,
+          clientWidth: document.documentElement.clientWidth,
+          clientHeight: document.documentElement.clientHeight,
+        },
       });
     })()`,
     returnByValue: true,
   });
-  const canvasPayload = JSON.parse(canvasMetrics.result.value);
-  const minCoverage = Number.parseFloat(process.env.GODOT_WEB_MIN_COVERAGE ?? "90");
-  const runtimeState = await send("Runtime.evaluate", {
-    expression:
-      "JSON.stringify({ready:document.readyState,visibility:document.visibilityState,canvas:{width:canvas.width,height:canvas.height,clientWidth:canvas.clientWidth,clientHeight:canvas.clientHeight},touch:navigator.maxTouchPoints})",
-    returnByValue: true,
-  });
-  const screenshot = await send("Page.captureScreenshot", {
-    format: "png",
-    captureBeyondViewport: false,
-  });
-  await writeFile(output, Buffer.from(screenshot.data, "base64"));
-  const luminanceResult = await send("Runtime.evaluate", {
-    expression: `(async () => {
-      const image = new Image();
-      image.src = "data:image/png;base64,${screenshot.data}";
-      await image.decode();
-      const sampleWidth = Math.min(image.width, 256);
-      const sampleHeight = Math.min(image.height, 256);
-      const surface = document.createElement("canvas");
-      surface.width = sampleWidth;
-      surface.height = sampleHeight;
-      const context = surface.getContext("2d", { willReadFrequently: true });
-      context.drawImage(image, 0, 0, sampleWidth, sampleHeight);
-      const pixels = context.getImageData(0, 0, sampleWidth, sampleHeight).data;
-      let sum = 0;
-      let opaquePixels = 0;
-      for (let index = 0; index < pixels.length; index += 4) {
-        if (pixels[index + 3] === 0) continue;
-        sum += (0.2126 * pixels[index] + 0.7152 * pixels[index + 1] + 0.0722 * pixels[index + 2]) / 255;
-        opaquePixels += 1;
-      }
-      return { average: opaquePixels ? sum / opaquePixels : 0, sampledPixels: opaquePixels };
-    })()`,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  const luminance = luminanceResult.result.value;
-  const blackCapture = luminance.average <= 0.01;
+  const payload = JSON.parse(metricsResult.result.value);
+  const coverage = payload.metrics?.coverage ?? { x: 0, y: 0 };
+  const canvas = payload.metrics?.canvas ?? payload.canvasRect ?? {};
+
   if (consoleErrors.length) {
     throw new Error(`Web runtime console errors:\n${consoleErrors.join("\n")}`);
   }
-  if (canvasPayload.coverage.x < minCoverage || canvasPayload.coverage.y < minCoverage) {
+  if (!String(payload.build).includes("G0.5.3")) {
+    throw new Error(`Stale or missing build marker: ${payload.build || "none"}`);
+  }
+  if (coverage.x < minCoverage || coverage.y < minCoverage) {
     throw new Error(
-      `Canvas coverage below ${minCoverage}%: x=${canvasPayload.coverage.x}% y=${canvasPayload.coverage.y}%`,
+      `Canvas coverage below ${minCoverage}%: x=${coverage.x?.toFixed?.(1) ?? coverage.x}% y=${coverage.y?.toFixed?.(1) ?? coverage.y}%`,
     );
   }
-  if (blackCapture && !mobile) {
-    throw new Error(
-      `Desktop screenshot is effectively black (average luminance ${luminance.average.toFixed(6)})`,
-    );
+  if ((canvas.w ?? canvas.width ?? 0) < width * 0.9) {
+    throw new Error(`Canvas CSS width too small: ${canvas.w ?? canvas.width} < ${width * 0.9}`);
   }
-  console.log(`GODOT_WEB_RUNTIME_PASS ${url}`);
-  console.log(`CANVAS_COVERAGE ${JSON.stringify(canvasPayload.coverage)}`);
-  console.log(`RUNTIME_STATE ${runtimeState.result.value}`);
-  if (mobile) console.log(`CONSOLE ${JSON.stringify(consoleMessages)}`);
-  console.log(`SCREENSHOT_LUMINANCE ${JSON.stringify(luminance)}`);
-  console.log(`EVIDENCE_TIER ${mobile ? "EMULATED" : "VERIFIED"}`);
-  console.log(`CAPTURE_UNRELIABLE ${blackCapture && mobile}`);
-  console.log(`SCREENSHOT ${output}`);
+  if ((canvas.h ?? canvas.height ?? 0) < height * 0.9) {
+    throw new Error(`Canvas CSS height too small: ${canvas.h ?? canvas.height} < ${height * 0.9}`);
+  }
+  if ((canvas.x ?? 0) > 4 || (canvas.y ?? 0) > 4) {
+    throw new Error(`Canvas origin offset too large: x=${canvas.x} y=${canvas.y}`);
+  }
+
+  const evidencePath = path.resolve(
+    process.env.GODOT_WEB_CANVAS_EVIDENCE ??
+      `artifacts/godot-g0.5.3/web-canvas-${width}x${height}-${mobile ? "mobile" : "desktop"}.json`,
+  );
+  await mkdir(path.dirname(evidencePath), { recursive: true });
+  await writeFile(evidencePath, `${JSON.stringify(payload, null, 2)}\n`);
+
+  console.log(`GODOT_WEB_CANVAS_QA_PASS ${width}x${height} ${mobile ? "mobile" : "desktop"}`);
+  console.log(`CANVAS_COVERAGE x=${coverage.x.toFixed(1)}% y=${coverage.y.toFixed(1)}%`);
+  console.log(`EVIDENCE ${evidencePath}`);
 } finally {
   socket.close();
   browser.kill();
   await sleep(500);
-  await rm(profile, { recursive: true, force: true }).catch(() => {
-    // Chrome's crash reporter can briefly retain a metrics file on Windows.
-  });
+  await rm(profile, { recursive: true, force: true }).catch(() => {});
 }
-

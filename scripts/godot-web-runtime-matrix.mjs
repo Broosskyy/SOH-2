@@ -4,6 +4,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const RUNTIME_MATRIX = [
+  { width: 915, height: 412 },
+  { width: 755, height: 298 },
   { width: 1280, height: 720 },
   { width: 1920, height: 1080 },
   { width: 2400, height: 1080 },

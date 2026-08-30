@@ -39,8 +39,8 @@ func _refresh() -> void:
 	_label.anchor_bottom = 1.0
 	_label.offset_right = -(safe.size.x - safe.end.x + 6.0)
 	_label.offset_bottom = -(safe.size.y - safe.end.y + 6.0)
-	_label.offset_left = _label.offset_right - 220.0
-	_label.offset_top = _label.offset_bottom - 96.0
+	_label.offset_left = _label.offset_right - 260.0
+	_label.offset_top = _label.offset_bottom - 180.0
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	if _collapsed:
 		_label.text = "QA ▶"

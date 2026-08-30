@@ -4,13 +4,11 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("G0.5.2 build marker and version", async () => {
-  const project = await read("godot/project.godot");
+test("G0.5.2 responsive HUD foundation preserved", async () => {
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
-  assert.match(project, /config\/version="0\.5\.2"/);
-  assert.match(metrics, /G0\.5\.2-NATIVE-RESPONSIVE-HUD/);
-  assert.match(layout, /G0\.5\.2-NATIVE-RESPONSIVE-HUD/);
+  assert.match(metrics, /static func ui_viewport/);
+  assert.match(layout, /ResponsiveHudMetrics/);
 });
 
 test("one responsive viewport source", async () => {
@@ -69,10 +67,11 @@ test("floating player HUD has no numeric values", async () => {
 test("resize idempotence and fullscreen relayout hooks", async () => {
   const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const world = await read("godot/scripts/world/world.gd");
+  const contractJs = await read("godot/export/web-viewport-contract.js");
   assert.match(root, /size_changed\.connect/);
   assert.match(root, /if viewport == _last_viewport/);
-  assert.match(root, /fullscreenchange/);
-  assert.match(world, /_sync_web_ui_viewport/);
+  assert.match(contractJs, /fullscreenchange/);
+  assert.match(world, /WebViewportContract/);
 });
 
 test("QA diagnostics gated and zone outlines", async () => {

@@ -7,7 +7,7 @@ extends RefCounted
 
 enum Profile { DESKTOP_TABLET, PHONE_LANDSCAPE }
 
-const BUILD_LABEL := "G0.5.2-NATIVE-RESPONSIVE-HUD"
+const BUILD_LABEL := "G0.5.3-WEB-CANVAS-RECOVERY"
 const MIN_TOUCH_PX := 48.0
 const PHONE_SHORT_EDGE_MAX := 520.0
 const PHONE_MIN_ASPECT := 1.55
@@ -73,11 +73,44 @@ static func safe_rect(viewport: Vector2) -> Rect2:
 	return PlatformService.safe_rect(viewport)
 
 static func apply_web_window_size(window: Window) -> void:
-	if OS.get_name() != "Web" or window == null:
+	apply_web_presentation_sync(window)
+
+static func install_web_canvas_contract() -> void:
+	if OS.get_name() != "Web" or not ClassDB.class_exists("JavaScriptBridge"):
 		return
-	var css := css_viewport()
-	if css.x >= 320.0 and css.y >= 240.0:
-		window.size = Vector2i(int(css.x), int(css.y))
+	JavaScriptBridge.eval("window.AbyssalWebViewport?.install?.()")
+
+static func web_metrics() -> Dictionary:
+	if OS.get_name() != "Web" or not ClassDB.class_exists("JavaScriptBridge"):
+		return {}
+	install_web_canvas_contract()
+	var raw: Variant = JavaScriptBridge.eval(
+		"JSON.stringify(window.AbyssalWebViewport?.readMetrics?.() || {})"
+	)
+	if raw is String and not raw.is_empty():
+		var parsed: Variant = JSON.parse_string(raw)
+		if parsed is Dictionary:
+			return parsed
+	return {}
+
+static func browser_content_viewport() -> Vector2:
+	var metrics := web_metrics()
+	var container: Variant = metrics.get("container", {})
+	if container is Dictionary:
+		return Vector2(float(container.get("w", 0)), float(container.get("h", 0)))
+	return css_viewport()
+
+static func canvas_coverage() -> Vector2:
+	var metrics := web_metrics()
+	var coverage: Variant = metrics.get("coverage", {})
+	if coverage is Dictionary:
+		return Vector2(float(coverage.get("x", 0)), float(coverage.get("y", 0)))
+	return Vector2.ZERO
+
+static func apply_web_presentation_sync(_window: Window) -> void:
+	if OS.get_name() != "Web":
+		return
+	install_web_canvas_contract()
 
 static func content_scale_mode_name() -> String:
 	var tree := Engine.get_main_loop()
@@ -94,7 +127,11 @@ static func content_scale_mode_name() -> String:
 static func css_viewport() -> Vector2:
 	if OS.get_name() == "Web" and ClassDB.class_exists("JavaScriptBridge"):
 		var raw: Variant = JavaScriptBridge.eval(
-			"(() => JSON.stringify({ w: window.innerWidth || 0, h: window.innerHeight || 0 }))()"
+			"""(() => {
+				const vv = window.visualViewport;
+				if (vv) return JSON.stringify({ w: vv.width || 0, h: vv.height || 0 });
+				return JSON.stringify({ w: window.innerWidth || 0, h: window.innerHeight || 0 });
+			})()"""
 		)
 		if raw is String and not raw.is_empty():
 			var parsed: Variant = JSON.parse_string(raw)
@@ -119,17 +156,39 @@ static func fullscreen_state() -> String:
 	return "n/a"
 
 static func audit_lines(viewport: Vector2) -> PackedStringArray:
-	var css := css_viewport()
+	var metrics := web_metrics()
+	var inner: Dictionary = metrics.get("inner", {})
+	var visual: Dictionary = metrics.get("visual", {}) if metrics.get("visual") is Dictionary else {}
+	var client: Dictionary = metrics.get("client", {})
+	var container: Dictionary = metrics.get("container", {})
+	var canvas: Dictionary = metrics.get("canvas", {}) if metrics.get("canvas") is Dictionary else {}
+	var coverage := canvas_coverage()
 	return PackedStringArray([
 		"PROFILE: %s" % profile_name(viewport),
-		"UI_VIEWPORT: %dx%d" % [int(viewport.x), int(viewport.y)],
-		"ASPECT: %.2f" % aspect(viewport),
-		"SHORT_EDGE: %.0f" % short_edge(viewport),
-		"WINDOW: %dx%d" % [int(window_size().x), int(window_size().y)],
-		"CSS: %dx%d" % [int(css.x), int(css.y)],
+		"INNER: %dx%d" % [int(inner.get("w", 0)), int(inner.get("h", 0))],
+		"VISUAL: %dx%d" % [int(visual.get("w", 0)), int(visual.get("h", 0))],
+		"CLIENT: %dx%d" % [int(client.get("w", 0)), int(client.get("h", 0))],
+		"CONTAINER: %.0f,%.0f,%.0f,%.0f" % [
+			float(container.get("x", 0)),
+			float(container.get("y", 0)),
+			float(container.get("w", 0)),
+			float(container.get("h", 0)),
+		],
+		"CANVAS_CSS: %.0f,%.0f,%.0f,%.0f" % [
+			float(canvas.get("x", 0)),
+			float(canvas.get("y", 0)),
+			float(canvas.get("w", 0)),
+			float(canvas.get("h", 0)),
+		],
+		"CANVAS_BUFFER: %dx%d" % [int(canvas.get("bufferW", 0)), int(canvas.get("bufferH", 0))],
+		"GODOT_WINDOW: %dx%d" % [int(window_size().x), int(window_size().y)],
+		"GODOT_VIEWPORT: %dx%d" % [int(viewport.x), int(viewport.y)],
+		"HUD_VIEWPORT: %dx%d" % [int(viewport.x), int(viewport.y)],
 		"DPR: %.2f" % device_pixel_ratio(),
 		"CONTENT_SCALE_MODE: %s" % content_scale_mode_name(),
 		"FULLSCREEN: %s" % fullscreen_state(),
+		"CANVAS_COVERAGE_X: %.1f%%" % coverage.x,
+		"CANVAS_COVERAGE_Y: %.1f%%" % coverage.y,
 	])
 
 static func zone_visible(rect: Rect2, viewport: Vector2) -> bool:

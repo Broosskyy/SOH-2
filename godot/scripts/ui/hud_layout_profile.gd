@@ -5,7 +5,7 @@ extends RefCounted
 
 enum Profile { DESKTOP, MOBILE_LANDSCAPE, MOBILE_PORTRAIT }
 
-const BUILD_LABEL := "G0.5.2-NATIVE-RESPONSIVE-HUD"
+const BUILD_LABEL := "G0.5.3-WEB-CANVAS-RECOVERY"
 const GIT_SHA := "c3db31f"
 
 const RATIO_TOP_BAR_H := 0.072

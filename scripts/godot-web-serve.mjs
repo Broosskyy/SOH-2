@@ -151,9 +151,12 @@ export function createStaticHandler(webRoot) {
     try {
       await access(filePath, constants.F_OK);
       const extension = path.extname(filePath).toLowerCase();
+      const cacheControl = extension === ".html"
+        ? "no-cache, no-store, must-revalidate"
+        : "no-store";
       response.writeHead(200, {
         "Content-Type": MIME_TYPES.get(extension) ?? "application/octet-stream",
-        "Cache-Control": "no-store",
+        "Cache-Control": cacheControl,
       });
       createReadStream(filePath).pipe(response);
     } catch {

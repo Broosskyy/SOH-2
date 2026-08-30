@@ -54,15 +54,8 @@ func _ready() -> void:
 	TargetingSystem.target_changed.connect(func(_t): _refresh_target())
 	TargetingSystem.target_cleared.connect(func(): _refresh_target())
 	get_viewport().size_changed.connect(_on_viewport_changed)
-	if OS.get_name() == "Web" and ClassDB.class_exists("JavaScriptBridge"):
-		JavaScriptBridge.eval(
-			"""document.addEventListener('fullscreenchange', () => {
-				if (window.godotDisplayResized) window.godotDisplayResized();
-			});
-			window.addEventListener('resize', () => {
-				if (window.godotDisplayResized) window.godotDisplayResized();
-			});"""
-		)
+	if OS.get_name() == "Web":
+		WebViewportContract.presentation_resized.connect(_on_viewport_changed)
 	call_deferred("_on_viewport_changed")
 
 func _process(_delta: float) -> void:
@@ -524,8 +517,7 @@ func _toggle_fullscreen() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
-	ResponsiveHudMetrics.apply_web_window_size(get_window())
-	get_viewport().size_changed.emit()
+	WebViewportContract.request_sync()
 
 func _fmt(value: float) -> String:
 	var whole := int(value)

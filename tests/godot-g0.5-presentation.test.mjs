@@ -8,9 +8,9 @@ test("G0.5 build marker and version", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
-  assert.match(project, /config\/version="0\.5\.[012]"/);
-  assert.match(layout, /G0\.5\.[012]-/);
-  assert.match(overlay, /G0\.5\.[012]-/);
+  assert.match(project, /config\/version="0\.5\.[0123]"/);
+  assert.match(layout, /G0\.5\.[0123]-/);
+  assert.match(overlay, /G0\.5\.[0123]-/);
 });
 
 test("single presentation root replaces legacy gameplay HUD in scene", async () => {
