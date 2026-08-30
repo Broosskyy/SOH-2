@@ -17,7 +17,7 @@ enum Zone {
 }
 
 const BUILD_LABEL := "G0.5.5-PHONE-COMPOSITION"
-const GIT_SHA := "d4b76d5"
+const GIT_SHA := "dc81848"
 
 static func zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
 	if HudLayoutProfile.is_phone(viewport):
