@@ -45,11 +45,14 @@ next-env.d.ts
 /outputs/
 /work/
 /godot/.godot/
+# Godot exports — ignore build artifacts except published Android test APKs
 /godot/build/*
+!/godot/build/android/
+/godot/build/android/*
+!godot/build/android/*.apk
 !/godot/build/.gdignore
 /artifacts/godot-g0.1/
 /artifacts/godot-g0.2/
 /godot/assets/ships/player/kraken/Kraken_ship_player_30k_Baked_*.png
-*.apk
 *.aab
 *.ipa
