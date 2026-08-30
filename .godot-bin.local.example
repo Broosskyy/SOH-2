@@ -1,0 +1,3 @@
+# Copy to .godot-bin.local (gitignored) and set your Godot 4.7.2 console binary path.
+# Example (Windows):
+# C:\path\to\Godot_v4.7.2-stable_win64_console.exe

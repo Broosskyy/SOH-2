@@ -105,6 +105,17 @@ test("runtime QA preserves boot checks and grades black captures", async () => {
   assert.match(source, /blackCapture && !mobile/);
 });
 
+test("godot binary resolver supports env, local config, and version check", async () => {
+  const resolver = await read("scripts/godot-resolve-binary.mjs");
+  const exporter = await read("scripts/godot-web-export.mjs");
+  assert.match(resolver, /GODOT_BIN/);
+  assert.match(resolver, /\.godot-bin\.local/);
+  assert.match(resolver, /verifyGodotVersion/);
+  assert.match(resolver, /4\.7\.2/);
+  assert.match(exporter, /godot-resolve-binary\.mjs/);
+  assert.match(exporter, /mkdir\(webBuildDir/);
+});
+
 test("native smoke tools are gated and produce evidence", async () => {
   const windows = await read("scripts/godot-windows-smoke.mjs");
   const android = await read("scripts/godot-android-smoke.mjs");

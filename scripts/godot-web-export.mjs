@@ -1,8 +1,9 @@
 import { execFile } from "node:child_process";
-import { access, copyFile, readFile, writeFile } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { resolveGodotBinary } from "./godot-resolve-binary.mjs";
 
 const execFileAsync = promisify(execFile);
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -51,37 +52,19 @@ html, body {
   await writeFile(htmlPath, html, "utf8");
 }
 
-export async function resolveGodotBinary() {
-  const candidates = [
-    process.env.GODOT_BIN,
-    process.env.GODOT4_BIN,
-    path.join(rootDir, ".tools", "Godot_v4.7.2-stable_win64_console.exe"),
-    path.join(rootDir, ".tools", "Godot_v4.7.2-stable_win64.exe"),
-    "godot",
-    "godot4",
-    "C:\\Program Files\\Godot\\Godot_v4.7.2-stable_win64.exe",
-  ].filter(Boolean);
-  for (const candidate of candidates) {
-    if (candidate.includes(path.sep) || candidate.includes("/") || candidate.includes("\\")) {
-      try {
-        await access(candidate);
-        return candidate;
-      } catch {
-        continue;
-      }
-    }
-    return candidate;
-  }
-  return "godot";
-}
+export { resolveGodotBinary } from "./godot-resolve-binary.mjs";
 
 export async function exportGodotWeb({
   godotBinary,
   projectPath = godotProject,
   preset = exportPreset,
 } = {}) {
-  const resolvedBinary = godotBinary ?? await resolveGodotBinary();
+  const resolved = godotBinary
+    ? { binary: godotBinary, version: null }
+    : await resolveGodotBinary();
+  const resolvedBinary = resolved.binary;
   await access(projectPath);
+  await mkdir(webBuildDir, { recursive: true });
   const args = ["--headless", "--path", path.dirname(projectPath), "--export-release", preset];
   const { stdout, stderr } = await execFileAsync(resolvedBinary, args, {
     cwd: rootDir,
