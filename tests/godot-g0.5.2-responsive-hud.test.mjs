@@ -8,7 +8,7 @@ test("G0.5.2 responsive HUD foundation preserved", async () => {
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   assert.match(metrics, /static func ui_viewport/);
-  assert.match(layout, /ResponsiveHudMetrics/);
+  assert.match(layout, /ResponsiveHudLayoutSolver/);
 });
 
 test("one responsive viewport source", async () => {
@@ -17,7 +17,7 @@ test("one responsive viewport source", async () => {
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   assert.match(metrics, /static func logical_ui_viewport_size/);
   assert.match(root, /ResponsiveHudMetrics\.logical_ui_viewport_size/);
-  assert.match(layout, /ResponsiveHudMetrics\./);
+  assert.match(layout, /ResponsiveHudLayoutSolver/);
   assert.doesNotMatch(root, /css_to_render/);
 });
 
@@ -52,10 +52,12 @@ test("phone landscape and desktop profile detection", async () => {
 
 test("required zones visible in layout definitions", async () => {
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
+  const solver = await read("godot/scripts/ui/responsive_hud_layout_solver.gd");
   for (const zone of ["PROFILE", "STATUS", "NAV", "MISSION", "MINIMAP", "ZOOM", "CHAT", "CONSUMABLES", "COMBAT"]) {
-    assert.match(layout, new RegExp(`Zone\\.${zone}`));
+    assert.match(layout, new RegExp(`\\b${zone},`));
   }
-  assert.match(layout, /Zone\.CURRENCY/);
+  assert.match(layout, /\bCURRENCY,/);
+  assert.match(solver, /MOVEMENT/);
   assert.doesNotMatch(layout, /CARIBBEAN SEA/);
 });
 

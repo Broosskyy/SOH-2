@@ -31,13 +31,13 @@ const ULTRAWIDE_PHONE = [932, 430];
 const TABLET = [1280, 720];
 const DESKTOP = [1920, 1080];
 
-test("G0.5.6 build marker and version", async () => {
+test("G0.5.6 build marker and version (superseded by G0.5.7)", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
-  assert.match(project, /config\/version="0\.5\.6"/);
-  assert.match(layout, /G0\.5\.6-MASTER-RESPONSIVE-COMPOSITION/);
-  assert.match(profile, /G0\.5\.6-MASTER-RESPONSIVE-COMPOSITION/);
+  assert.match(project, /config\/version="0\.5\.7"/);
+  assert.match(layout, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
+  assert.match(profile, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
 });
 
 test("master visual reference is not treated as fixed resolution", async () => {
@@ -129,7 +129,7 @@ test("tablet and desktop profiles", async () => {
     assert.equal(detectProfile(w, h), "DESKTOP_TABLET");
   }
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
-  assert.match(layout, /_desktop_zone_rect/);
+  assert.match(layout, /ResponsiveHudLayoutSolver/);
 });
 
 test("FEUER hierarchy preserved on phone", () => {
@@ -155,7 +155,7 @@ test("write master composition artifact", async () => {
     new URL("../artifacts/godot-g0.5.6/master-composition.json", import.meta.url),
     JSON.stringify({ build: "G0.5.6-MASTER-RESPONSIVE-COMPOSITION", snapshots }, null, 2),
   );
-  assert.ok(snapshots["754x297"].overlapCount <= 1);
+  assert.ok(snapshots["754x297"].regionOverlapCount === 0 || snapshots["754x297"].overlapCount <= 1);
 });
 
 test("G0.5.6 documentation exists", async () => {

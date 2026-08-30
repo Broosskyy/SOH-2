@@ -7,7 +7,7 @@ extends RefCounted
 
 enum Profile { DESKTOP_TABLET, PHONE_LANDSCAPE }
 
-const BUILD_LABEL := "G0.5.6-MASTER-RESPONSIVE-COMPOSITION"
+const BUILD_LABEL := "G0.5.7-RESERVED-REGION-LAYOUT"
 const MIN_TOUCH_PX := 48.0
 const PHONE_MIN_TOUCH_PX := 26.0
 const PHONE_SHORT_EDGE_MAX := 520.0
@@ -87,7 +87,7 @@ static func safe_edge_margin(viewport: Vector2) -> float:
 	return margin(viewport)
 
 static func player_safe_area(viewport: Vector2) -> Rect2:
-	return central_safe_rect(viewport)
+	return ResponsiveHudLayoutSolver.center_safe_rect(viewport)
 
 static func length(viewport: Vector2, ratio: float, axis := "y") -> float:
 	if axis == "x":
@@ -165,35 +165,52 @@ static func zone_audit_lines(viewport: Vector2) -> PackedStringArray:
 	return lines
 
 static func content_bounds_audit(zones: Dictionary, viewport: Vector2) -> Dictionary:
-	var names := {
-		"profile": "PROFILE_CONTENT",
-		"status": "STATUS_CONTENT",
-		"nav": "NAV_CONTENT",
-		"mission": "MISSION_CONTENT",
-		"minimap": "MINIMAP_CONTENT",
-		"zoom": "ZOOM_CONTENT",
-		"chat": "CHAT_CONTENT",
-		"consumables": "CONSUMABLE_CONTENT",
-		"combat": "COMBAT_CONTENT",
+	var solution := ResponsiveHudLayoutSolver.solve(viewport)
+	var region_keys := {
+		"profile": "identity",
+		"status": "status",
+		"nav": "nav",
+		"mission": "mission",
+		"minimap": "minimap",
+		"zoom": "zoom",
+		"movement": "movement",
+		"chat": "chat",
+		"consumables": "consumables",
+		"combat": "combat",
 	}
 	var bounds: Dictionary = {}
+	var reserved: Dictionary = {}
+	var overflows: Array = []
 	var lines: PackedStringArray = []
-	for key in names.keys():
+	for key in region_keys.keys():
 		var zone: Control = zones.get(key)
 		if zone == null:
 			continue
-		var rect := VisibleContentBounds.bounds_for(zone)
-		if rect.size == Vector2.ZERO:
-			rect = Rect2(zone.position, zone.size)
-		var global_rect := Rect2(zone.position + rect.position, rect.size)
-		bounds[key] = global_rect
+		var region_key: String = region_keys[key]
+		var region_rect: Rect2 = solution.get(region_key, Rect2())
+		reserved[key] = region_rect
+		var actual := VisibleContentBounds.global_bounds_for(zone)
+		if actual.size == Vector2.ZERO:
+			actual = Rect2(zone.position, zone.size)
+		bounds[key] = actual
+		if VisibleContentBounds.content_exceeds_region(zone, region_rect):
+			overflows.append(key)
 		lines.append(
-			"%s: %.0f,%.0f %.0fx%.0f" % [
-				names[key],
-				global_rect.position.x,
-				global_rect.position.y,
-				global_rect.size.x,
-				global_rect.size.y,
+			"%s_RESERVED: %.0f,%.0f %.0fx%.0f" % [
+				key.to_upper(),
+				region_rect.position.x,
+				region_rect.position.y,
+				region_rect.size.x,
+				region_rect.size.y,
+			]
+		)
+		lines.append(
+			"%s_ACTUAL: %.0f,%.0f %.0fx%.0f" % [
+				key.to_upper(),
+				actual.position.x,
+				actual.position.y,
+				actual.size.x,
+				actual.size.y,
 			]
 		)
 	var safe := player_safe_area(viewport)
@@ -202,9 +219,31 @@ static func content_bounds_audit(zones: Dictionary, viewport: Vector2) -> Dictio
 			safe.position.x, safe.position.y, safe.size.x, safe.size.y
 		]
 	)
-	var overlap_count := count_content_overlaps(bounds)
-	lines.append("OVERLAP_COUNT: %d" % overlap_count)
-	return {"lines": lines, "bounds": bounds, "overlap_count": overlap_count, "player_safe": safe}
+	var overlap_count := count_region_overlaps(solution)
+	var validation := ResponsiveHudLayoutSolver.validate(solution, viewport)
+	lines.append("REGION_OVERLAP_COUNT: %d" % overlap_count)
+	lines.append("CONTENT_OVERFLOW_COUNT: %d" % overflows.size())
+	lines.append("OFFSCREEN_COUNT: %d" % validation.offscreen.size())
+	return {
+		"lines": lines,
+		"bounds": bounds,
+		"reserved": reserved,
+		"overflows": overflows,
+		"overlap_count": overlap_count,
+		"player_safe": safe,
+		"validation": validation,
+	}
+
+static func count_region_overlaps(solution: Dictionary) -> int:
+	var keys := ["identity", "status", "nav", "minimap", "mission", "zoom", "movement", "chat", "consumables", "combat"]
+	var count := 0
+	for i in range(keys.size()):
+		for j in range(i + 1, keys.size()):
+			var a: Rect2 = solution.get(keys[i], Rect2())
+			var b: Rect2 = solution.get(keys[j], Rect2())
+			if VisibleContentBounds.major_overlap(a, b):
+				count += 1
+	return count
 
 static func count_content_overlaps(bounds: Dictionary) -> int:
 	var pairs := [

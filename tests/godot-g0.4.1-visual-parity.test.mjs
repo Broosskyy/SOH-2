@@ -48,7 +48,7 @@ test("responsive landscape and fullscreen action", async () => {
   const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   assert.match(root, /_toggle_fullscreen/);
-  assert.match(layout, /ResponsiveHudMetrics/);
+  assert.match(layout, /ResponsiveHudLayoutSolver/);
 });
 
 test("Kraken asset and camera lock preserved", async () => {

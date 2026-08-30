@@ -17,11 +17,11 @@ const PHONE_VIEWPORTS = [
   [932, 430],
 ];
 
-test("G0.5.5 build marker and version (superseded by G0.5.6)", async () => {
+test("G0.5.5 build marker and version (superseded by G0.5.7)", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
-  assert.match(project, /config\/version="0\.5\.6"/);
-  assert.match(layout, /G0\.5\.6-MASTER-RESPONSIVE-COMPOSITION/);
+  assert.match(project, /config\/version="0\.5\.7"/);
+  assert.match(layout, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
 });
 
 test("phone landscape uses separate occupancy constants", async () => {
@@ -32,9 +32,9 @@ test("phone landscape uses separate occupancy constants", async () => {
 });
 
 test("desktop and phone layout paths are split", async () => {
-  const layout = await read("godot/scripts/ui/presentation_layout.gd");
-  assert.match(layout, /_phone_zone_rect/);
-  assert.match(layout, /_desktop_zone_rect/);
+  const solver = await read("godot/scripts/ui/responsive_hud_layout_solver.gd");
+  assert.match(solver, /_solve_phone/);
+  assert.match(solver, /_solve_desktop/);
 });
 
 test("responsive architecture preserved", async () => {

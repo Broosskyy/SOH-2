@@ -1,38 +1,12 @@
 /**
- * Mirrors G0.5.6 phone landscape zone layout for automated overlap tests.
- * MASTER VISUAL REFERENCE IS RESOLUTION-INDEPENDENT — viewport is layout authority.
+ * Mirrors G0.5.7 ResponsiveHudLayoutSolver for automated overlap tests.
  */
 
 const PHONE_SHORT_EDGE_MAX = 520;
 const PHONE_MIN_ASPECT = 1.55;
 
 const PHONE = {
-  TOP_BAR_H: 0.068,
-  PROFILE_W: 0.11,
-  STATUS_BAR_W: 0.16,
-  MISSION_H: 0.16,
-  MINIMAP_D: 0.14,
-  ZOOM_W: 0.048,
-  ZOOM_H: 0.16,
-  CHAT_W: 0.20,
-  CHAT_H: 0.18,
-  CONSUMABLE_ROW_W: 0.22,
-  CONSUMABLE_D: 0.09,
-  FIRE_D: 0.15,
-  COMBAT_CLUSTER_SCALE: 1.0,
   SAFE_EDGE_RATIO: 0.018,
-};
-
-const CONTENT_INSET = {
-  PROFILE: { x: 2, y: 2 },
-  STATUS: { x: 2, y: 2 },
-  NAV: { x: 1, y: 1 },
-  MISSION: { x: 2, y: 2 },
-  MINIMAP: { x: 0, y: 0 },
-  ZOOM: { x: 1, y: 1 },
-  CHAT: { x: 2, y: 2 },
-  CONSUMABLES: { x: 2, y: 2 },
-  COMBAT: { x: 4, y: 4 },
 };
 
 export function detectProfile(w, h) {
@@ -59,6 +33,11 @@ function safeEdgeMargin(viewport) {
   return margin(viewport);
 }
 
+function safeRect(viewport) {
+  const m = margin(viewport);
+  return { x: m, y: m, w: viewport.w - m * 2, h: viewport.h - m * 2 };
+}
+
 function clampLength(viewport, ratio, axis, minPx, maxRatio) {
   const base = axis === "x" ? viewport.w * ratio : viewport.h * ratio;
   const cap = (axis === "x" ? viewport.w : viewport.h) * maxRatio;
@@ -77,95 +56,167 @@ function minTouchPx(viewport) {
   return Math.max(48, shortEdge(viewport) * 0.044);
 }
 
-function playerSafeRect(viewport) {
+export function majorOverlap(a, b, threshold = 0.12) {
+  const ix = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
+  const iy = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+  const inter = ix * iy;
+  const minArea = Math.min(a.w * a.h, b.w * b.h);
+  if (minArea <= 0) return false;
+  return inter / minArea > threshold;
+}
+
+function centerSafeFromRegions(safe, identity, mission, zoom, movement, chat, consumables, combat, minimap, status, nav) {
+  const pad = margin({ w: safe.w, h: safe.h });
+  const left = Math.max(identity.x + identity.w, mission.x + mission.w, zoom.x + zoom.w, movement.x + movement.w) + pad * 0.5;
+  const right = Math.min(combat.x, minimap.x, nav.x) - pad * 0.5;
+  const top = Math.max(identity.y + identity.h, status.y + status.h, nav.y + nav.h, minimap.y + minimap.h) + pad * 0.35;
+  const bottom = Math.min(consumables.y, combat.y, chat.y) - pad * 0.35;
+  return { x: left, y: top, w: Math.max(24, right - left), h: Math.max(24, bottom - top) };
+}
+
+export function solvePhoneLayout(w, h) {
+  const viewport = { w, h };
+  const safe = safeRect(viewport);
   const m = margin(viewport);
-  const area = { x: m, y: m, w: viewport.w - m * 2, h: viewport.h - m * 2 };
-  const insetX = area.w * 0.19;
-  const insetTop = area.h * 0.22;
-  const insetBottom = area.h * 0.26;
+  const edge = safeEdgeMargin(viewport);
+  const gap = m * 0.45;
+
+  const topRowH = clampLength(viewport, 0.062, "y", 16, 0.085);
+  const currencyH = clampLength(viewport, 0.034, "y", 10, 0.06);
+  const identityW = clampLength(viewport, 0.105, "x", 68, 0.14);
+  const identityH = topRowH + currencyH + gap * 0.5;
+
+  const statusW = clampLength(viewport, 0.152, "x", 90, 0.19);
+  const minimapD = touchDiameter(viewport, 0.125, minTouchPx(viewport) * 0.8, 0.14);
+  const fsD = touchDiameter(viewport, 0.032, 18, 0.05);
+
+  const identity = { x: safe.x, y: safe.y, w: identityW, h: identityH };
+  const status = { x: identity.x + identity.w + gap, y: safe.y, w: statusW, h: topRowH };
+  const minimap = { x: safe.x + safe.w - minimapD, y: safe.y, w: minimapD, h: minimapD };
+  const fullscreen = { x: minimap.x - fsD - gap * 0.5, y: safe.y, w: fsD, h: fsD };
+
+  const navLeft = status.x + status.w + gap;
+  const navRight = fullscreen.x - gap;
+  const nav = { x: navLeft, y: safe.y, w: Math.max(36, navRight - navLeft), h: topRowH };
+
+  const topBandBottom = identity.y + identity.h + gap;
+  const missionH = clampLength(viewport, 0.13, "y", 34, 0.18);
+  const mission = { x: safe.x, y: topBandBottom, w: identityW, h: missionH };
+
+  const zoomW = clampLength(viewport, 0.044, "x", 24, 0.055);
+  const zoomH = clampLength(viewport, 0.12, "y", 34, 0.18);
+  const zoom = { x: safe.x, y: mission.y + mission.h + gap, w: zoomW, h: zoomH };
+
+  const movementH = clampLength(viewport, 0.10, "y", 28, 0.14);
+  const movement = { x: safe.x, y: zoom.y + zoom.h + gap, w: zoomW * 1.15, h: movementH };
+
+  const consumableH = touchDiameter(viewport, 0.085, minTouchPx(viewport) * 0.75, 0.10);
+  const consumableW = clampLength(viewport, 0.21, "x", 84, 0.24);
+  const combatSize = touchDiameter(viewport, 0.13, minTouchPx(viewport) * 0.85, 0.16);
+
+  const chatH = clampLength(viewport, 0.10, "y", 30, 0.16);
+  const chatW = clampLength(viewport, 0.19, "x", 80, 0.22);
+  const bottomY = safe.y + safe.h - edge;
+
+  const consumables = {
+    x: safe.x + safe.w * 0.5 - consumableW * 0.5,
+    y: bottomY - consumableH,
+    w: consumableW,
+    h: consumableH,
+  };
+  const combat = { x: safe.x + safe.w - combatSize - edge, y: bottomY - combatSize, w: combatSize, h: combatSize };
+
+  const chatY = Math.max(movement.y + movement.h + gap, bottomY - chatH);
+  const chat = { x: safe.x, y: chatY, w: chatW, h: Math.min(chatH, bottomY - chatY) };
+
+  const centerSafe = centerSafeFromRegions(safe, identity, mission, zoom, movement, chat, consumables, combat, minimap, status, nav);
+
   return {
-    x: area.x + insetX,
-    y: area.y + insetTop,
-    w: Math.max(40, area.w - insetX * 2),
-    h: Math.max(40, area.h - insetTop - insetBottom),
+    safe,
+    identity,
+    status,
+    nav,
+    minimap,
+    fullscreen,
+    mission,
+    zoom,
+    movement,
+    chat,
+    consumables,
+    combat,
+    center_safe: centerSafe,
   };
 }
 
 export function phoneZoneRects(w, h) {
-  const viewport = { w, h };
-  const m = margin(viewport);
-  const edge = safeEdgeMargin(viewport);
-  const area = { x: m, y: m, w: w - m * 2, h: h - m * 2 };
-  const topH = clampLength(viewport, PHONE.TOP_BAR_H, "y", 16, 0.09);
-  const profileW = clampLength(viewport, PHONE.PROFILE_W, "x", 72, 0.14);
-  const statusW = clampLength(viewport, PHONE.STATUS_BAR_W, "x", 88, 0.20);
-  const minimapD = touchDiameter(viewport, PHONE.MINIMAP_D, minTouchPx(viewport) * 0.85, 0.16);
-  const missionH = clampLength(viewport, PHONE.MISSION_H, "y", 40, 0.20);
-  const missionW = profileW;
-  const consumableH = touchDiameter(viewport, PHONE.CONSUMABLE_D, minTouchPx(viewport) * 0.8, 0.11);
-  const combatSize =
-    touchDiameter(viewport, PHONE.FIRE_D, minTouchPx(viewport) * 0.9, 0.18) * PHONE.COMBAT_CLUSTER_SCALE;
-  const chatH = clampLength(viewport, PHONE.CHAT_H, "y", 40, 0.22);
-  const chatW = clampLength(viewport, PHONE.CHAT_W, "x", 88, 0.24);
-  const zoomW = clampLength(viewport, PHONE.ZOOM_W, "x", 26, 0.06);
-  const zoomH = clampLength(viewport, PHONE.ZOOM_H, "y", 42, 0.22);
-  const consumableRowW = clampLength(viewport, PHONE.CONSUMABLE_ROW_W, "x", 88, 0.24);
-  const topY = area.y;
-  const currencyH = topH * 0.55;
-
+  const s = solvePhoneLayout(w, h);
   return {
-    PROFILE: { x: area.x, y: topY, w: profileW, h: topH },
-    STATUS: { x: area.x + profileW + m * 1.2, y: topY, w: statusW, h: topH },
-    NAV: {
-      x: area.x + profileW + statusW + m * 2,
-      y: topY,
-      w: Math.max(60, area.x + area.w - minimapD - m * 1.2 - (area.x + profileW + statusW + m * 2)),
-      h: topH,
-    },
-    CURRENCY: { x: area.x, y: topY + topH, w: profileW, h: currencyH },
-    MISSION: { x: area.x, y: topY + topH + currencyH + m * 0.35, w: missionW, h: missionH },
-    MINIMAP: { x: area.x + area.w - minimapD, y: topY, w: minimapD, h: minimapD },
-    ZOOM: { x: area.x, y: topY + topH + currencyH + missionH + m * 0.6, w: zoomW, h: zoomH },
-    CHAT: {
-      x: area.x,
-      y: area.y + area.h - chatH - edge - consumableH * 0.2,
-      w: chatW,
-      h: chatH,
-    },
-    CONSUMABLES: {
-      x: area.x + area.w * 0.5 - consumableRowW * 0.5,
-      y: area.y + area.h - consumableH - edge,
-      w: consumableRowW,
-      h: consumableH,
-    },
-    COMBAT: {
-      x: area.x + area.w - combatSize - edge,
-      y: area.y + area.h - combatSize - edge,
-      w: combatSize,
-      h: combatSize,
-    },
-    PLAYER_SAFE: playerSafeRect(viewport),
+    PROFILE: s.identity,
+    IDENTITY: s.identity,
+    STATUS: s.status,
+    NAV: s.nav,
+    CURRENCY: s.identity,
+    MISSION: s.mission,
+    MINIMAP: s.minimap,
+    FULLSCREEN: s.fullscreen,
+    ZOOM: s.zoom,
+    MOVEMENT: s.movement,
+    CHAT: s.chat,
+    CONSUMABLES: s.consumables,
+    COMBAT: s.combat,
+    PLAYER_SAFE: s.center_safe,
+    CENTER_SAFE: s.center_safe,
   };
 }
 
-export function contentBoundsForZone(zoneKey, zoneRect) {
-  const inset = CONTENT_INSET[zoneKey] || { x: 2, y: 2 };
-  return {
-    x: zoneRect.x + inset.x,
-    y: zoneRect.y + inset.y,
-    w: Math.max(1, zoneRect.w - inset.x * 2),
-    h: Math.max(1, zoneRect.h - inset.y * 2),
-  };
-}
-
-export function phoneContentBounds(w, h) {
-  const zones = phoneZoneRects(w, h);
-  const bounds = {};
-  for (const key of ["PROFILE", "STATUS", "NAV", "MISSION", "MINIMAP", "ZOOM", "CHAT", "CONSUMABLES", "COMBAT"]) {
-    bounds[key] = contentBoundsForZone(key, zones[key]);
+export function regionOverlapCount(solution) {
+  const keys = ["identity", "status", "nav", "minimap", "mission", "zoom", "movement", "chat", "consumables", "combat"];
+  let count = 0;
+  for (let i = 0; i < keys.length; i++) {
+    for (let j = i + 1; j < keys.length; j++) {
+      if (majorOverlap(solution[keys[i]], solution[keys[j]])) count += 1;
+    }
   }
-  bounds.PLAYER_SAFE = zones.PLAYER_SAFE;
-  return bounds;
+  return count;
+}
+
+export function feuerOnscreen(solution, viewport) {
+  const edge = safeEdgeMargin(viewport);
+  const safe = solution.safe;
+  const combat = solution.combat;
+  return (
+    combat.x >= safe.x - 1 &&
+    combat.y >= safe.y - 1 &&
+    combat.x + combat.w <= safe.x + safe.w + edge * 0.25 &&
+    combat.y + combat.h <= safe.y + safe.h + edge * 0.25
+  );
+}
+
+export function insideSafe(rect, safe, edge = 0) {
+  return (
+    rect.x >= safe.x - 1 &&
+    rect.y >= safe.y - 1 &&
+    rect.x + rect.w <= safe.x + safe.w + edge * 0.25 &&
+    rect.y + rect.h <= safe.y + safe.h + edge * 0.25
+  );
+}
+
+export function validateSolution(w, h) {
+  const viewport = { w, h };
+  const solution = solvePhoneLayout(w, h);
+  const edge = safeEdgeMargin(viewport);
+  const keys = ["identity", "status", "nav", "minimap", "mission", "zoom", "movement", "chat", "consumables", "combat"];
+  const offscreen = [];
+  for (const key of keys) {
+    if (!insideSafe(solution[key], solution.safe, edge)) offscreen.push(key);
+  }
+  return {
+    solution,
+    overlaps: regionOverlapCount(solution),
+    offscreen,
+    feuerOnscreen: feuerOnscreen(solution, viewport),
+    missionBelowTopBand: solution.mission.y >= solution.identity.y + solution.identity.h,
+  };
 }
 
 export function overlapRatio(a, b) {
@@ -177,35 +228,31 @@ export function overlapRatio(a, b) {
   return inter / minArea;
 }
 
-export function majorOverlap(a, b, threshold = 0.12) {
-  return overlapRatio(a, b) > threshold;
-}
-
 export function insideViewport(rect, w, h, m = 0) {
   return rect.x >= -m && rect.y >= -m && rect.x + rect.w <= w + m && rect.y + rect.h <= h + m;
 }
 
-export function centralObstruction(zones, threshold = 0.15) {
-  const safe = zones.PLAYER_SAFE;
-  let blocked = 0;
-  for (const key of ["PROFILE", "STATUS", "NAV", "MISSION", "CHAT", "CONSUMABLES", "COMBAT"]) {
-    if (overlapRatio(zones[key], safe) > threshold) blocked += 1;
+export function phoneContentBounds(w, h) {
+  const zones = phoneZoneRects(w, h);
+  const bounds = {};
+  for (const key of ["PROFILE", "STATUS", "NAV", "MISSION", "MINIMAP", "ZOOM", "MOVEMENT", "CHAT", "CONSUMABLES", "COMBAT"]) {
+    bounds[key] = { ...zones[key] };
   }
-  return blocked;
+  bounds.PLAYER_SAFE = zones.CENTER_SAFE;
+  return bounds;
 }
 
 export function contentOverlapCount(bounds) {
   const pairs = [
     ["PROFILE", "STATUS"],
     ["PROFILE", "MISSION"],
-    ["STATUS", "MISSION"],
     ["STATUS", "NAV"],
     ["NAV", "MINIMAP"],
     ["MISSION", "ZOOM"],
-    ["MISSION", "CHAT"],
-    ["CHAT", "ZOOM"],
+    ["ZOOM", "MOVEMENT"],
+    ["MOVEMENT", "CHAT"],
+    ["CHAT", "CONSUMABLES"],
     ["CONSUMABLES", "COMBAT"],
-    ["CONSUMABLES", "CHAT"],
     ["COMBAT", "MINIMAP"],
   ];
   let count = 0;
@@ -219,14 +266,29 @@ export function consumablesOutsidePlayerSafe(bounds) {
   return overlapRatio(bounds.CONSUMABLES, bounds.PLAYER_SAFE) <= 0.08;
 }
 
+export function centralObstruction(zones, threshold = 0.15) {
+  const safe = zones.PLAYER_SAFE;
+  let blocked = 0;
+  for (const key of ["PROFILE", "STATUS", "NAV", "MISSION", "CHAT", "CONSUMABLES", "COMBAT"]) {
+    if (overlapRatio(zones[key], safe) > threshold) blocked += 1;
+  }
+  return blocked;
+}
+
 export function compositionSnapshot(w, h) {
+  const validation = validateSolution(w, h);
   const zones = phoneZoneRects(w, h);
   const bounds = phoneContentBounds(w, h);
   return {
     viewport: { w, h, profile: detectProfile(w, h) },
     zones,
+    solution: validation.solution,
     contentBounds: bounds,
+    regionOverlapCount: validation.overlaps,
     overlapCount: contentOverlapCount(bounds),
+    offscreen: validation.offscreen,
+    feuerOnscreen: validation.feuerOnscreen,
+    missionBelowTopBand: validation.missionBelowTopBand,
     playerSafe: bounds.PLAYER_SAFE,
     centralObstruction: centralObstruction(zones),
     consumablesOutsidePlayerSafe: consumablesOutsidePlayerSafe(bounds),

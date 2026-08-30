@@ -23,6 +23,7 @@ var _mission: PanelContainer
 var _target: PanelContainer
 var _chat: PanelContainer
 var _zoom: VBoxContainer
+var _movement: Control
 var _consumables: HBoxContainer
 var _combat: Control
 var _fullscreen: Button
@@ -107,6 +108,7 @@ func _build() -> void:
 	_zones["mission"] = _make_zone("MissionZone")
 	_zones["minimap"] = _make_zone("MinimapZone")
 	_zones["zoom"] = _make_zone("ZoomZone")
+	_zones["movement"] = _make_zone("MovementZone")
 	_zones["chat"] = _make_zone("ChatZone")
 	_zones["consumables"] = _make_zone("ConsumablesZone")
 	_zones["combat"] = _make_zone("CombatZone")
@@ -121,6 +123,7 @@ func _build() -> void:
 	_nav = _build_nav()
 	_zones["nav"].add_child(_nav)
 	_currency = _build_currency()
+	_currency.visible = false
 	_zones["currency"].add_child(_currency)
 	_mission = _panel()
 	_mission.add_child(_build_mission())
@@ -134,10 +137,13 @@ func _build() -> void:
 	_zones["chat"].add_child(_chat)
 	_zoom = _build_zoom()
 	_zones["zoom"].add_child(_zoom)
+	_movement = _build_movement()
+	_zones["movement"].add_child(_movement)
 	_consumables = _build_consumables()
 	_zones["consumables"].add_child(_consumables)
 	_combat = _build_combat()
 	_zones["combat"].add_child(_combat)
+	(_zones["combat"] as Control).clip_contents = true
 	_fullscreen = Button.new()
 	_fullscreen.text = "FS"
 	_fullscreen.tooltip_text = "Fullscreen"
@@ -195,6 +201,19 @@ func _build_profile() -> HBoxContainer:
 	_guild_label.text = MockupCompositionProfile.HUD_GUILD_TAG
 	_guild_label.add_theme_color_override("font_color", PresentationTheme.label_color("guild"))
 	copy.add_child(_guild_label)
+	var currency_row := HBoxContainer.new()
+	currency_row.name = "CurrencyRow"
+	currency_row.add_theme_constant_override("separation", 3)
+	_gold_label = Label.new()
+	_gold_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
+	currency_row.add_child(_gold_label)
+	_xp_label = Label.new()
+	_xp_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
+	currency_row.add_child(_xp_label)
+	_pearl_label = Label.new()
+	_pearl_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
+	currency_row.add_child(_pearl_label)
+	copy.add_child(currency_row)
 	row.add_child(copy)
 	return row
 
@@ -262,17 +281,7 @@ func _nav_btn(icon: String, label_text: String, compact := false) -> Button:
 
 func _build_currency() -> HBoxContainer:
 	var row := HBoxContainer.new()
-	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.add_theme_constant_override("separation", 4)
-	_gold_label = Label.new()
-	_gold_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
-	row.add_child(_gold_label)
-	_xp_label = Label.new()
-	_xp_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
-	row.add_child(_xp_label)
-	_pearl_label = Label.new()
-	_pearl_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
-	row.add_child(_pearl_label)
+	row.visible = false
 	return row
 
 func _build_mission() -> HBoxContainer:
@@ -356,12 +365,20 @@ func _build_zoom() -> VBoxContainer:
 	col.add_child(_zoom_btn("+", 0.08))
 	col.add_child(_zoom_btn("MID", 0.0))
 	col.add_child(_zoom_btn("-", -0.08))
-	var recenter := Button.new()
-	recenter.text = "SHIP"
-	recenter.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	recenter.pressed.connect(func(): camera.reset_pan())
-	col.add_child(recenter)
 	return col
+
+func _build_movement() -> Control:
+	var shell := Control.new()
+	shell.name = "MovementShell"
+	shell.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var button := Button.new()
+	button.name = "RecenterButton"
+	button.text = "SHIP"
+	button.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	button.pressed.connect(func(): camera.reset_pan())
+	button.add_theme_stylebox_override("normal", PresentationTheme.round_button(18.0))
+	shell.add_child(button)
+	return shell
 
 func _zoom_btn(label_text: String, delta: float) -> Button:
 	var button := Button.new()
@@ -424,11 +441,11 @@ func _bar(color: Color) -> ProgressBar:
 
 func _apply_layout(viewport: Vector2) -> void:
 	_rebuild_nav(viewport)
+	var solution := PresentationLayout.solve(viewport)
 	var zone_map := {
 		"profile": PresentationLayout.Zone.PROFILE,
 		"status": PresentationLayout.Zone.STATUS,
 		"nav": PresentationLayout.Zone.NAV,
-		"currency": PresentationLayout.Zone.CURRENCY,
 		"mission": PresentationLayout.Zone.MISSION,
 		"minimap": PresentationLayout.Zone.MINIMAP,
 		"zoom": PresentationLayout.Zone.ZOOM,
@@ -438,15 +455,33 @@ func _apply_layout(viewport: Vector2) -> void:
 		"fullscreen": PresentationLayout.Zone.FULLSCREEN,
 		"target": PresentationLayout.Zone.TARGET,
 	}
+	var qa_labels := {
+		"profile": "IDENTITY",
+		"status": "STATUS",
+		"nav": "NAV",
+		"minimap": "MINIMAP",
+		"mission": "MISSION",
+		"zoom": "ZOOM",
+		"movement": "MOVEMENT",
+		"chat": "CHAT",
+		"consumables": "CONSUMABLES",
+		"combat": "COMBAT",
+	}
 	var qa := MobileWebDiagnostics.query_flag("qa")
 	for key in zone_map.keys():
 		var zone: Control = _zones[key]
 		var rect := PresentationLayout.zone_rect(viewport, zone_map[key])
 		PresentationLayout.apply_zone(zone, rect)
 		if zone.has_method("set_qa_outline"):
-			zone.call("set_qa_outline", qa)
+			zone.call("set_qa_outline", qa, qa_labels.get(key, ""))
+	var movement_rect: Rect2 = solution.get("movement", Rect2())
+	if movement_rect.size.x > 0.0:
+		PresentationLayout.apply_zone(_zones["movement"], movement_rect)
+		if _zones["movement"].has_method("set_qa_outline"):
+			_zones["movement"].call("set_qa_outline", qa, "MOVEMENT")
 	_style_content(viewport)
 	_layout_combat(viewport)
+	_layout_movement(viewport)
 	if _minimap != null:
 		_minimap.fill_parent_zone()
 	if qa:
@@ -455,7 +490,8 @@ func _apply_layout(viewport: Vector2) -> void:
 			var zone: Control = _zones.get(key)
 			if zone != null and zone.has_method("set_qa_content_bounds"):
 				var bounds: Rect2 = audit.bounds[key]
-				var local := Rect2(bounds.position - zone.position, bounds.size)
+				var reserved: Rect2 = audit.reserved.get(key, Rect2(zone.position, zone.size))
+				var local := Rect2(bounds.position - reserved.position, bounds.size)
 				zone.call("set_qa_content_bounds", local)
 
 func _style_content(viewport: Vector2) -> void:
@@ -520,6 +556,10 @@ func _style_content(viewport: Vector2) -> void:
 		_apply_label_font(child, viewport, HudLayout.Semantic.MISSION)
 	for child in _chat.get_children():
 		_apply_label_font(child, viewport, HudLayout.Semantic.CHAT)
+	if is_phone and _chat_preview != null:
+		_chat_preview.max_lines_visible = 1
+	elif _chat_preview != null:
+		_chat_preview.max_lines_visible = 2
 	for child in _zoom.get_children():
 		if child is Button:
 			(child as Button).add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.ZOOM))
@@ -557,8 +597,29 @@ func _apply_label_font(node: Node, viewport: Vector2, semantic: HudLayout.Semant
 	for child in node.get_children():
 		_apply_label_font(child, viewport, semantic)
 
+func _layout_movement(viewport: Vector2) -> void:
+	var zone: Control = _zones.get("movement")
+	if zone == null:
+		return
+	var button := _movement.get_node_or_null("RecenterButton") as Button
+	if button == null:
+		return
+	var is_phone := ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE
+	var diameter := ResponsiveHudMetrics.touch_diameter(
+		viewport,
+		0.085 if is_phone else 0.1,
+		ResponsiveHudMetrics.min_touch_px(viewport) * 0.75,
+		0.12
+	)
+	button.custom_minimum_size = Vector2(diameter, diameter)
+	button.position = Vector2(
+		(zone.size.x - diameter) * 0.5,
+		(zone.size.y - diameter) * 0.5
+	)
+	button.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.ZOOM))
+
 func _layout_combat(viewport: Vector2) -> void:
-	var rect: Vector2 = (_zones["combat"] as Control).size
+	var zone_size: Vector2 = (_zones["combat"] as Control).size
 	var is_phone := ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE
 	var fire_ratio := HudLayoutProfile.pick(
 		viewport,
@@ -571,63 +632,69 @@ func _layout_combat(viewport: Vector2) -> void:
 		HudLayoutProfile.PHONE_RATIO_ABILITY_D
 	)
 	var fire := _combat.get_node_or_null("FireButton") as Button
-	var fire_size := ResponsiveHudMetrics.touch_diameter(
-		viewport,
-		fire_ratio,
-		ResponsiveHudMetrics.min_touch_px(viewport),
-		0.22
+	var max_fire := minf(zone_size.x, zone_size.y) * (0.72 if is_phone else 0.68)
+	var fire_size := minf(
+		ResponsiveHudMetrics.touch_diameter(
+			viewport,
+			fire_ratio,
+			ResponsiveHudMetrics.min_touch_px(viewport) * (0.85 if is_phone else 1.0),
+			0.22
+		),
+		max_fire
 	)
 	if fire != null:
 		fire.custom_minimum_size = Vector2(fire_size, fire_size)
-		var edge := ResponsiveHudMetrics.safe_edge_margin(viewport) if is_phone else 0.0
-		fire.position = Vector2(rect.x - fire_size - edge * 0.25, rect.y - fire_size - edge * 0.25)
+		fire.position = Vector2(zone_size.x - fire_size, zone_size.y - fire_size)
 		fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PRIMARY_ACTION))
-	var ability_offsets: Array[Vector2] = []
-	if is_phone:
-		ability_offsets = [
-			Vector2(-fire_size * 0.88, -fire_size * 0.05),
-			Vector2(-fire_size * 0.68, -fire_size * 0.52),
-			Vector2(-fire_size * 0.28, -fire_size * 0.82),
-		]
-	else:
-		for i in range(3):
-			ability_offsets.append(Vector2(rect.x - fire_size * 1.05, rect.y - fire_size * (1.35 + i * 0.42)) - Vector2.ZERO)
+	var ability_offsets: Array[Vector2] = [
+		Vector2(-fire_size * 0.82, -fire_size * 0.04),
+		Vector2(-fire_size * 0.62, -fire_size * 0.48),
+		Vector2(-fire_size * 0.24, -fire_size * 0.74),
+	]
 	for i in range(3):
 		var ability_name: String = ["Ability8", "Ability14", "Ability11"][i]
 		var ability := _combat.get_node_or_null(ability_name) as Button
 		if ability != null:
-			var ability_size := ResponsiveHudMetrics.touch_diameter(
-				viewport,
-				ability_ratio,
-				ResponsiveHudMetrics.min_touch_px(viewport) * (0.75 if is_phone else 0.85),
-				0.12
+			var ability_size := minf(
+				ResponsiveHudMetrics.touch_diameter(
+					viewport,
+					ability_ratio,
+					ResponsiveHudMetrics.min_touch_px(viewport) * (0.7 if is_phone else 0.85),
+					0.12
+				),
+				fire_size * 0.42
 			)
 			ability.custom_minimum_size = Vector2(ability_size, ability_size)
-			if is_phone:
-				ability.position = Vector2(rect.x - fire_size, rect.y - fire_size) + ability_offsets[i]
-			else:
-				ability.position = Vector2(rect.x - fire_size * 1.05, rect.y - fire_size * (1.35 + i * 0.42))
+			ability.position = fire.position + ability_offsets[i]
 			ability.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
 	var utility_offsets := [
-		Vector2(-fire_size * 0.55, -fire_size * 1.02),
-		Vector2(-fire_size * 1.02, -fire_size * 0.55),
-		Vector2(-fire_size * 0.20, -fire_size * 1.02),
-		Vector2(-fire_size * 1.02, -fire_size * 0.20),
-	] if is_phone else []
+		Vector2(-fire_size * 0.50, -fire_size * 0.92),
+		Vector2(-fire_size * 0.92, -fire_size * 0.50),
+		Vector2(-fire_size * 0.18, -fire_size * 0.92),
+		Vector2(-fire_size * 0.92, -fire_size * 0.18),
+	] if is_phone else [
+		Vector2(-fire_size * 1.05, -fire_size * 0.15),
+		Vector2(-fire_size * 0.15, -fire_size * 1.05),
+		Vector2(-fire_size * 0.55, -fire_size * 0.95),
+		Vector2(-fire_size * 0.95, -fire_size * 0.55),
+	]
 	var utility_index := 0
 	for utility_name in ["TargetButton", "AutoButton", "ShieldButton", "RepairButton"]:
 		var utility := _combat.get_node_or_null(utility_name) as Button
 		if utility == null:
 			continue
-		var utility_size := ResponsiveHudMetrics.touch_diameter(
-			viewport,
-			ability_ratio * 0.92,
-			ResponsiveHudMetrics.min_touch_px(viewport) * 0.7,
-			0.11
+		var utility_size := minf(
+			ResponsiveHudMetrics.touch_diameter(
+				viewport,
+				ability_ratio * 0.92,
+				ResponsiveHudMetrics.min_touch_px(viewport) * 0.65,
+				0.11
+			),
+			fire_size * 0.36
 		)
 		utility.custom_minimum_size = Vector2(utility_size, utility_size)
-		if is_phone and utility_index < utility_offsets.size():
-			utility.position = Vector2(rect.x - fire_size, rect.y - fire_size) + utility_offsets[utility_index]
+		if utility_index < utility_offsets.size():
+			utility.position = fire.position + utility_offsets[utility_index]
 		utility_index += 1
 
 func _refresh() -> void:

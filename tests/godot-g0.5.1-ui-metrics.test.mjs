@@ -8,7 +8,7 @@ test("G0.5.1 metrics superseded by G0.5.2 responsive authority (historical)", as
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   assert.match(metrics, /class_name ResponsiveHudMetrics/);
-  assert.match(layout, /ResponsiveHudMetrics\./);
+  assert.match(layout, /ResponsiveHudLayoutSolver/);
   assert.doesNotMatch(metrics, /css_to_render/);
 });
 

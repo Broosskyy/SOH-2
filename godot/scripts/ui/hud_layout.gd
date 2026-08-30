@@ -2,14 +2,20 @@ class_name HudLayout
 extends RefCounted
 
 enum Semantic {
+	PROFILE_PRIMARY,
 	PLAYER_STATUS,
+	STATUS,
 	MISSION,
 	MINIMAP,
 	FLOATING_PLAYER,
+	WORLD_PLAYER,
 	FLOATING_NPC,
+	WORLD_NPC,
+	WORLD_POI,
 	PRIMARY_ACTION,
 	SECONDARY_ACTION,
 	NAVIGATION,
+	NAV,
 	TARGET_STATUS,
 	REGION,
 	ZOOM,
@@ -36,12 +42,16 @@ static func scale_factor(viewport: Vector2) -> float:
 static func font_size(viewport: Vector2, desktop_px: float, semantic: Semantic = Semantic.PLAYER_STATUS) -> int:
 	if is_mobile_landscape(viewport):
 		match semantic:
-			Semantic.PLAYER_STATUS, Semantic.FLOATING_PLAYER:
+			Semantic.PROFILE_PRIMARY, Semantic.PLAYER_STATUS, Semantic.WORLD_PLAYER, Semantic.FLOATING_PLAYER:
 				return ResponsiveHudMetrics.font_px(viewport, 0.034, 9, 12)
-			Semantic.MISSION, Semantic.CHAT, Semantic.NAVIGATION, Semantic.ZOOM:
-				return ResponsiveHudMetrics.font_px(viewport, 0.028, 7, 10)
-			Semantic.FLOATING_NPC, Semantic.REGION:
+			Semantic.STATUS:
+				return ResponsiveHudMetrics.font_px(viewport, 0.028, 8, 10)
+			Semantic.MISSION, Semantic.CHAT:
+				return ResponsiveHudMetrics.font_px(viewport, 0.027, 7, 10)
+			Semantic.NAVIGATION, Semantic.NAV, Semantic.ZOOM:
 				return ResponsiveHudMetrics.font_px(viewport, 0.026, 7, 9)
+			Semantic.FLOATING_NPC, Semantic.WORLD_NPC, Semantic.WORLD_POI, Semantic.REGION:
+				return ResponsiveHudMetrics.font_px(viewport, 0.025, 7, 9)
 			Semantic.PRIMARY_ACTION:
 				return ResponsiveHudMetrics.font_px(viewport, 0.032, 8, 11)
 			Semantic.SECONDARY_ACTION:

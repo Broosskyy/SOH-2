@@ -50,6 +50,9 @@ func _process(_delta: float) -> void:
 			label.visible = false
 			continue
 		label.update_projection(camera, anchor.global_position)
+		if _should_hide_for_hud(label, int(entry.priority)):
+			label.visible = false
+			continue
 		if entry.get("npc", false) and label.has_method("update_hp"):
 			var unit := _resolve_unit(str(entry.get("unit_id", "")))
 			if unit != null and unit.get("health") != null:
@@ -63,6 +66,23 @@ func _process(_delta: float) -> void:
 		label.position.y = adjusted.position.y
 		label.visible = true
 		occupied.append(Rect2(label.position, label.size))
+
+func _should_hide_for_hud(label: Control, priority: int) -> bool:
+	if priority >= 90:
+		return false
+	var hud_root := get_tree().get_first_node_in_group("gameplay_presentation_root")
+	if hud_root == null:
+		return false
+	var viewport := ResponsiveHudMetrics.logical_ui_viewport_size(hud_root)
+	var solution := ResponsiveHudLayoutSolver.solve(viewport)
+	var rect := Rect2(label.position, label.size)
+	for key in ["combat", "minimap", "mission", "chat"]:
+		var region: Rect2 = solution.get(key, Rect2())
+		if region.size == Vector2.ZERO:
+			continue
+		if VisibleContentBounds.major_overlap(rect, region, 0.18):
+			return true
+	return false
 
 func _priority_for_id(anchor_id: String) -> int:
 	if anchor_id.begins_with("player"):
