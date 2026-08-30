@@ -1,0 +1,55 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/game/game_world.gd" id="1_game"]
+[ext_resource type="Script" path="res://scripts/game/ocean_surface.gd" id="2_ocean"]
+[ext_resource type="PackedScene" path="res://scenes/player/PlayerShip.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/camera/naval_camera_rig.gd" id="4_camera_rig"]
+[ext_resource type="PackedScene" path="res://scenes/ui/MinimalDebugHUD.tscn" id="5_hud"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.14, 0.48, 0.62, 1)
+sky_horizon_color = Color(0.4, 0.67, 0.72, 1)
+ground_bottom_color = Color(0.02, 0.12, 0.17, 1)
+ground_horizon_color = Color(0.22, 0.48, 0.52, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.75, 0.92, 1, 1)
+ambient_light_energy = 0.72
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_game")
+player_path = NodePath("World/PlayerShip")
+camera_rig_path = NodePath("NavalCameraRig")
+debug_hud_path = NodePath("MinimalDebugHUD")
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="World"]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="World"]
+rotation_degrees = Vector3(-52, -32, 0)
+light_color = Color(1, 0.9, 0.72, 1)
+light_energy = 1.8
+shadow_enabled = true
+
+[node name="Ocean" type="MeshInstance3D" parent="World"]
+script = ExtResource("2_ocean")
+
+[node name="PlayerShip" parent="World" instance=ExtResource("3_player")]
+
+[node name="NavalCameraRig" type="Node3D" parent="."]
+script = ExtResource("4_camera_rig")
+target_path = NodePath("../World/PlayerShip/GameplayRoot")
+camera_path = NodePath("Camera3D")
+
+[node name="Camera3D" type="Camera3D" parent="NavalCameraRig"]
+fov = 35.0
+
+[node name="MinimalDebugHUD" parent="." instance=ExtResource("5_hud")]

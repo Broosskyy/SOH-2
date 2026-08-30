@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player_ship.gd" id="1_ship"]
+[ext_resource type="PackedScene" path="res://assets/ships/player/kraken/Kraken_ship_player_30k.glb" id="2_kraken"]
+[ext_resource type="Script" path="res://scripts/player/player_ship_controller.gd" id="3_controller"]
+[ext_resource type="Script" path="res://scripts/input/desktop_input_source.gd" id="4_desktop"]
+
+[node name="PlayerShip" type="Node3D"]
+script = ExtResource("1_ship")
+
+[node name="GameplayRoot" type="Node3D" parent="."]
+
+[node name="VisualRoot" type="Node3D" parent="GameplayRoot"]
+
+[node name="Kraken" parent="GameplayRoot/VisualRoot" instance=ExtResource("2_kraken")]
+
+[node name="CameraAnchor" type="Marker3D" parent="GameplayRoot"]
+position = Vector3(0, 24, 0)
+
+[node name="UiAnchor" type="Marker3D" parent="GameplayRoot"]
+position = Vector3(0, 48, 0)
+
+[node name="PlayerShipController" type="Node" parent="."]
+script = ExtResource("3_controller")
+
+[node name="DesktopInputSource" type="Node" parent="."]
+script = ExtResource("4_desktop")
