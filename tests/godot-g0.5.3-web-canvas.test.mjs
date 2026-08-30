@@ -8,8 +8,8 @@ test("G0.5.3 build marker and version", async () => {
   const project = await read("godot/project.godot");
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   const contract = await read("godot/scripts/platform/web_viewport_contract.gd");
-  assert.match(project, /config\/version="0\.5\.[34]"/);
-  assert.match(metrics, /G0\.5\.[34]-/);
+  assert.match(project, /config\/version="0\.5\.[345]"/);
+  assert.match(metrics, /G0\.5\.[345]-/);
   assert.match(contract, /presentation_resized/);
 });
 

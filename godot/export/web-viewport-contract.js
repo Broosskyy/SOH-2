@@ -1,5 +1,5 @@
 (function () {
-	const BUILD = "G0.5.4-LOGICAL-UI";
+	const BUILD = "G0.5.5-PHONE-COMPOSITION";
 	let installed = false;
 
 	function readVisual() {

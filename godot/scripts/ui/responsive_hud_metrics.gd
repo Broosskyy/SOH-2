@@ -7,8 +7,9 @@ extends RefCounted
 
 enum Profile { DESKTOP_TABLET, PHONE_LANDSCAPE }
 
-const BUILD_LABEL := "G0.5.4-LOGICAL-UI"
+const BUILD_LABEL := "G0.5.5-PHONE-COMPOSITION"
 const MIN_TOUCH_PX := 48.0
+const PHONE_MIN_TOUCH_PX := 26.0
 const PHONE_SHORT_EDGE_MAX := 520.0
 const PHONE_MIN_ASPECT := 1.55
 const PRESENTATION_SCALE_TOLERANCE := 0.05
@@ -98,7 +99,62 @@ static func font_px(viewport: Vector2, ratio: float, min_px := 10, max_px := 28)
 	return int(clampf(short_edge(viewport) * ratio, float(min_px), float(max_px)))
 
 static func min_touch_px(viewport: Vector2) -> float:
+	if detect_profile(viewport) == Profile.PHONE_LANDSCAPE:
+		return clampf(short_edge(viewport) * 0.10, PHONE_MIN_TOUCH_PX, 34.0)
 	return maxf(MIN_TOUCH_PX, short_edge(viewport) * 0.044)
+
+static func central_safe_rect(viewport: Vector2) -> Rect2:
+	var area := safe_rect(viewport)
+	if detect_profile(viewport) == Profile.PHONE_LANDSCAPE:
+		var inset_x := area.size.x * 0.17
+		var inset_top := area.size.y * 0.20
+		var inset_bottom := area.size.y * 0.24
+		return Rect2(
+			area.position.x + inset_x,
+			area.position.y + inset_top,
+			maxf(40.0, area.size.x - inset_x * 2.0),
+			maxf(40.0, area.size.y - inset_top - inset_bottom)
+		)
+	var inset := margin(viewport) * 2.0
+	return Rect2(
+		area.position.x + area.size.x * 0.18,
+		area.position.y + area.size.y * 0.14,
+		area.size.x * 0.64,
+		area.size.y * 0.62
+	)
+
+static func zone_audit_lines(viewport: Vector2) -> PackedStringArray:
+	var names := {
+		PresentationLayout.Zone.PROFILE: "PROFILE_RECT",
+		PresentationLayout.Zone.STATUS: "STATUS_RECT",
+		PresentationLayout.Zone.NAV: "NAV_RECT",
+		PresentationLayout.Zone.MISSION: "MISSION_RECT",
+		PresentationLayout.Zone.MINIMAP: "MINIMAP_RECT",
+		PresentationLayout.Zone.ZOOM: "ZOOM_RECT",
+		PresentationLayout.Zone.CHAT: "CHAT_RECT",
+		PresentationLayout.Zone.CONSUMABLES: "CONSUMABLES_RECT",
+		PresentationLayout.Zone.COMBAT: "COMBAT_RECT",
+	}
+	var lines: PackedStringArray = []
+	for zone in names.keys():
+		var rect := PresentationLayout.zone_rect(viewport, zone)
+		lines.append(
+			"%s: %.0f,%.0f %.0fx%.0f" % [
+				names[zone],
+				rect.position.x,
+				rect.position.y,
+				rect.size.x,
+				rect.size.y,
+			]
+		)
+	var safe := central_safe_rect(viewport)
+	lines.append(
+		"CENTRAL_SAFE_AREA: %.0f,%.0f %.0fx%.0f" % [
+			safe.position.x, safe.position.y, safe.size.x, safe.size.y
+		]
+	)
+	lines.append("PHONE_PROFILE: %s" % profile_name(viewport))
+	return lines
 
 static func safe_rect(viewport: Vector2) -> Rect2:
 	return PlatformService.safe_rect(viewport)
@@ -205,7 +261,7 @@ static func audit_lines(node: Node = null) -> PackedStringArray:
 	var client: Dictionary = metrics.get("client", {})
 	var canvas: Dictionary = metrics.get("canvas", {}) if metrics.get("canvas") is Dictionary else {}
 	var coverage := canvas_coverage()
-	return PackedStringArray([
+	var lines := PackedStringArray([
 		"PROFILE: %s" % profile_name(logical),
 		"LOGICAL_UI: %dx%d" % [int(logical.x), int(logical.y)],
 		"RENDER_VIEWPORT: %dx%d" % [int(render.x), int(render.y)],
@@ -229,6 +285,9 @@ static func audit_lines(node: Node = null) -> PackedStringArray:
 		"CANVAS_COVERAGE_X: %.1f%%" % coverage.x,
 		"CANVAS_COVERAGE_Y: %.1f%%" % coverage.y,
 	])
+	if detect_profile(logical) == Profile.PHONE_LANDSCAPE:
+		lines.append_array(zone_audit_lines(logical))
+	return lines
 
 static func zone_visible(rect: Rect2, viewport: Vector2) -> bool:
 	if rect.size.x <= 1.0 or rect.size.y <= 1.0:

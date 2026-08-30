@@ -33,7 +33,21 @@ static func semantic_scale(_viewport: Vector2, _semantic: Semantic) -> float:
 static func scale_factor(viewport: Vector2) -> float:
 	return 1.0
 
-static func font_size(viewport: Vector2, desktop_px: float, _semantic: Semantic = Semantic.PLAYER_STATUS) -> int:
+static func font_size(viewport: Vector2, desktop_px: float, semantic: Semantic = Semantic.PLAYER_STATUS) -> int:
+	if is_mobile_landscape(viewport):
+		match semantic:
+			Semantic.PLAYER_STATUS, Semantic.FLOATING_PLAYER:
+				return ResponsiveHudMetrics.font_px(viewport, 0.034, 9, 12)
+			Semantic.MISSION, Semantic.CHAT, Semantic.NAVIGATION, Semantic.ZOOM:
+				return ResponsiveHudMetrics.font_px(viewport, 0.028, 7, 10)
+			Semantic.FLOATING_NPC, Semantic.REGION:
+				return ResponsiveHudMetrics.font_px(viewport, 0.026, 7, 9)
+			Semantic.PRIMARY_ACTION:
+				return ResponsiveHudMetrics.font_px(viewport, 0.032, 8, 11)
+			Semantic.SECONDARY_ACTION:
+				return ResponsiveHudMetrics.font_px(viewport, 0.028, 7, 10)
+			_:
+				return ResponsiveHudMetrics.font_px(viewport, 0.028, 7, 10)
 	return ResponsiveHudMetrics.font_px(viewport, desktop_px / maxf(ResponsiveHudMetrics.short_edge(viewport), 1.0))
 
 static func touch_size(viewport: Vector2, desired: float, _semantic: Semantic = Semantic.PRIMARY_ACTION) -> float:
@@ -43,7 +57,12 @@ static func panel_margin(viewport: Vector2) -> float:
 	return ResponsiveHudMetrics.margin(viewport)
 
 static func floating_width(viewport: Vector2, player: bool) -> float:
-	var base := ResponsiveHudMetrics.clamp_length(viewport, HudLayoutProfile.RATIO_FLOATING_PLAYER_W, "x", 92.0, 0.16)
+	var ratio := HudLayoutProfile.pick(
+		viewport,
+		HudLayoutProfile.RATIO_FLOATING_PLAYER_W,
+		HudLayoutProfile.PHONE_RATIO_FLOATING_PLAYER_W
+	)
+	var base := ResponsiveHudMetrics.clamp_length(viewport, ratio, "x", 72.0 if is_mobile_landscape(viewport) else 92.0, 0.16)
 	if not player:
 		base *= 0.84
 	return base

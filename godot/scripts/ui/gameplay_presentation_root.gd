@@ -127,7 +127,7 @@ func _build() -> void:
 	_combat = _build_combat()
 	_zones["combat"].add_child(_combat)
 	_fullscreen = Button.new()
-	_fullscreen.text = "⛶"
+	_fullscreen.text = "FS"
 	_fullscreen.tooltip_text = "Fullscreen"
 	_fullscreen.pressed.connect(_toggle_fullscreen)
 	_zones["fullscreen"].add_child(_fullscreen)
@@ -162,7 +162,7 @@ func _build_profile() -> HBoxContainer:
 	avatar.name = "Avatar"
 	avatar.add_theme_stylebox_override("panel", PresentationTheme.round_button(18.0))
 	var mark := Label.new()
-	mark.text = "☠"
+	mark.text = "SK"
 	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	mark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -223,9 +223,9 @@ func _build_nav() -> HBoxContainer:
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 1)
 	for entry in [
-		["⛵", "SHIPS"], ["⚓", "WERFT"], ["✦", "EVENTS"], ["◆", "QUESTS"],
-		["🏪", "SHOP"], ["⚔", "GUILD"], ["💬", "CHAT"], ["🏆", "ACHIEV"],
-		["📖", "LOG"], ["◎", "RANK"], ["✧", "BONUS"], ["☰", "MENU"],
+		["S", "SHIPS"], ["W", "WERFT"], ["E", "EVENTS"], ["Q", "QUESTS"],
+		["P", "SHOP"], ["G", "GUILD"], ["C", "CHAT"], ["A", "ACHIEV"],
+		["L", "LOG"], ["R", "RANK"], ["B", "BONUS"], ["M", "MENU"],
 	]:
 		row.add_child(_nav_btn(entry[0], entry[1]))
 	return row
@@ -258,7 +258,7 @@ func _build_mission() -> HBoxContainer:
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 8)
 	var icon := Label.new()
-	icon.text = "✦"
+	icon.text = "*"
 	icon.add_theme_color_override("font_color", Color(0.82, 0.45, 0.32))
 	row.add_child(icon)
 	var copy := VBoxContainer.new()
@@ -288,7 +288,7 @@ func _build_target() -> HBoxContainer:
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 6)
 	var icon := Label.new()
-	icon.text = "⚔"
+	icon.text = "X"
 	row.add_child(icon)
 	var copy := VBoxContainer.new()
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -331,7 +331,7 @@ func _build_zoom() -> VBoxContainer:
 	col.add_child(_zoom_btn("MID", 0.0))
 	col.add_child(_zoom_btn("-", -0.08))
 	var recenter := Button.new()
-	recenter.text = "⚓\nSCHIFF"
+	recenter.text = "SHIP"
 	recenter.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	recenter.pressed.connect(func(): camera.reset_pan())
 	col.add_child(recenter)
@@ -355,7 +355,7 @@ func _build_consumables() -> HBoxContainer:
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 6)
-	for slot in [["🛢", "32"], ["🧪", "21"], ["💣", "18"], ["💧", "24"]]:
+	for slot in [["OIL", "32"], ["POT", "21"], ["BMB", "18"], ["H2O", "24"]]:
 		var button := Button.new()
 		button.text = "%s\n%s" % [slot[0], slot[1]]
 		button.disabled = true
@@ -370,7 +370,7 @@ func _build_combat() -> Control:
 	cluster.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var fire := Button.new()
 	fire.name = "FireButton"
-	fire.text = "🔥\nFEUER"
+	fire.text = "FEUER"
 	fire.disabled = true
 	fire.add_theme_stylebox_override("disabled", PresentationTheme.round_button(42.0, Color(0.92, 0.62, 0.22, 0.85)))
 	cluster.add_child(fire)
@@ -423,55 +423,161 @@ func _apply_layout(viewport: Vector2) -> void:
 		_minimap.fill_parent_zone()
 
 func _style_content(viewport: Vector2) -> void:
-	var bar_h := maxf(6.0, viewport.y * 0.009)
+	var is_phone := ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE
+	var bar_h := maxf(4.0 if is_phone else 6.0, viewport.y * (0.006 if is_phone else 0.009))
 	for bar in [_exp_bar, _hull_bar, _shield_bar, _target_hp, _mission_progress]:
 		if bar != null:
 			bar.custom_minimum_size.y = bar_h
-	var nav_h: float = (_zones["nav"] as Control).size.y * 0.82
+	var nav_h: float = (_zones["nav"] as Control).size.y * (0.9 if is_phone else 0.82)
 	for child in _nav.get_children():
 		if child is Button:
 			child.custom_minimum_size = Vector2(0.0, nav_h)
-			child.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.013, 8, 14))
+			if is_phone:
+				var parts: PackedStringArray = (child as Button).text.split("\n")
+				if parts.size() > 1:
+					(child as Button).text = parts[1]
+			child.add_theme_font_size_override(
+				"font_size",
+				HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.NAVIGATION)
+			)
+	var ability_ratio := HudLayoutProfile.pick(
+		viewport,
+		HudLayoutProfile.RATIO_ABILITY_D,
+		HudLayoutProfile.PHONE_RATIO_CONSUMABLE_D
+	)
 	for slot in _consumables.get_children():
 		if slot is Button:
-			var consumable_size := ResponsiveHudMetrics.touch_diameter(viewport, HudLayoutProfile.RATIO_ABILITY_D, ResponsiveHudMetrics.min_touch_px(viewport) * 0.85, 0.14)
+			var consumable_size := ResponsiveHudMetrics.touch_diameter(
+				viewport,
+				ability_ratio,
+				ResponsiveHudMetrics.min_touch_px(viewport) * (0.75 if is_phone else 0.85),
+				0.13 if is_phone else 0.14
+			)
 			slot.custom_minimum_size = Vector2(consumable_size, consumable_size)
-			slot.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 8, 13))
+			slot.add_theme_font_size_override(
+				"font_size",
+				HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION)
+			)
 	var avatar := _profile.get_node_or_null("ProfileRow/Avatar") as PanelContainer
 	if avatar != null:
-		var avatar_size := ResponsiveHudMetrics.touch_diameter(viewport, 0.055, 32.0, 0.12)
+		var avatar_ratio := HudLayoutProfile.pick(
+			viewport,
+			0.055,
+			HudLayoutProfile.PHONE_RATIO_AVATAR_D
+		)
+		var avatar_size := ResponsiveHudMetrics.touch_diameter(
+			viewport,
+			avatar_ratio,
+			24.0 if is_phone else 32.0,
+			0.10 if is_phone else 0.12
+		)
 		avatar.custom_minimum_size = Vector2(avatar_size, avatar_size)
-	_captain_name.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.016, 11, 18))
-	_captain_level.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.014, 10, 16))
-	_guild_label.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 9, 14))
-	_gold_label.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 9, 14))
-	_pearl_label.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 9, 14))
+	_captain_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0, HudLayout.Semantic.PLAYER_STATUS))
+	_captain_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
+	_guild_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
+	_gold_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
+	_pearl_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
 	for value in [_exp_value, _hull_value, _shield_value]:
 		if value != null:
-			value.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.011, 9, 14))
+			value.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.PLAYER_STATUS))
+	for child in _mission.get_children():
+		_apply_label_font(child, viewport, HudLayout.Semantic.MISSION)
 	for child in _chat.get_children():
-		if child is Label:
-			(child as Label).add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.011, 9, 14))
+		_apply_label_font(child, viewport, HudLayout.Semantic.CHAT)
 	for child in _zoom.get_children():
 		if child is Button:
-			(child as Button).add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.012, 9, 14))
+			(child as Button).add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.ZOOM))
+	if is_phone:
+		_profile.add_theme_constant_override("margin_left", 2)
+		_profile.add_theme_constant_override("margin_right", 2)
+		_profile.add_theme_constant_override("margin_top", 2)
+		_profile.add_theme_constant_override("margin_bottom", 2)
+		_mission.add_theme_constant_override("margin_left", 3)
+		_mission.add_theme_constant_override("margin_right", 3)
+		_mission.add_theme_constant_override("margin_top", 2)
+		_mission.add_theme_constant_override("margin_bottom", 2)
+		_chat.add_theme_constant_override("margin_left", 3)
+		_chat.add_theme_constant_override("margin_right", 3)
+		_chat.add_theme_constant_override("margin_top", 2)
+		_chat.add_theme_constant_override("margin_bottom", 2)
+
+func _apply_label_font(node: Node, viewport: Vector2, semantic: HudLayout.Semantic) -> void:
+	if node is Label:
+		(node as Label).add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, semantic))
+	for child in node.get_children():
+		_apply_label_font(child, viewport, semantic)
 
 func _layout_combat(viewport: Vector2) -> void:
 	var rect: Vector2 = (_zones["combat"] as Control).size
+	var is_phone := ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE
+	var fire_ratio := HudLayoutProfile.pick(
+		viewport,
+		HudLayoutProfile.RATIO_FIRE_D,
+		HudLayoutProfile.PHONE_RATIO_FIRE_D
+	)
+	var ability_ratio := HudLayoutProfile.pick(
+		viewport,
+		HudLayoutProfile.RATIO_ABILITY_D,
+		HudLayoutProfile.PHONE_RATIO_ABILITY_D
+	)
 	var fire := _combat.get_node_or_null("FireButton") as Button
-	var fire_size := ResponsiveHudMetrics.touch_diameter(viewport, HudLayoutProfile.RATIO_FIRE_D, ResponsiveHudMetrics.min_touch_px(viewport), 0.22)
+	var fire_size := ResponsiveHudMetrics.touch_diameter(
+		viewport,
+		fire_ratio,
+		ResponsiveHudMetrics.min_touch_px(viewport),
+		0.22
+	)
 	if fire != null:
 		fire.custom_minimum_size = Vector2(fire_size, fire_size)
-		fire.position = Vector2(rect.x - fire_size * 0.92, rect.y - fire_size * 0.88)
-		fire.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.014, 10, 16))
+		fire.position = Vector2(rect.x - fire_size, rect.y - fire_size)
+		fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PRIMARY_ACTION))
+	var ability_offsets: Array[Vector2] = []
+	if is_phone:
+		ability_offsets = [
+			Vector2(-fire_size * 0.92, -fire_size * 0.08),
+			Vector2(-fire_size * 0.72, -fire_size * 0.58),
+			Vector2(-fire_size * 0.30, -fire_size * 0.88),
+		]
+	else:
+		for i in range(3):
+			ability_offsets.append(Vector2(rect.x - fire_size * 1.05, rect.y - fire_size * (1.35 + i * 0.42)) - Vector2.ZERO)
 	for i in range(3):
 		var ability_name: String = ["Ability8", "Ability14", "Ability11"][i]
 		var ability := _combat.get_node_or_null(ability_name) as Button
 		if ability != null:
-			var ability_size := ResponsiveHudMetrics.touch_diameter(viewport, HudLayoutProfile.RATIO_ABILITY_D, ResponsiveHudMetrics.min_touch_px(viewport) * 0.85, 0.12)
+			var ability_size := ResponsiveHudMetrics.touch_diameter(
+				viewport,
+				ability_ratio,
+				ResponsiveHudMetrics.min_touch_px(viewport) * (0.75 if is_phone else 0.85),
+				0.12
+			)
 			ability.custom_minimum_size = Vector2(ability_size, ability_size)
-			ability.position = Vector2(rect.x - fire_size * 1.05, rect.y - fire_size * (1.35 + i * 0.42))
-			ability.add_theme_font_size_override("font_size", ResponsiveHudMetrics.font_px(viewport, 0.011, 8, 13))
+			if is_phone:
+				ability.position = Vector2(rect.x - fire_size, rect.y - fire_size) + ability_offsets[i]
+			else:
+				ability.position = Vector2(rect.x - fire_size * 1.05, rect.y - fire_size * (1.35 + i * 0.42))
+			ability.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
+	var utility_offsets := [
+		Vector2(-fire_size * 0.55, -fire_size * 1.02),
+		Vector2(-fire_size * 1.02, -fire_size * 0.55),
+		Vector2(-fire_size * 0.20, -fire_size * 1.02),
+		Vector2(-fire_size * 1.02, -fire_size * 0.20),
+	] if is_phone else []
+	var utility_index := 0
+	for utility_name in ["TargetButton", "AutoButton", "ShieldButton", "RepairButton"]:
+		var utility := _combat.get_node_or_null(utility_name) as Button
+		if utility == null:
+			continue
+		var utility_size := ResponsiveHudMetrics.touch_diameter(
+			viewport,
+			ability_ratio * 0.92,
+			ResponsiveHudMetrics.min_touch_px(viewport) * 0.7,
+			0.11
+		)
+		utility.custom_minimum_size = Vector2(utility_size, utility_size)
+		if is_phone and utility_index < utility_offsets.size():
+			utility.position = Vector2(rect.x - fire_size, rect.y - fire_size) + utility_offsets[utility_index]
+		utility_index += 1
 
 func _refresh() -> void:
 	var ship_id := str(GameState.save_data.get("shipId", "sovereign"))
@@ -494,8 +600,8 @@ func _refresh() -> void:
 	_shield_value.text = "%s / %s" % [_fmt(MockupCompositionProfile.HUD_SCHUTZ_CURRENT), _fmt(MockupCompositionProfile.HUD_SCHUTZ_MAX)]
 	_captain_name.text = str(GameState.save_data.get("playerName", MockupCompositionProfile.HUD_PLAYER_NAME)).to_upper()
 	_captain_level.text = "Lv. %d" % int(GameState.save_data.get("level", MockupCompositionProfile.HUD_PLAYER_LEVEL))
-	_gold_label.text = "◆ %s" % _fmt_num(int(GameState.save_data.get("gold", 815600)))
-	_pearl_label.text = "● %d" % int(GameState.save_data.get("pearls", 3250))
+	_gold_label.text = "G %s" % _fmt_num(int(GameState.save_data.get("gold", 815600)))
+	_pearl_label.text = "P %d" % int(GameState.save_data.get("pearls", 3250))
 
 func _refresh_target() -> void:
 	var target := TargetingSystem.current_target

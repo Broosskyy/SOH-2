@@ -16,14 +16,24 @@ enum Zone {
 	TARGET,
 }
 
-const BUILD_LABEL := "G0.5.4-LOGICAL-UI"
-const GIT_SHA := "88436d0"
+const BUILD_LABEL := "G0.5.5-PHONE-COMPOSITION"
+const GIT_SHA := "d4b76d5"
 
 static func zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
+	if HudLayoutProfile.is_phone(viewport):
+		return _phone_zone_rect(viewport, zone)
+	return _desktop_zone_rect(viewport, zone)
+
+static func _desktop_zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
 	var area := ResponsiveHudMetrics.safe_rect(viewport)
 	var m := ResponsiveHudMetrics.margin(viewport)
-	var profile := ResponsiveHudMetrics.detect_profile(viewport)
-	var top_h := ResponsiveHudMetrics.clamp_length(viewport, HudLayoutProfile.RATIO_TOP_BAR_H, "y", ResponsiveHudMetrics.min_touch_px(viewport) * 0.5, 0.12)
+	var top_h := ResponsiveHudMetrics.clamp_length(
+		viewport,
+		HudLayoutProfile.RATIO_TOP_BAR_H,
+		"y",
+		ResponsiveHudMetrics.min_touch_px(viewport) * 0.5,
+		0.12
+	)
 	match zone:
 		Zone.PROFILE:
 			var w := ResponsiveHudMetrics.clamp_length(viewport, HudLayoutProfile.RATIO_PROFILE_W, "x", 96.0, 0.22)
@@ -31,15 +41,12 @@ static func zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
 		Zone.STATUS:
 			var w := ResponsiveHudMetrics.clamp_length(viewport, HudLayoutProfile.RATIO_STATUS_BAR_W, "x", 120.0, 0.28)
 			var x := area.position.x + area.size.x * 0.5 - w * 0.5
-			if profile == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE:
-				x = area.position.x + ResponsiveHudMetrics.length(viewport, HudLayoutProfile.RATIO_PROFILE_W, "x") + m * 2.0
 			return Rect2(x, area.position.y + m, w, top_h)
 		Zone.NAV:
 			var left := area.position.x + ResponsiveHudMetrics.length(viewport, HudLayoutProfile.RATIO_PROFILE_W, "x") + m * 2.0
 			var right := area.end.x - ResponsiveHudMetrics.touch_diameter(viewport, HudLayoutProfile.RATIO_MINIMAP_D) - m * 2.0
-			if profile == ResponsiveHudMetrics.Profile.DESKTOP_TABLET:
-				left = area.position.x + area.size.x * 0.2
-				right = area.end.x - area.size.x * 0.2
+			left = area.position.x + area.size.x * 0.2
+			right = area.end.x - area.size.x * 0.2
 			var w := maxf(120.0, right - left)
 			return Rect2(left, area.position.y + m, w, top_h)
 		Zone.CURRENCY:
@@ -74,6 +81,139 @@ static func zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
 		Zone.TARGET:
 			var w := ResponsiveHudMetrics.clamp_length(viewport, 0.24, "x", 100.0, 0.42)
 			return Rect2(area.position.x + area.size.x * 0.5 - w * 0.5, area.position.y + top_h + m * 0.2, w, top_h * 0.75)
+		_:
+			return Rect2()
+
+static func _phone_zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
+	var area := ResponsiveHudMetrics.safe_rect(viewport)
+	var m := ResponsiveHudMetrics.margin(viewport)
+	var top_h := ResponsiveHudMetrics.clamp_length(
+		viewport,
+		HudLayoutProfile.PHONE_RATIO_TOP_BAR_H,
+		"y",
+		18.0,
+		0.10
+	)
+	var profile_w := ResponsiveHudMetrics.clamp_length(
+		viewport,
+		HudLayoutProfile.PHONE_RATIO_PROFILE_W,
+		"x",
+		84.0,
+		0.16
+	)
+	var status_w := ResponsiveHudMetrics.clamp_length(
+		viewport,
+		HudLayoutProfile.PHONE_RATIO_STATUS_BAR_W,
+		"x",
+		100.0,
+		0.26
+	)
+	var minimap_d := ResponsiveHudMetrics.touch_diameter(
+		viewport,
+		HudLayoutProfile.PHONE_RATIO_MINIMAP_D,
+		ResponsiveHudMetrics.min_touch_px(viewport),
+		0.22
+	)
+	var mission_h := ResponsiveHudMetrics.clamp_length(
+		viewport,
+		HudLayoutProfile.PHONE_RATIO_MISSION_H,
+		"y",
+		52.0,
+		0.28
+	)
+	var consumable_h := ResponsiveHudMetrics.touch_diameter(
+		viewport,
+		HudLayoutProfile.PHONE_RATIO_CONSUMABLE_D,
+		ResponsiveHudMetrics.min_touch_px(viewport),
+		0.13
+	)
+	var combat_size := ResponsiveHudMetrics.touch_diameter(
+		viewport,
+		HudLayoutProfile.PHONE_RATIO_FIRE_D,
+		ResponsiveHudMetrics.min_touch_px(viewport),
+		0.22
+	) * HudLayoutProfile.PHONE_COMBAT_CLUSTER_SCALE
+	match zone:
+		Zone.PROFILE:
+			return Rect2(area.position.x + m, area.position.y + m, profile_w, top_h)
+		Zone.STATUS:
+			var x := area.position.x + profile_w + m * 1.5
+			return Rect2(x, area.position.y + m, status_w, top_h)
+		Zone.NAV:
+			var left := area.position.x + profile_w + status_w + m * 2.0
+			var right := area.end.x - minimap_d - m * 1.5
+			var w := maxf(80.0, right - left)
+			return Rect2(left, area.position.y + m, w, top_h)
+		Zone.CURRENCY:
+			var w := ResponsiveHudMetrics.clamp_length(viewport, 0.12, "x", 64.0, 0.16)
+			return Rect2(area.end.x - w - m, area.position.y + m * 0.35, w, top_h * 0.72)
+		Zone.MISSION:
+			var w := ResponsiveHudMetrics.clamp_length(
+				viewport,
+				HudLayoutProfile.PHONE_RATIO_MISSION_W,
+				"x",
+				96.0,
+				0.24
+			)
+			return Rect2(area.position.x + m, area.position.y + top_h + m * 0.5, w, mission_h)
+		Zone.MINIMAP:
+			return Rect2(area.end.x - minimap_d - m, area.position.y + m, minimap_d, minimap_d)
+		Zone.ZOOM:
+			var w := ResponsiveHudMetrics.clamp_length(
+				viewport,
+				HudLayoutProfile.PHONE_RATIO_ZOOM_W,
+				"x",
+				30.0,
+				0.07
+			)
+			var h := ResponsiveHudMetrics.clamp_length(
+				viewport,
+				HudLayoutProfile.PHONE_RATIO_ZOOM_H,
+				"y",
+				52.0,
+				0.28
+			)
+			var y := area.position.y + top_h + mission_h + m
+			return Rect2(area.position.x + m, y, w, h)
+		Zone.CHAT:
+			var w := ResponsiveHudMetrics.clamp_length(
+				viewport,
+				HudLayoutProfile.PHONE_RATIO_CHAT_W,
+				"x",
+				96.0,
+				0.26
+			)
+			var h := ResponsiveHudMetrics.clamp_length(
+				viewport,
+				HudLayoutProfile.PHONE_RATIO_CHAT_H,
+				"y",
+				52.0,
+				0.30
+			)
+			var y := area.end.y - h - m - consumable_h * 0.35
+			return Rect2(area.position.x + m, y, w, h)
+		Zone.CONSUMABLES:
+			var w := ResponsiveHudMetrics.clamp_length(
+				viewport,
+				HudLayoutProfile.PHONE_RATIO_CONSUMABLE_ROW_W,
+				"x",
+				96.0,
+				0.26
+			)
+			return Rect2(
+				area.position.x + area.size.x * 0.5 - w * 0.5,
+				area.end.y - consumable_h - m,
+				w,
+				consumable_h
+			)
+		Zone.COMBAT:
+			return Rect2(area.end.x - combat_size - m, area.end.y - combat_size - m, combat_size, combat_size)
+		Zone.FULLSCREEN:
+			var fs := ResponsiveHudMetrics.touch_diameter(viewport, 0.038, 24.0, 0.07)
+			return Rect2(area.end.x - fs - m, area.position.y + top_h + m * 0.2, fs, fs)
+		Zone.TARGET:
+			var w := ResponsiveHudMetrics.clamp_length(viewport, 0.18, "x", 84.0, 0.34)
+			return Rect2(area.position.x + area.size.x * 0.5 - w * 0.5, area.position.y + top_h + m * 0.15, w, top_h * 0.7)
 		_:
 			return Rect2()
 

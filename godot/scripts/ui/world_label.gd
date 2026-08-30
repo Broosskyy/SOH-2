@@ -54,16 +54,17 @@ func update_projection(camera: Camera3D, world_position: Vector3) -> void:
 	var logical := ResponsiveHudMetrics.logical_ui_viewport_size(self)
 	var render := ResponsiveHudMetrics.render_viewport_size(self)
 	var pscale := ResponsiveHudMetrics.presentation_scale_uniform(self)
-	var font_px := HudLayout.font_size(
+	var font_px_val := HudLayout.font_size(
 		logical,
-		16.0 if HudLayout.is_mobile_landscape(logical) else 12.0,
+		12.0,
 		HudLayout.Semantic.FLOATING_NPC
 	)
-	_label.add_theme_font_size_override("font_size", int(round(font_px * pscale)))
+	_label.add_theme_font_size_override("font_size", int(round(font_px_val * pscale)))
 	if _hp_bar != null:
+		var bar_w := HudLayout.floating_width(logical, false) * pscale
 		_hp_bar.custom_minimum_size = Vector2(
-			HudLayout.floating_width(logical, false) * pscale,
-			maxf(5.0, logical.y * 0.006) * pscale
+			bar_w,
+			maxf(3.0 if HudLayout.is_mobile_landscape(logical) else 5.0, logical.y * 0.005) * pscale
 		)
 	var screen_position := camera.unproject_position(world_position)
 	var height := _label.size.y + (_hp_bar.custom_minimum_size.y if _hp_bar != null else 0.0)

@@ -80,6 +80,7 @@ func _process(_delta: float) -> void:
 	var logical := ResponsiveHudMetrics.logical_ui_viewport_size(self)
 	var render := ResponsiveHudMetrics.render_viewport_size(self)
 	var pscale := ResponsiveHudMetrics.presentation_scale_uniform(self)
+	var is_phone := HudLayout.is_mobile_landscape(logical)
 	var width := HudLayout.floating_width(logical, true) * pscale
 	player_name.add_theme_font_size_override(
 		"font_size",
@@ -89,9 +90,11 @@ func _process(_delta: float) -> void:
 		"font_size",
 		int(round(HudLayout.font_size(logical, 9.0, HudLayout.Semantic.FLOATING_PLAYER) * pscale))
 	)
-	hp_bar.custom_minimum_size = Vector2(width, maxf(4.0, logical.y * 0.006) * pscale)
-	shield_bar.custom_minimum_size = Vector2(width, maxf(3.0, logical.y * 0.005) * pscale)
-	root.custom_minimum_size = Vector2(width, maxf(28.0, logical.y * 0.05) * pscale)
+	var bar_h_hp := maxf(3.0 if is_phone else 4.0, logical.y * (0.004 if is_phone else 0.006)) * pscale
+	var bar_h_shield := maxf(2.0 if is_phone else 3.0, logical.y * (0.0035 if is_phone else 0.005)) * pscale
+	hp_bar.custom_minimum_size = Vector2(width, bar_h_hp)
+	shield_bar.custom_minimum_size = Vector2(width, bar_h_shield)
+	root.custom_minimum_size = Vector2(width, maxf(22.0 if is_phone else 28.0, logical.y * (0.04 if is_phone else 0.05)) * pscale)
 	var screen_position := camera.unproject_position(ui_anchor.global_position)
 	var desired := screen_position + _profile.nameplate_offset
 	desired -= Vector2(width * 0.5, root.size.y + _profile.ui_safe_gap * pscale)
