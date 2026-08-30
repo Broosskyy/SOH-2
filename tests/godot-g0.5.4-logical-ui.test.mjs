@@ -24,8 +24,8 @@ function detectProfile(w, h) {
 test("G0.5.4 build marker and version", async () => {
   const project = await read("godot/project.godot");
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
-  assert.match(project, /config\/version="0\.5\.[45678]"/);
-  assert.match(metrics, /G0\.5\.[45678]-/);
+  assert.match(project, /config\/version="0\.[56]\.[0-8]"/);
+  assert.match(metrics, /G0\.(5|6)-/);
 });
 
 test("logical and render viewport sources are explicit", async () => {

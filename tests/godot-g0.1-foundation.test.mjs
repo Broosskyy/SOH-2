@@ -64,7 +64,7 @@ test("test world and all Tier-1 export presets are configured", async () => {
   assert.match(world, /RegionRuntime/);
   assert.match(world, /IslandContainer/);
   assert.match(world, /HarborContainer/);
-  assert.match(world, /GameplayPresentation|FloatingPlayerHUD/);
+  assert.match(world, /GameplayHUDV2|FloatingPlayerHUD/);
   for (const preset of ["Web", "Android", "iOS", "Windows"]) {
     assert.match(exports, new RegExp(`name="${preset}"`));
   }

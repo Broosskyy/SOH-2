@@ -1,3 +1,5 @@
+## LEGACY — G0.5.x responsive HUD (deprecated G0.6).
+## Kept for reference only. Active gameplay uses GameplayHUDV2.
 class_name GameplayPresentationRoot
 extends CanvasLayer
 

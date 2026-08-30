@@ -35,10 +35,10 @@ test("G0.5.7 build marker and version (superseded by G0.5.8)", async () => {
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   const solver = await read("godot/scripts/ui/responsive_hud_layout_solver.gd");
   const exportScript = await read("scripts/godot-web-export.mjs");
-  assert.match(project, /config\/version="0\.5\.8"/);
-  assert.match(layout, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
+  assert.match(project, /config\/version="0\.6\.0"/);
+  assert.match(layout, /G0\.6-HUD-V2-CLEAN-REBUILD/);
   assert.match(solver, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
-  assert.match(exportScript, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
+  assert.match(exportScript, /G0\.6-HUD-V2-CLEAN-REBUILD/);
 });
 
 test("single layout authority delegates to ResponsiveHudLayoutSolver", async () => {

@@ -16,7 +16,7 @@ test("runtime QA marker gated to qa query flag", async () => {
   assert.match(qa, /query_flag\("qa"\)/);
   assert.match(project, /RuntimeQaMarker/);
   const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
-  assert.match(profile, /G0\.5\.[012345678]-/);
+  assert.match(profile, /G0\.(5|6)-/);
 });
 
 test("single gameplay HUD owner with mobile landscape profile (legacy file)", async () => {
@@ -38,7 +38,7 @@ test("normalized control prominence (presentation root)", async () => {
 test("diagnostic overlay remains diag gated", async () => {
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
   assert.match(overlay, /query_flag\("diag"\)/);
-  assert.match(overlay, /G0\.5\.[012345678]-/);
+  assert.match(overlay, /G0\.(5|6)-/);
 });
 
 test("runtime HUD audit docs exist", async () => {

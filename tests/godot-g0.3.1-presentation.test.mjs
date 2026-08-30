@@ -60,8 +60,8 @@ test("minimap data mapping foundation", async () => {
   assert.match(minimap, /map_data/);
   assert.match(minimap, /island_entities/);
   assert.match(minimap, /npc_ships/);
-  assert.match(world, /GameplayPresentation/);
-  assert.match(world, /Minimap|gameplay_presentation_root/);
+  assert.match(world, /GameplayHUDV2/);
+  assert.match(world, /gameplay_hud_v2|Minimap/);
 });
 
 test("HUD responsive contract (presentation root)", async () => {

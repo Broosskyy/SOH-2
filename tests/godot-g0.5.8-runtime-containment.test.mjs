@@ -31,15 +31,9 @@ const TEST_VIEWPORTS = [
 
 const PHONE_VIEWPORTS = TEST_VIEWPORTS.filter(([w, h]) => detectProfile(w, h) === "PHONE_LANDSCAPE");
 
-test("G0.5.8 build marker and version", async () => {
-  const project = await read("godot/project.godot");
-  const layout = await read("godot/scripts/ui/presentation_layout.gd");
+test("G0.5.8 build marker preserved in legacy containment module", async () => {
   const containment = await read("godot/scripts/ui/hud_region_containment.gd");
-  const exportScript = await read("scripts/godot-web-export.mjs");
-  assert.match(project, /config\/version="0\.5\.8"/);
-  assert.match(layout, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
   assert.match(containment, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
-  assert.match(exportScript, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
 });
 
 test("responsive foundation unchanged", async () => {

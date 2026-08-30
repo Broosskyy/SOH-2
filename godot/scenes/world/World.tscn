@@ -13,7 +13,7 @@
 [ext_resource type="Script" path="res://scripts/npc/npc_spawner.gd" id="11_spawner"]
 [ext_resource type="Script" path="res://scripts/ui/world_label_service.gd" id="12_labels"]
 [ext_resource type="Script" path="res://scripts/ui/target_reticle.gd" id="13_reticle"]
-[ext_resource type="Script" path="res://scripts/ui/gameplay_presentation_root.gd" id="14_gameplay_hud"]
+[ext_resource type="Script" path="res://scripts/ui/v2/gameplay_hud_v2.gd" id="14_gameplay_hud"]
 [ext_resource type="Script" path="res://scripts/world/ocean_surface.gd" id="16_ocean"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
@@ -93,7 +93,7 @@ script = ExtResource("5_hud")
 target_path = NodePath("../PlayerShip")
 camera_path = NodePath("../Camera")
 
-[node name="GameplayPresentation" type="CanvasLayer" parent="."]
+[node name="GameplayHUDV2" type="CanvasLayer" parent="."]
 script = ExtResource("14_gameplay_hud")
 player_path = NodePath("../PlayerShip")
 camera_path = NodePath("../Camera")
