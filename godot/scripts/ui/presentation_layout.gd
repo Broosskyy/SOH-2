@@ -17,7 +17,7 @@ enum Zone {
 }
 
 const BUILD_LABEL := "G0.5.3-WEB-CANVAS-RECOVERY"
-const GIT_SHA := "1030cfe"
+const GIT_SHA := "f67762e"
 
 static func zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
 	var area := ResponsiveHudMetrics.safe_rect(viewport)
