@@ -37,12 +37,16 @@ test("web build breakdown reports sorted artifact sizes", async () => {
   }
 });
 
-test("runtime matrix covers three viewports in desktop and mobile modes", () => {
-  assert.equal(RUNTIME_MATRIX.length, 6);
+test("runtime matrix covers mobile and desktop viewports", () => {
+  assert.equal(RUNTIME_MATRIX.length, 10);
   assert.deepEqual(
     RUNTIME_MATRIX.map(({ width, height, mobile }) =>
       `${width}x${height}:${mobile ? "mobile" : "desktop"}`),
     [
+      "915x412:desktop",
+      "915x412:mobile",
+      "755x298:desktop",
+      "755x298:mobile",
       "1280x720:desktop",
       "1280x720:mobile",
       "1920x1080:desktop",

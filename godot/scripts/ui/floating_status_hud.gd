@@ -77,18 +77,25 @@ func _process(_delta: float) -> void:
 		root.visible = false
 		return
 	root.visible = true
-	var viewport_size := get_viewport().get_visible_rect().size
-	var scale := HudLayout.semantic_scale(viewport_size, HudLayout.Semantic.FLOATING_PLAYER)
-	var width := HudLayout.floating_width(viewport_size, true)
-	player_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 11.0, HudLayout.Semantic.FLOATING_PLAYER))
-	level_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport_size, 9.0, HudLayout.Semantic.FLOATING_PLAYER))
-	hp_bar.custom_minimum_size = Vector2(width, maxf(4.0, viewport_size.y * 0.006))
-	shield_bar.custom_minimum_size = Vector2(width, maxf(3.0, viewport_size.y * 0.005))
-	root.custom_minimum_size = Vector2(width, maxf(28.0, viewport_size.y * 0.05))
+	var logical := ResponsiveHudMetrics.logical_ui_viewport_size(self)
+	var render := ResponsiveHudMetrics.render_viewport_size(self)
+	var pscale := ResponsiveHudMetrics.presentation_scale_uniform(self)
+	var width := HudLayout.floating_width(logical, true) * pscale
+	player_name.add_theme_font_size_override(
+		"font_size",
+		int(round(HudLayout.font_size(logical, 11.0, HudLayout.Semantic.FLOATING_PLAYER) * pscale))
+	)
+	level_label.add_theme_font_size_override(
+		"font_size",
+		int(round(HudLayout.font_size(logical, 9.0, HudLayout.Semantic.FLOATING_PLAYER) * pscale))
+	)
+	hp_bar.custom_minimum_size = Vector2(width, maxf(4.0, logical.y * 0.006) * pscale)
+	shield_bar.custom_minimum_size = Vector2(width, maxf(3.0, logical.y * 0.005) * pscale)
+	root.custom_minimum_size = Vector2(width, maxf(28.0, logical.y * 0.05) * pscale)
 	var screen_position := camera.unproject_position(ui_anchor.global_position)
 	var desired := screen_position + _profile.nameplate_offset
-	desired -= Vector2(width * 0.5, root.size.y + _profile.ui_safe_gap)
-	var safe_rect := PlatformService.safe_rect(viewport_size)
+	desired -= Vector2(width * 0.5, root.size.y + _profile.ui_safe_gap * pscale)
+	var safe_rect := PlatformService.safe_rect(render)
 	var inset := 6.0
 	root.position = Vector2(
 		clampf(desired.x, safe_rect.position.x + inset, maxf(safe_rect.position.x + inset, safe_rect.end.x - width - inset)),

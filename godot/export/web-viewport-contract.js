@@ -1,5 +1,5 @@
 (function () {
-	const BUILD = "G0.5.3-WEB-CANVAS-RECOVERY";
+	const BUILD = "G0.5.4-LOGICAL-UI";
 	let installed = false;
 
 	function readVisual() {

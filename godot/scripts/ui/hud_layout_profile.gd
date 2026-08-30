@@ -5,7 +5,7 @@ extends RefCounted
 
 enum Profile { DESKTOP, MOBILE_LANDSCAPE, MOBILE_PORTRAIT }
 
-const BUILD_LABEL := "G0.5.3-WEB-CANVAS-RECOVERY"
+const BUILD_LABEL := "G0.5.4-LOGICAL-UI"
 const GIT_SHA := "c3db31f"
 
 const RATIO_TOP_BAR_H := 0.072

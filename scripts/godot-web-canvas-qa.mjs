@@ -154,7 +154,7 @@ try {
   if (consoleErrors.length) {
     throw new Error(`Web runtime console errors:\n${consoleErrors.join("\n")}`);
   }
-  if (!String(payload.build).includes("G0.5.3")) {
+  if (!String(payload.build).includes("G0.5.4")) {
     throw new Error(`Stale or missing build marker: ${payload.build || "none"}`);
   }
   if (coverage.x < minCoverage || coverage.y < minCoverage) {

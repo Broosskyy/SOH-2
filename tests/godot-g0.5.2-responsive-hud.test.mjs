@@ -15,8 +15,8 @@ test("one responsive viewport source", async () => {
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
-  assert.match(metrics, /static func ui_viewport/);
-  assert.match(root, /ResponsiveHudMetrics\.ui_viewport/);
+  assert.match(metrics, /static func logical_ui_viewport_size/);
+  assert.match(root, /ResponsiveHudMetrics\.logical_ui_viewport_size/);
   assert.match(layout, /ResponsiveHudMetrics\./);
   assert.doesNotMatch(root, /css_to_render/);
 });
@@ -37,7 +37,8 @@ test("GameplayPresentationRoot fills available rect without cumulative scale", a
   assert.match(root, /scale = Vector2\.ONE/);
   assert.match(root, /ProfileZone/);
   assert.match(root, /CombatZone/);
-  assert.match(root, /_last_viewport/);
+  assert.match(root, /_apply_presentation_transform/);
+  assert.match(root, /_last_logical/);
   assert.doesNotMatch(root, /1920/);
 });
 
@@ -69,7 +70,7 @@ test("resize idempotence and fullscreen relayout hooks", async () => {
   const world = await read("godot/scripts/world/world.gd");
   const contractJs = await read("godot/export/web-viewport-contract.js");
   assert.match(root, /size_changed\.connect/);
-  assert.match(root, /if viewport == _last_viewport/);
+  assert.match(root, /if logical == _last_logical and is_equal_approx\(pscale, _last_scale\)/);
   assert.match(contractJs, /fullscreenchange/);
   assert.match(world, /WebViewportContract/);
 });

@@ -1,10 +1,12 @@
 extends Node
 
-## G0.5.3 — Web canvas CSS contract + debounced HUD relayout notifications.
+## G0.5.4 — Web canvas contract + logical/render viewport change detection.
 
 signal presentation_resized
 
-var _last_viewport := Vector2.ZERO
+var _last_logical := Vector2.ZERO
+var _last_render := Vector2.ZERO
+var _last_scale := 1.0
 var _contract_ready := false
 
 func _ready() -> void:
@@ -28,10 +30,14 @@ func _check_viewport() -> void:
 	if not _contract_ready:
 		return
 	ResponsiveHudMetrics.install_web_canvas_contract()
-	var viewport := ResponsiveHudMetrics.ui_viewport()
-	if viewport == _last_viewport:
+	var logical := ResponsiveHudMetrics.logical_ui_viewport_size()
+	var render := ResponsiveHudMetrics.render_viewport_size()
+	var pscale := ResponsiveHudMetrics.presentation_scale_uniform()
+	if logical == _last_logical and render == _last_render and is_equal_approx(pscale, _last_scale):
 		return
-	_last_viewport = viewport
+	_last_logical = logical
+	_last_render = render
+	_last_scale = pscale
 	presentation_resized.emit()
 
 func request_sync() -> void:

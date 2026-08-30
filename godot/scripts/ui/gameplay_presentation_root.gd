@@ -11,7 +11,8 @@ extends CanvasLayer
 
 var _root: Control
 var _zones: Dictionary = {}
-var _last_viewport := Vector2.ZERO
+var _last_logical := Vector2.ZERO
+var _last_scale := 1.0
 
 var _profile: PanelContainer
 var _status: PanelContainer
@@ -64,11 +65,21 @@ func _process(_delta: float) -> void:
 		_refresh_target()
 
 func _on_viewport_changed() -> void:
-	var viewport := ResponsiveHudMetrics.ui_viewport(self)
-	if viewport == _last_viewport:
+	var logical := ResponsiveHudMetrics.logical_ui_viewport_size(self)
+	var pscale := ResponsiveHudMetrics.presentation_scale_uniform(self)
+	if logical == _last_logical and is_equal_approx(pscale, _last_scale):
 		return
-	_last_viewport = viewport
-	_apply_layout(viewport)
+	_last_logical = logical
+	_last_scale = pscale
+	_apply_presentation_transform(logical, pscale)
+	_apply_layout(logical)
+
+func _apply_presentation_transform(logical: Vector2, pscale: float) -> void:
+	scale = Vector2.ONE
+	_root.position = Vector2.ZERO
+	_root.custom_minimum_size = logical
+	_root.size = logical
+	_root.scale = Vector2.ONE * pscale
 
 func _build() -> void:
 	_root = Control.new()
@@ -386,8 +397,6 @@ func _bar(color: Color) -> ProgressBar:
 	return bar
 
 func _apply_layout(viewport: Vector2) -> void:
-	_root.scale = Vector2.ONE
-	scale = Vector2.ONE
 	var zone_map := {
 		"profile": PresentationLayout.Zone.PROFILE,
 		"status": PresentationLayout.Zone.STATUS,

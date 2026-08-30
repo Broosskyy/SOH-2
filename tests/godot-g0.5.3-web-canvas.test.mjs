@@ -8,8 +8,8 @@ test("G0.5.3 build marker and version", async () => {
   const project = await read("godot/project.godot");
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   const contract = await read("godot/scripts/platform/web_viewport_contract.gd");
-  assert.match(project, /config\/version="0\.5\.3"/);
-  assert.match(metrics, /G0\.5\.3-WEB-CANVAS-RECOVERY/);
+  assert.match(project, /config\/version="0\.5\.[34]"/);
+  assert.match(metrics, /G0\.5\.[34]-/);
   assert.match(contract, /presentation_resized/);
 });
 
@@ -47,10 +47,13 @@ test("browser content viewport uses visual viewport", async () => {
 test("QA diagnostics include canvas chain", async () => {
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   for (const key of [
+    "PROFILE:",
+    "LOGICAL_UI:",
+    "RENDER_VIEWPORT:",
+    "PRESENTATION_SCALE:",
     "INNER:",
     "VISUAL:",
     "CLIENT:",
-    "CONTAINER:",
     "CANVAS_CSS:",
     "CANVAS_BUFFER:",
     "GODOT_WINDOW:",

@@ -16,7 +16,7 @@ enum Zone {
 	TARGET,
 }
 
-const BUILD_LABEL := "G0.5.3-WEB-CANVAS-RECOVERY"
+const BUILD_LABEL := "G0.5.4-LOGICAL-UI"
 const GIT_SHA := "f67762e"
 
 static func zone_rect(viewport: Vector2, zone: Zone) -> Rect2:

@@ -1,18 +1,19 @@
 class_name ResponsiveHudMetrics
 extends RefCounted
 
-## G0.5.2 — single authoritative native UI viewport metrics.
-## All HUD layout uses Godot UI coordinates from the actual available viewport.
-## CSS / DPR are diagnostic only — never used for Control positioning.
+## G0.5.4 — logical UI space vs render buffer separation.
+## Layout/profile uses logical browser game area on Web.
+## Presentation root maps logical layout → render coordinates via measured scale.
 
 enum Profile { DESKTOP_TABLET, PHONE_LANDSCAPE }
 
-const BUILD_LABEL := "G0.5.3-WEB-CANVAS-RECOVERY"
+const BUILD_LABEL := "G0.5.4-LOGICAL-UI"
 const MIN_TOUCH_PX := 48.0
 const PHONE_SHORT_EDGE_MAX := 520.0
 const PHONE_MIN_ASPECT := 1.55
+const PRESENTATION_SCALE_TOLERANCE := 0.05
 
-static func ui_viewport(node: Node = null) -> Vector2:
+static func render_viewport_size(node: Node = null) -> Vector2:
 	if node != null and is_instance_valid(node) and node.get_viewport() != null:
 		var size := node.get_viewport().get_visible_rect().size
 		if size.x > 1.0 and size.y > 1.0:
@@ -26,6 +27,36 @@ static func ui_viewport(node: Node = null) -> Vector2:
 		float(ProjectSettings.get_setting("display/window/size/viewport_width", 1920)),
 		float(ProjectSettings.get_setting("display/window/size/viewport_height", 1080))
 	)
+
+static func logical_ui_viewport_size(node: Node = null) -> Vector2:
+	if OS.get_name() == "Web":
+		var logical := browser_content_viewport()
+		if logical.x >= 320.0 and logical.y >= 240.0:
+			return logical
+	return render_viewport_size(node)
+
+static func ui_viewport(node: Node = null) -> Vector2:
+	return logical_ui_viewport_size(node)
+
+static func presentation_scale_uniform(node: Node = null) -> float:
+	var logical := logical_ui_viewport_size(node)
+	var render := render_viewport_size(node)
+	if logical.x < 1.0 or logical.y < 1.0 or render.x < 1.0 or render.y < 1.0:
+		return 1.0
+	if OS.get_name() != "Web":
+		return 1.0
+	var sx := render.x / logical.x
+	var sy := render.y / logical.y
+	if absf(sx - sy) <= PRESENTATION_SCALE_TOLERANCE:
+		return (sx + sy) * 0.5
+	return minf(sx, sy)
+
+static func presentation_scale(node: Node = null) -> Vector2:
+	var uniform := presentation_scale_uniform(node)
+	return Vector2.ONE * uniform
+
+static func render_size_from_logical(logical_size: float, node: Node = null) -> float:
+	return logical_size * presentation_scale_uniform(node)
 
 static func short_edge(viewport: Vector2) -> float:
 	return minf(viewport.x, viewport.y)
@@ -97,7 +128,16 @@ static func browser_content_viewport() -> Vector2:
 	var metrics := web_metrics()
 	var container: Variant = metrics.get("container", {})
 	if container is Dictionary:
-		return Vector2(float(container.get("w", 0)), float(container.get("h", 0)))
+		var w := float(container.get("w", 0))
+		var h := float(container.get("h", 0))
+		if w >= 320.0 and h >= 240.0:
+			return Vector2(w, h)
+	var canvas: Dictionary = metrics.get("canvas", {}) if metrics.get("canvas") is Dictionary else {}
+	if not canvas.is_empty():
+		var cw := float(canvas.get("w", 0))
+		var ch := float(canvas.get("h", 0))
+		if cw >= 320.0 and ch >= 240.0:
+			return Vector2(cw, ch)
 	return css_viewport()
 
 static func canvas_coverage() -> Vector2:
@@ -155,25 +195,24 @@ static func fullscreen_state() -> String:
 		return "yes" if bool(JavaScriptBridge.eval("!!document.fullscreenElement")) else "no"
 	return "n/a"
 
-static func audit_lines(viewport: Vector2) -> PackedStringArray:
+static func audit_lines(node: Node = null) -> PackedStringArray:
+	var logical := logical_ui_viewport_size(node)
+	var render := render_viewport_size(node)
+	var pscale := presentation_scale_uniform(node)
 	var metrics := web_metrics()
 	var inner: Dictionary = metrics.get("inner", {})
 	var visual: Dictionary = metrics.get("visual", {}) if metrics.get("visual") is Dictionary else {}
 	var client: Dictionary = metrics.get("client", {})
-	var container: Dictionary = metrics.get("container", {})
 	var canvas: Dictionary = metrics.get("canvas", {}) if metrics.get("canvas") is Dictionary else {}
 	var coverage := canvas_coverage()
 	return PackedStringArray([
-		"PROFILE: %s" % profile_name(viewport),
+		"PROFILE: %s" % profile_name(logical),
+		"LOGICAL_UI: %dx%d" % [int(logical.x), int(logical.y)],
+		"RENDER_VIEWPORT: %dx%d" % [int(render.x), int(render.y)],
+		"PRESENTATION_SCALE: %.3f" % pscale,
 		"INNER: %dx%d" % [int(inner.get("w", 0)), int(inner.get("h", 0))],
 		"VISUAL: %dx%d" % [int(visual.get("w", 0)), int(visual.get("h", 0))],
 		"CLIENT: %dx%d" % [int(client.get("w", 0)), int(client.get("h", 0))],
-		"CONTAINER: %.0f,%.0f,%.0f,%.0f" % [
-			float(container.get("x", 0)),
-			float(container.get("y", 0)),
-			float(container.get("w", 0)),
-			float(container.get("h", 0)),
-		],
 		"CANVAS_CSS: %.0f,%.0f,%.0f,%.0f" % [
 			float(canvas.get("x", 0)),
 			float(canvas.get("y", 0)),
@@ -182,8 +221,8 @@ static func audit_lines(viewport: Vector2) -> PackedStringArray:
 		],
 		"CANVAS_BUFFER: %dx%d" % [int(canvas.get("bufferW", 0)), int(canvas.get("bufferH", 0))],
 		"GODOT_WINDOW: %dx%d" % [int(window_size().x), int(window_size().y)],
-		"GODOT_VIEWPORT: %dx%d" % [int(viewport.x), int(viewport.y)],
-		"HUD_VIEWPORT: %dx%d" % [int(viewport.x), int(viewport.y)],
+		"GODOT_VIEWPORT: %dx%d" % [int(render.x), int(render.y)],
+		"HUD_VIEWPORT: %dx%d" % [int(logical.x), int(logical.y)],
 		"DPR: %.2f" % device_pixel_ratio(),
 		"CONTENT_SCALE_MODE: %s" % content_scale_mode_name(),
 		"FULLSCREEN: %s" % fullscreen_state(),
