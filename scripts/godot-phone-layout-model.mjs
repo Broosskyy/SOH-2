@@ -275,6 +275,57 @@ export function centralObstruction(zones, threshold = 0.15) {
   return blocked;
 }
 
+export function estimateStatusContentSize(status) {
+  const rowH = Math.max(4, (status.h - 4) / 3);
+  return { w: status.w - 4, h: rowH * 3 + 2 };
+}
+
+export function estimateIdentityContentSize(identity) {
+  const rowH = Math.max(6, identity.h / 4.5);
+  return { w: identity.w - 4, h: rowH * 3.5 + 4 };
+}
+
+export function estimateCombatContentSize(combat) {
+  const fire = Math.min(combat.w, combat.h) * 0.62;
+  const secondary = fire * 0.34;
+  return {
+    w: fire + secondary * 0.4,
+    h: fire + secondary * 0.4,
+    fire,
+  };
+}
+
+export function contentFitsRegion(content, region, tolerance = 2) {
+  return content.w <= region.w + tolerance && content.h <= region.h + tolerance;
+}
+
+export function contentContainmentSnapshot(w, h) {
+  const validation = validateSolution(w, h);
+  const s = validation.solution;
+  const identityContent = estimateIdentityContentSize(s.identity);
+  const statusContent = estimateStatusContentSize(s.status);
+  const combatContent = estimateCombatContentSize(s.combat);
+  const overflows = [];
+  if (!contentFitsRegion(identityContent, s.identity)) overflows.push("identity");
+  if (!contentFitsRegion(statusContent, s.status)) overflows.push("status");
+  if (!contentFitsRegion(combatContent, s.combat)) overflows.push("combat");
+  if (!contentFitsRegion({ w: s.consumables.w - 4, h: s.consumables.h - 2 }, s.consumables)) overflows.push("consumables");
+  return {
+    viewport: { w, h, profile: detectProfile(w, h) },
+    safe: s.safe,
+    solution: s,
+    identity: { reserved: s.identity, content: identityContent },
+    status: { reserved: s.status, content: statusContent },
+    combat: { reserved: s.combat, content: combatContent, feuer: combatContent.fire },
+    overflowCount: overflows.length,
+    overflows,
+    overlapCount: validation.overlaps,
+    offscreenCount: validation.offscreen.length,
+    feuerOnscreen: feuerOnscreen(s, { w, h }),
+    missionBelowTopBand: validation.missionBelowTopBand,
+  };
+}
+
 export function compositionSnapshot(w, h) {
   const validation = validateSolution(w, h);
   const zones = phoneZoneRects(w, h);

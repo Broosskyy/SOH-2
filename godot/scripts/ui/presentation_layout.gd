@@ -16,8 +16,8 @@ enum Zone {
 	TARGET,
 }
 
-const BUILD_LABEL := "G0.5.7-RESERVED-REGION-LAYOUT"
-const GIT_SHA := "g057"
+const BUILD_LABEL := "G0.5.8-RUNTIME-CONTENT-CONTAINMENT"
+const GIT_SHA := "g058"
 
 static func zone_rect(viewport: Vector2, zone: Zone) -> Rect2:
 	return ResponsiveHudLayoutSolver.zone_rect(viewport, zone)

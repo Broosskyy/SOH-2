@@ -7,16 +7,24 @@ static func global_bounds_for(control: Control) -> Rect2:
 	var local := bounds_for(control)
 	if local.size == Vector2.ZERO:
 		return Rect2()
+	var parent := control.get_parent() as Control
+	if parent != null:
+		return Rect2(parent.position + local.position, local.size)
 	return Rect2(control.global_position + local.position, local.size)
 
-static func content_exceeds_region(control: Control, reserved: Rect2, threshold := 0.04) -> bool:
-	var actual := global_bounds_for(control)
-	if actual.size == Vector2.ZERO:
+static func content_exceeds_region(control: Control, reserved: Rect2 = Rect2(), threshold := 0.04) -> bool:
+	if control == null or control.size.x <= 0.0 or control.size.y <= 0.0:
 		return false
-	if reserved.encloses(actual):
+	var local := bounds_for(control)
+	if local.size == Vector2.ZERO:
 		return false
-	var intersection := actual.intersection(reserved)
-	var actual_area := actual.size.x * actual.size.y
+	var allowed := Rect2(Vector2.ZERO, control.size)
+	if reserved.size != Vector2.ZERO:
+		allowed = reserved
+	if allowed.encloses(local):
+		return false
+	var intersection := local.intersection(allowed)
+	var actual_area := local.size.x * local.size.y
 	if actual_area <= 0.0:
 		return false
 	var outside_area := actual_area - intersection.size.x * intersection.size.y

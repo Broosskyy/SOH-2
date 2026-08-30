@@ -14,6 +14,8 @@ var _zones: Dictionary = {}
 var _last_logical := Vector2.ZERO
 var _last_scale := 1.0
 var _last_nav_phone := false
+var _layout_generation := 0
+var _last_audit: Dictionary = {}
 
 var _profile: PanelContainer
 var _status: PanelContainer
@@ -143,7 +145,6 @@ func _build() -> void:
 	_zones["consumables"].add_child(_consumables)
 	_combat = _build_combat()
 	_zones["combat"].add_child(_combat)
-	(_zones["combat"] as Control).clip_contents = true
 	_fullscreen = Button.new()
 	_fullscreen.text = "FS"
 	_fullscreen.tooltip_text = "Fullscreen"
@@ -229,24 +230,26 @@ func _build_status() -> VBoxContainer:
 	stack.add_child(_status_row("SCHUTZ", _shield_bar, "_shield_value"))
 	return stack
 
-func _status_row(title: String, bar: ProgressBar, value_var: String) -> VBoxContainer:
-	var col := VBoxContainer.new()
-	col.add_theme_constant_override("separation", 1)
-	var header := HBoxContainer.new()
+func _status_row(title: String, bar: ProgressBar, value_var: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 2)
 	var label := Label.new()
 	label.text = title
+	label.custom_minimum_size.x = 34.0
 	label.add_theme_color_override("font_color", PresentationTheme.label_color("muted"))
-	header.add_child(label)
+	row.add_child(label)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_stretch_ratio = 1.0
+	row.add_child(bar)
 	var value := Label.new()
 	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value.custom_minimum_size.x = 52.0
+	value.clip_text = true
+	value.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	value.add_theme_color_override("font_color", PresentationTheme.label_color())
-	header.add_child(value)
+	row.add_child(value)
 	set(value_var, value)
-	col.add_child(header)
-	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	col.add_child(bar)
-	return col
+	return row
 
 func _build_nav() -> HBoxContainer:
 	var row := HBoxContainer.new()
@@ -440,6 +443,8 @@ func _bar(color: Color) -> ProgressBar:
 	return bar
 
 func _apply_layout(viewport: Vector2) -> void:
+	_layout_generation += 1
+	var generation := _layout_generation
 	_rebuild_nav(viewport)
 	var solution := PresentationLayout.solve(viewport)
 	var zone_map := {
@@ -482,28 +487,58 @@ func _apply_layout(viewport: Vector2) -> void:
 	_style_content(viewport)
 	_layout_combat(viewport)
 	_layout_movement(viewport)
+	_layout_zoom(viewport)
 	if _minimap != null:
 		_minimap.fill_parent_zone()
+	call_deferred("_finalize_layout", viewport, generation)
+
+func _finalize_layout(viewport: Vector2, generation: int) -> void:
+	if generation != _layout_generation:
+		return
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if generation != _layout_generation:
+		return
+	_enforce_region_containment(viewport)
+	_last_audit = HudRegionContainment.audit_regions(_zones, viewport)
+	var qa := MobileWebDiagnostics.query_flag("qa")
 	if qa:
-		var audit := ResponsiveHudMetrics.content_bounds_audit(_zones, viewport)
-		for key in audit.bounds.keys():
+		for key in _last_audit.get("regions", {}).keys():
 			var zone: Control = _zones.get(key)
-			if zone != null and zone.has_method("set_qa_content_bounds"):
-				var bounds: Rect2 = audit.bounds[key]
-				var reserved: Rect2 = audit.reserved.get(key, Rect2(zone.position, zone.size))
-				var local := Rect2(bounds.position - reserved.position, bounds.size)
-				zone.call("set_qa_content_bounds", local)
+			if zone == null:
+				continue
+			var entry: Dictionary = _last_audit.regions[key]
+			var status: String = entry.get("status", "PASS")
+			var content_local: Rect2 = entry.get("content_local", Rect2())
+			if zone.has_method("set_qa_outline"):
+				var qa_labels := {
+					"profile": "IDENTITY", "status": "STATUS", "nav": "NAV", "minimap": "MINIMAP",
+					"mission": "MISSION", "zoom": "ZOOM", "movement": "MOVEMENT", "chat": "CHAT",
+					"consumables": "CONSUMABLES", "combat": "COMBAT",
+				}
+				zone.call("set_qa_outline", true, qa_labels.get(key, key.to_upper()), status)
+			if zone.has_method("set_qa_content_bounds"):
+				zone.call("set_qa_content_bounds", content_local)
 
 func _style_content(viewport: Vector2) -> void:
 	var is_phone := ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE
-	var bar_h := maxf(3.0 if is_phone else 6.0, viewport.y * (0.005 if is_phone else 0.009))
+	var status_zone_h: float = (_zones["status"] as Control).size.y
+	var row_h := maxf(4.0, (status_zone_h - 4.0) / 3.0) if is_phone else maxf(6.0, viewport.y * 0.009)
 	for bar in [_exp_bar, _hull_bar, _shield_bar, _target_hp, _mission_progress]:
 		if bar != null:
-			bar.custom_minimum_size.y = bar_h
-	var nav_h: float = (_zones["nav"] as Control).size.y * (0.88 if is_phone else 0.82)
+			bar.custom_minimum_size.y = row_h - (1.0 if is_phone else 0.0)
+	var status_stack := _status.get_child(0) as VBoxContainer
+	if status_stack != null:
+		status_stack.add_theme_constant_override("separation", 0 if is_phone else 2)
+		for child in status_stack.get_children():
+			if child is Control:
+				(child as Control).custom_minimum_size.y = row_h
+	var nav_zone_h: float = (_zones["nav"] as Control).size.y
+	var nav_h := minf(nav_zone_h * (0.92 if is_phone else 0.82), nav_zone_h - 1.0)
 	for child in _nav.get_children():
 		if child is Button:
 			child.custom_minimum_size = Vector2(0.0, nav_h)
+			child.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			var nav_style := PresentationTheme.compact_nav_button(false) if is_phone else PresentationTheme.nav_button(false)
 			child.add_theme_stylebox_override("normal", nav_style)
 			child.add_theme_stylebox_override("disabled", nav_style)
@@ -518,12 +553,14 @@ func _style_content(viewport: Vector2) -> void:
 	)
 	for slot in _consumables.get_children():
 		if slot is Button:
+			var consumable_zone: Vector2 = (_zones["consumables"] as Control).size
 			var consumable_size := ResponsiveHudMetrics.touch_diameter(
 				viewport,
 				ability_ratio,
 				ResponsiveHudMetrics.min_touch_px(viewport) * (0.75 if is_phone else 0.85),
 				0.13 if is_phone else 0.14
 			)
+			consumable_size = minf(consumable_size, minf(consumable_zone.y - 2.0, consumable_zone.x / 4.5))
 			slot.custom_minimum_size = Vector2(consumable_size, consumable_size)
 			slot.add_theme_font_size_override(
 				"font_size",
@@ -543,6 +580,28 @@ func _style_content(viewport: Vector2) -> void:
 			0.10 if is_phone else 0.12
 		)
 		avatar.custom_minimum_size = Vector2(avatar_size, avatar_size)
+	if is_phone:
+		_captain_level.visible = false
+		_guild_label.max_lines_visible = 1
+		_guild_label.clip_text = true
+		_gold_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		_xp_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		_pearl_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var mission_icon := _mission.get_node_or_null("HBoxContainer/Label") as Label
+		if mission_icon == null:
+			mission_icon = _mission.get_child(0).get_child(0) if _mission.get_child_count() > 0 else null
+		if _mission.get_child_count() > 0:
+			var mission_row := _mission.get_child(0) as HBoxContainer
+			if mission_row != null and mission_row.get_child_count() > 0 and mission_row.get_child(0) is Label:
+				(mission_row.get_child(0) as Label).visible = false
+		_mission_objective.max_lines_visible = 1
+	else:
+		_captain_level.visible = true
+		if _mission.get_child_count() > 0:
+			var mission_row := _mission.get_child(0) as HBoxContainer
+			if mission_row != null and mission_row.get_child_count() > 0 and mission_row.get_child(0) is Label:
+				(mission_row.get_child(0) as Label).visible = true
+		_mission_objective.max_lines_visible = 2
 	_captain_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 12.0, HudLayout.Semantic.PLAYER_STATUS))
 	_captain_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
 	_guild_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
@@ -584,7 +643,13 @@ func _style_content(viewport: Vector2) -> void:
 		_chat.add_theme_constant_override("margin_right", 2)
 		_chat.add_theme_constant_override("margin_top", 1)
 		_chat.add_theme_constant_override("margin_bottom", 1)
-		(_status.get_child(0) as VBoxContainer).add_theme_constant_override("separation", 1)
+		(_status.get_child(0) as VBoxContainer).add_theme_constant_override("separation", 0)
+		_captain_name.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PROFILE_PRIMARY))
+		_guild_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 8.0, HudLayout.Semantic.SECONDARY_ACTION))
+		for value in [_exp_value, _hull_value, _shield_value]:
+			if value != null:
+				value.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 7.0, HudLayout.Semantic.STATUS))
+				value.custom_minimum_size.x = 44.0
 	else:
 		_profile.add_theme_stylebox_override("panel", PresentationTheme.glass_panel())
 		_status.add_theme_stylebox_override("panel", PresentationTheme.glass_panel())
@@ -618,84 +683,63 @@ func _layout_movement(viewport: Vector2) -> void:
 	)
 	button.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.ZOOM))
 
+func _layout_zoom(viewport: Vector2) -> void:
+	var zone: Control = _zones.get("zoom")
+	if zone == null:
+		return
+	var count := maxi(1, _zoom.get_child_count())
+	var button_h := maxf(8.0, (zone.size.y - (count - 1) * 2.0) / float(count))
+	for child in _zoom.get_children():
+		if child is Button:
+			var button := child as Button
+			button.custom_minimum_size = Vector2(zone.size.x, button_h)
+			button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+
+func _enforce_region_containment(viewport: Vector2) -> void:
+	_layout_combat(viewport)
+	var chat_zone: Vector2 = (_zones["chat"] as Control).size
+	if _chat_preview != null and chat_zone.y > 0.0:
+		_chat_preview.custom_minimum_size.y = maxf(8.0, chat_zone.y * 0.35)
+
 func _layout_combat(viewport: Vector2) -> void:
-	var zone_size: Vector2 = (_zones["combat"] as Control).size
+	var zone: Control = _zones["combat"]
+	var zone_size: Vector2 = zone.size
 	var is_phone := ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE
 	var fire_ratio := HudLayoutProfile.pick(
 		viewport,
 		HudLayoutProfile.RATIO_FIRE_D,
 		HudLayoutProfile.PHONE_RATIO_FIRE_D
 	)
-	var ability_ratio := HudLayoutProfile.pick(
-		viewport,
-		HudLayoutProfile.RATIO_ABILITY_D,
-		HudLayoutProfile.PHONE_RATIO_ABILITY_D
-	)
 	var fire := _combat.get_node_or_null("FireButton") as Button
-	var max_fire := minf(zone_size.x, zone_size.y) * (0.72 if is_phone else 0.68)
+	var max_fire := minf(zone_size.x, zone_size.y) * (0.58 if is_phone else 0.62)
 	var fire_size := minf(
 		ResponsiveHudMetrics.touch_diameter(
 			viewport,
 			fire_ratio,
-			ResponsiveHudMetrics.min_touch_px(viewport) * (0.85 if is_phone else 1.0),
+			ResponsiveHudMetrics.min_touch_px(viewport) * (0.75 if is_phone else 1.0),
 			0.22
 		),
 		max_fire
 	)
-	if fire != null:
-		fire.custom_minimum_size = Vector2(fire_size, fire_size)
-		fire.position = Vector2(zone_size.x - fire_size, zone_size.y - fire_size)
-		fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PRIMARY_ACTION))
-	var ability_offsets: Array[Vector2] = [
-		Vector2(-fire_size * 0.82, -fire_size * 0.04),
-		Vector2(-fire_size * 0.62, -fire_size * 0.48),
-		Vector2(-fire_size * 0.24, -fire_size * 0.74),
-	]
-	for i in range(3):
-		var ability_name: String = ["Ability8", "Ability14", "Ability11"][i]
+	var abilities: Array = []
+	for ability_name in ["Ability8", "Ability14", "Ability11"]:
 		var ability := _combat.get_node_or_null(ability_name) as Button
 		if ability != null:
-			var ability_size := minf(
-				ResponsiveHudMetrics.touch_diameter(
-					viewport,
-					ability_ratio,
-					ResponsiveHudMetrics.min_touch_px(viewport) * (0.7 if is_phone else 0.85),
-					0.12
-				),
-				fire_size * 0.42
-			)
-			ability.custom_minimum_size = Vector2(ability_size, ability_size)
-			ability.position = fire.position + ability_offsets[i]
-			ability.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
-	var utility_offsets := [
-		Vector2(-fire_size * 0.50, -fire_size * 0.92),
-		Vector2(-fire_size * 0.92, -fire_size * 0.50),
-		Vector2(-fire_size * 0.18, -fire_size * 0.92),
-		Vector2(-fire_size * 0.92, -fire_size * 0.18),
-	] if is_phone else [
-		Vector2(-fire_size * 1.05, -fire_size * 0.15),
-		Vector2(-fire_size * 0.15, -fire_size * 1.05),
-		Vector2(-fire_size * 0.55, -fire_size * 0.95),
-		Vector2(-fire_size * 0.95, -fire_size * 0.55),
-	]
-	var utility_index := 0
+			abilities.append(ability)
+	var utilities: Array = []
 	for utility_name in ["TargetButton", "AutoButton", "ShieldButton", "RepairButton"]:
 		var utility := _combat.get_node_or_null(utility_name) as Button
-		if utility == null:
-			continue
-		var utility_size := minf(
-			ResponsiveHudMetrics.touch_diameter(
-				viewport,
-				ability_ratio * 0.92,
-				ResponsiveHudMetrics.min_touch_px(viewport) * 0.65,
-				0.11
-			),
-			fire_size * 0.36
-		)
-		utility.custom_minimum_size = Vector2(utility_size, utility_size)
-		if utility_index < utility_offsets.size():
-			utility.position = fire.position + utility_offsets[utility_index]
-		utility_index += 1
+		if utility != null:
+			utilities.append(utility)
+	HudRegionContainment.layout_combat_cluster(_combat, zone_size, fire, abilities, utilities, fire_size)
+	if fire != null:
+		fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PRIMARY_ACTION))
+	for ability in abilities:
+		if ability is Button:
+			(ability as Button).add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 8.0, HudLayout.Semantic.SECONDARY_ACTION))
+	for utility in utilities:
+		if utility is Button:
+			(utility as Button).add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 8.0, HudLayout.Semantic.SECONDARY_ACTION))
 
 func _refresh() -> void:
 	var ship_id := str(GameState.save_data.get("shipId", "sovereign"))
@@ -717,7 +761,11 @@ func _refresh() -> void:
 	_hull_value.text = "%s / %s" % [_fmt(MockupCompositionProfile.HUD_RUMPF_CURRENT), _fmt(MockupCompositionProfile.HUD_RUMPF_MAX)]
 	_shield_value.text = "%s / %s" % [_fmt(MockupCompositionProfile.HUD_SCHUTZ_CURRENT), _fmt(MockupCompositionProfile.HUD_SCHUTZ_MAX)]
 	_captain_name.text = str(GameState.save_data.get("playerName", MockupCompositionProfile.HUD_PLAYER_NAME)).to_upper()
-	_captain_level.text = "Lv. %d" % int(GameState.save_data.get("level", MockupCompositionProfile.HUD_PLAYER_LEVEL))
+	var level := int(GameState.save_data.get("level", MockupCompositionProfile.HUD_PLAYER_LEVEL))
+	if ResponsiveHudMetrics.detect_profile(_last_logical) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE:
+		_captain_name.text = "%s  Lv.%d" % [_captain_name.text, level]
+	else:
+		_captain_level.text = "Lv. %d" % level
 	_gold_label.text = "G %s" % _fmt_num(int(GameState.save_data.get("gold", 815600)))
 	_xp_label.text = "X %s" % _fmt_num(int(GameState.save_data.get("xp", 12400)))
 	_pearl_label.text = "D %d" % int(GameState.save_data.get("pearls", 3250))
@@ -740,6 +788,9 @@ func _refresh_target() -> void:
 
 func get_zones() -> Dictionary:
 	return _zones
+
+func get_containment_audit() -> Dictionary:
+	return _last_audit
 
 func _toggle_fullscreen() -> void:
 	if OS.get_name() == "Web" and ClassDB.class_exists("JavaScriptBridge"):

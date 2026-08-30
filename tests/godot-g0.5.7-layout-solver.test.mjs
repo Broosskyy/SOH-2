@@ -30,15 +30,15 @@ const TEST_VIEWPORTS = [
 
 const PHONE_VIEWPORTS = TEST_VIEWPORTS.filter(([w, h]) => detectProfile(w, h) === "PHONE_LANDSCAPE");
 
-test("G0.5.7 build marker and version", async () => {
+test("G0.5.7 build marker and version (superseded by G0.5.8)", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   const solver = await read("godot/scripts/ui/responsive_hud_layout_solver.gd");
   const exportScript = await read("scripts/godot-web-export.mjs");
-  assert.match(project, /config\/version="0\.5\.7"/);
-  assert.match(layout, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
+  assert.match(project, /config\/version="0\.5\.8"/);
+  assert.match(layout, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
   assert.match(solver, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
-  assert.match(exportScript, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
+  assert.match(exportScript, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
 });
 
 test("single layout authority delegates to ResponsiveHudLayoutSolver", async () => {
@@ -107,8 +107,10 @@ test("layout solver artifact", async () => {
 
 test("combat layout stays inside reserved region", async () => {
   const root = await read("godot/scripts/ui/gameplay_presentation_root.gd");
-  assert.match(root, /clip_contents = true/);
-  assert.match(root, /zone_size\.x - fire_size/);
+  const containment = await read("godot/scripts/ui/hud_region_containment.gd");
+  assert.match(root, /layout_combat_cluster/);
+  assert.match(root, /_finalize_layout/);
+  assert.match(containment, /layout_combat_cluster/);
 });
 
 test("world label HUD avoidance uses solver regions", async () => {

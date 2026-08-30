@@ -50,8 +50,15 @@ func _refresh() -> void:
 		return
 	var lines := ResponsiveHudMetrics.audit_lines(self)
 	var hud := get_tree().get_first_node_in_group("gameplay_presentation_root")
-	if hud != null and hud.has_method("get_zones"):
-		lines = ResponsiveHudMetrics.audit_lines_with_content(hud.call("get_zones"), self)
+	if hud != null and hud.has_method("get_containment_audit"):
+		var audit: Dictionary = hud.call("get_containment_audit")
+		if not audit.is_empty():
+			lines = HudRegionContainment.qa_summary_lines(audit, logical)
+	elif hud != null and hud.has_method("get_zones"):
+		lines = HudRegionContainment.qa_summary_lines(
+			HudRegionContainment.audit_regions(hud.call("get_zones"), logical),
+			logical
+		)
 	lines.append("GIT: %s" % PresentationLayout.GIT_SHA)
 	lines.append("(tap to collapse)")
 	_label.text = "\n".join(lines)

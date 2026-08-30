@@ -7,7 +7,7 @@ extends RefCounted
 
 enum Profile { DESKTOP_TABLET, PHONE_LANDSCAPE }
 
-const BUILD_LABEL := "G0.5.7-RESERVED-REGION-LAYOUT"
+const BUILD_LABEL := "G0.5.8-RUNTIME-CONTENT-CONTAINMENT"
 const MIN_TOUCH_PX := 48.0
 const PHONE_MIN_TOUCH_PX := 26.0
 const PHONE_SHORT_EDGE_MAX := 520.0
@@ -165,74 +165,29 @@ static func zone_audit_lines(viewport: Vector2) -> PackedStringArray:
 	return lines
 
 static func content_bounds_audit(zones: Dictionary, viewport: Vector2) -> Dictionary:
-	var solution := ResponsiveHudLayoutSolver.solve(viewport)
-	var region_keys := {
-		"profile": "identity",
-		"status": "status",
-		"nav": "nav",
-		"mission": "mission",
-		"minimap": "minimap",
-		"zoom": "zoom",
-		"movement": "movement",
-		"chat": "chat",
-		"consumables": "consumables",
-		"combat": "combat",
-	}
-	var bounds: Dictionary = {}
-	var reserved: Dictionary = {}
-	var overflows: Array = []
-	var lines: PackedStringArray = []
-	for key in region_keys.keys():
-		var zone: Control = zones.get(key)
-		if zone == null:
-			continue
-		var region_key: String = region_keys[key]
-		var region_rect: Rect2 = solution.get(region_key, Rect2())
-		reserved[key] = region_rect
-		var actual := VisibleContentBounds.global_bounds_for(zone)
-		if actual.size == Vector2.ZERO:
-			actual = Rect2(zone.position, zone.size)
-		bounds[key] = actual
-		if VisibleContentBounds.content_exceeds_region(zone, region_rect):
-			overflows.append(key)
+	var audit := HudRegionContainment.audit_regions(zones, viewport)
+	var lines := HudRegionContainment.qa_summary_lines(audit, viewport)
+	for key in audit.get("regions", {}).keys():
+		var entry: Dictionary = audit.regions[key]
+		var reserved: Rect2 = entry.get("reserved", Rect2())
+		var content: Rect2 = entry.get("content", Rect2())
 		lines.append(
-			"%s_RESERVED: %.0f,%.0f %.0fx%.0f" % [
-				key.to_upper(),
-				region_rect.position.x,
-				region_rect.position.y,
-				region_rect.size.x,
-				region_rect.size.y,
-			]
+			"%s_R: %.0f,%.0f %.0fx%.0f" % [key.to_upper(), reserved.position.x, reserved.position.y, reserved.size.x, reserved.size.y]
 		)
 		lines.append(
-			"%s_ACTUAL: %.0f,%.0f %.0fx%.0f" % [
-				key.to_upper(),
-				actual.position.x,
-				actual.position.y,
-				actual.size.x,
-				actual.size.y,
-			]
+			"%s_C: %.0f,%.0f %.0fx%.0f" % [key.to_upper(), content.position.x, content.position.y, content.size.x, content.size.y]
 		)
-	var safe := player_safe_area(viewport)
-	lines.append(
-		"PLAYER_SAFE_AREA: %.0f,%.0f %.0fx%.0f" % [
-			safe.position.x, safe.position.y, safe.size.x, safe.size.y
-		]
-	)
-	var overlap_count := count_region_overlaps(solution)
-	var validation := ResponsiveHudLayoutSolver.validate(solution, viewport)
-	lines.append("REGION_OVERLAP_COUNT: %d" % overlap_count)
-	lines.append("CONTENT_OVERFLOW_COUNT: %d" % overflows.size())
-	lines.append("OFFSCREEN_COUNT: %d" % validation.offscreen.size())
-	return {
-		"lines": lines,
-		"bounds": bounds,
-		"reserved": reserved,
-		"overflows": overflows,
-		"overlap_count": overlap_count,
-		"player_safe": safe,
-		"validation": validation,
-	}
+	audit["lines"] = lines
+	audit["bounds"] = {}
+	audit["reserved"] = {}
+	audit["overflows"] = audit.get("overflows", [])
+	audit["overlap_count"] = audit.get("overlap_count", 0)
+	audit["player_safe"] = ResponsiveHudLayoutSolver.center_safe_rect(viewport)
+	for key in audit.get("regions", {}).keys():
+		var entry: Dictionary = audit.regions[key]
+		audit.bounds[key] = entry.get("content", Rect2())
+		audit.reserved[key] = entry.get("reserved", Rect2())
+	return audit
 
 static func count_region_overlaps(solution: Dictionary) -> int:
 	var keys := ["identity", "status", "nav", "minimap", "mission", "zoom", "movement", "chat", "consumables", "combat"]

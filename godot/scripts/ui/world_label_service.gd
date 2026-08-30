@@ -76,7 +76,7 @@ func _should_hide_for_hud(label: Control, priority: int) -> bool:
 	var viewport := ResponsiveHudMetrics.logical_ui_viewport_size(hud_root)
 	var solution := ResponsiveHudLayoutSolver.solve(viewport)
 	var rect := Rect2(label.position, label.size)
-	for key in ["combat", "minimap", "mission", "chat"]:
+	for key in ["identity", "status", "nav", "minimap", "fullscreen", "mission", "zoom", "movement", "chat", "consumables", "combat"]:
 		var region: Rect2 = solution.get(key, Rect2())
 		if region.size == Vector2.ZERO:
 			continue

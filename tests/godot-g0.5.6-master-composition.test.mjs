@@ -31,13 +31,13 @@ const ULTRAWIDE_PHONE = [932, 430];
 const TABLET = [1280, 720];
 const DESKTOP = [1920, 1080];
 
-test("G0.5.6 build marker and version (superseded by G0.5.7)", async () => {
+test("G0.5.6 build marker and version (superseded by G0.5.8)", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
-  assert.match(project, /config\/version="0\.5\.7"/);
-  assert.match(layout, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
-  assert.match(profile, /G0\.5\.7-RESERVED-REGION-LAYOUT/);
+  assert.match(project, /config\/version="0\.5\.8"/);
+  assert.match(layout, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
+  assert.match(profile, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
 });
 
 test("master visual reference is not treated as fixed resolution", async () => {
@@ -68,7 +68,7 @@ test("visible content bounds module exists", async () => {
   const metrics = await read("godot/scripts/ui/responsive_hud_metrics.gd");
   assert.match(metrics, /content_bounds_audit/);
   assert.match(metrics, /player_safe_area/);
-  assert.match(metrics, /OVERLAP_COUNT/);
+  assert.match(metrics, /HudRegionContainment/);
 });
 
 test("HUD uses ASCII-safe labels", async () => {
