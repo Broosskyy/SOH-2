@@ -87,7 +87,7 @@ test("single mobile control owner", async () => {
 test("diagnostic overlay gated and build marker", async () => {
   const overlay = await read("godot/scripts/debug/debug_overlay.gd");
   assert.match(overlay, /MobileWebDiagnostics\.query_flag\("diag"\)/);
-  assert.match(overlay, /G0\.5|G0\.4|G0\.3\.3/);
+  assert.match(overlay, /G0\.(6|5|4|3\.3)-/);
 });
 
 test("G0.3.3 documentation set exists", async () => {

@@ -53,7 +53,10 @@ func _refresh() -> void:
 	if hud != null and hud.has_method("get_containment_audit"):
 		var audit: Dictionary = hud.call("get_containment_audit")
 		if not audit.is_empty():
-			lines = HudRegionContainment.qa_summary_lines(audit, logical)
+			if hud.is_in_group("gameplay_hud_v2"):
+				lines = HudV2Metrics.qa_summary_lines(audit)
+			else:
+				lines = HudRegionContainment.qa_summary_lines(audit, logical)
 	elif hud != null and hud.has_method("get_zones"):
 		lines = HudRegionContainment.qa_summary_lines(
 			HudRegionContainment.audit_regions(hud.call("get_zones"), logical),

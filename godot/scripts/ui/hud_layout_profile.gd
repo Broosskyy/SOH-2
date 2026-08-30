@@ -6,8 +6,8 @@ extends RefCounted
 
 enum Profile { DESKTOP, MOBILE_LANDSCAPE, MOBILE_PORTRAIT }
 
-const BUILD_LABEL := "G0.5.8-RUNTIME-CONTENT-CONTAINMENT"
-const GIT_SHA := "g058"
+const BUILD_LABEL := "G0.6-HUD-V2-CLEAN-REBUILD"
+const GIT_SHA := "g060"
 
 const RATIO_TOP_BAR_H := 0.072
 const RATIO_PROFILE_W := 0.12

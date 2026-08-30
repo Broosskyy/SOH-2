@@ -35,9 +35,9 @@ test("G0.5.6 build marker and version (superseded by G0.5.8)", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
   const profile = await read("godot/scripts/ui/hud_layout_profile.gd");
-  assert.match(project, /config\/version="0\.5\.8"/);
-  assert.match(layout, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
-  assert.match(profile, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
+  assert.match(project, /config\/version="0\.6\.0"/);
+  assert.match(layout, /G0\.6-HUD-V2-CLEAN-REBUILD/);
+  assert.match(profile, /G0\.6-HUD-V2-CLEAN-REBUILD/);
 });
 
 test("master visual reference is not treated as fixed resolution", async () => {

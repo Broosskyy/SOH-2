@@ -20,8 +20,8 @@ const PHONE_VIEWPORTS = [
 test("G0.5.5 build marker and version (superseded by G0.5.8)", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
-  assert.match(project, /config\/version="0\.5\.8"/);
-  assert.match(layout, /G0\.5\.8-RUNTIME-CONTENT-CONTAINMENT/);
+  assert.match(project, /config\/version="0\.6\.0"/);
+  assert.match(layout, /G0\.6-HUD-V2-CLEAN-REBUILD/);
 });
 
 test("phone landscape uses separate occupancy constants", async () => {
