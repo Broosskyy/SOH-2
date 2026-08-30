@@ -17,11 +17,11 @@ const PHONE_VIEWPORTS = [
   [932, 430],
 ];
 
-test("G0.5.5 build marker and version", async () => {
+test("G0.5.5 build marker and version (superseded by G0.5.6)", async () => {
   const project = await read("godot/project.godot");
   const layout = await read("godot/scripts/ui/presentation_layout.gd");
-  assert.match(project, /config\/version="0\.5\.5"/);
-  assert.match(layout, /G0\.5\.5-PHONE-COMPOSITION/);
+  assert.match(project, /config\/version="0\.5\.6"/);
+  assert.match(layout, /G0\.5\.6-MASTER-RESPONSIVE-COMPOSITION/);
 });
 
 test("phone landscape uses separate occupancy constants", async () => {

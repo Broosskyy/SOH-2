@@ -1,5 +1,5 @@
 (function () {
-	const BUILD = "G0.5.5-PHONE-COMPOSITION";
+	const BUILD = "G0.5.6-MASTER-RESPONSIVE-COMPOSITION";
 	let installed = false;
 
 	function readVisual() {

@@ -2,12 +2,12 @@ class_name HudLayoutProfile
 extends RefCounted
 
 ## Normalized HUD measurements derived from Master reference ratios.
-## G0.5.5 — phone landscape uses separate occupancy constants.
+## G0.5.6 — master-driven responsive composition ratios.
 
 enum Profile { DESKTOP, MOBILE_LANDSCAPE, MOBILE_PORTRAIT }
 
-const BUILD_LABEL := "G0.5.5-PHONE-COMPOSITION"
-const GIT_SHA := "dc81848"
+const BUILD_LABEL := "G0.5.6-MASTER-RESPONSIVE-COMPOSITION"
+const GIT_SHA := "g056"
 
 const RATIO_TOP_BAR_H := 0.072
 const RATIO_PROFILE_W := 0.12
@@ -23,23 +23,24 @@ const RATIO_ABILITY_D := 0.058
 const RATIO_FLOATING_PLAYER_W := 0.1
 const MAX_PANEL_COVERAGE := 0.22
 
-const PHONE_RATIO_TOP_BAR_H := 0.076
-const PHONE_RATIO_PROFILE_W := 0.14
-const PHONE_RATIO_STATUS_BAR_W := 0.23
-const PHONE_RATIO_MISSION_W := 0.20
-const PHONE_RATIO_MISSION_H := 0.24
-const PHONE_RATIO_MINIMAP_D := 0.20
-const PHONE_RATIO_ZOOM_W := 0.052
-const PHONE_RATIO_ZOOM_H := 0.20
-const PHONE_RATIO_CHAT_W := 0.22
-const PHONE_RATIO_CHAT_H := 0.26
-const PHONE_RATIO_CONSUMABLE_ROW_W := 0.24
-const PHONE_RATIO_CONSUMABLE_D := 0.11
-const PHONE_RATIO_FIRE_D := 0.20
-const PHONE_RATIO_ABILITY_D := 0.11
-const PHONE_RATIO_FLOATING_PLAYER_W := 0.085
-const PHONE_RATIO_AVATAR_D := 0.10
-const PHONE_COMBAT_CLUSTER_SCALE := 1.32
+const PHONE_RATIO_TOP_BAR_H := 0.068
+const PHONE_RATIO_PROFILE_W := 0.11
+const PHONE_RATIO_STATUS_BAR_W := 0.16
+const PHONE_RATIO_MISSION_W := 0.11
+const PHONE_RATIO_MISSION_H := 0.16
+const PHONE_RATIO_MINIMAP_D := 0.14
+const PHONE_RATIO_ZOOM_W := 0.048
+const PHONE_RATIO_ZOOM_H := 0.16
+const PHONE_RATIO_CHAT_W := 0.20
+const PHONE_RATIO_CHAT_H := 0.18
+const PHONE_RATIO_CONSUMABLE_ROW_W := 0.22
+const PHONE_RATIO_CONSUMABLE_D := 0.09
+const PHONE_RATIO_FIRE_D := 0.15
+const PHONE_RATIO_ABILITY_D := 0.09
+const PHONE_RATIO_FLOATING_PLAYER_W := 0.075
+const PHONE_RATIO_AVATAR_D := 0.085
+const PHONE_COMBAT_CLUSTER_SCALE := 1.0
+const PHONE_SAFE_EDGE_RATIO := 0.018
 
 static func is_phone(viewport: Vector2) -> bool:
 	return ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE

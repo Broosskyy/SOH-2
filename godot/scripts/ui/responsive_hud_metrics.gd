@@ -7,7 +7,7 @@ extends RefCounted
 
 enum Profile { DESKTOP_TABLET, PHONE_LANDSCAPE }
 
-const BUILD_LABEL := "G0.5.5-PHONE-COMPOSITION"
+const BUILD_LABEL := "G0.5.6-MASTER-RESPONSIVE-COMPOSITION"
 const MIN_TOUCH_PX := 48.0
 const PHONE_MIN_TOUCH_PX := 26.0
 const PHONE_SHORT_EDGE_MAX := 520.0
@@ -81,6 +81,14 @@ static func profile_name(viewport: Vector2) -> String:
 static func margin(viewport: Vector2) -> float:
 	return clampf(short_edge(viewport) * 0.014, 6.0, 20.0)
 
+static func safe_edge_margin(viewport: Vector2) -> float:
+	if detect_profile(viewport) == Profile.PHONE_LANDSCAPE:
+		return clampf(short_edge(viewport) * HudLayoutProfile.PHONE_SAFE_EDGE_RATIO, 5.0, 14.0)
+	return margin(viewport)
+
+static func player_safe_area(viewport: Vector2) -> Rect2:
+	return central_safe_rect(viewport)
+
 static func length(viewport: Vector2, ratio: float, axis := "y") -> float:
 	if axis == "x":
 		return viewport.x * ratio
@@ -106,9 +114,9 @@ static func min_touch_px(viewport: Vector2) -> float:
 static func central_safe_rect(viewport: Vector2) -> Rect2:
 	var area := safe_rect(viewport)
 	if detect_profile(viewport) == Profile.PHONE_LANDSCAPE:
-		var inset_x := area.size.x * 0.17
-		var inset_top := area.size.y * 0.20
-		var inset_bottom := area.size.y * 0.24
+		var inset_x := area.size.x * 0.19
+		var inset_top := area.size.y * 0.22
+		var inset_bottom := area.size.y * 0.26
 		return Rect2(
 			area.position.x + inset_x,
 			area.position.y + inset_top,
@@ -155,6 +163,70 @@ static func zone_audit_lines(viewport: Vector2) -> PackedStringArray:
 	)
 	lines.append("PHONE_PROFILE: %s" % profile_name(viewport))
 	return lines
+
+static func content_bounds_audit(zones: Dictionary, viewport: Vector2) -> Dictionary:
+	var names := {
+		"profile": "PROFILE_CONTENT",
+		"status": "STATUS_CONTENT",
+		"nav": "NAV_CONTENT",
+		"mission": "MISSION_CONTENT",
+		"minimap": "MINIMAP_CONTENT",
+		"zoom": "ZOOM_CONTENT",
+		"chat": "CHAT_CONTENT",
+		"consumables": "CONSUMABLE_CONTENT",
+		"combat": "COMBAT_CONTENT",
+	}
+	var bounds: Dictionary = {}
+	var lines: PackedStringArray = []
+	for key in names.keys():
+		var zone: Control = zones.get(key)
+		if zone == null:
+			continue
+		var rect := VisibleContentBounds.bounds_for(zone)
+		if rect.size == Vector2.ZERO:
+			rect = Rect2(zone.position, zone.size)
+		var global_rect := Rect2(zone.position + rect.position, rect.size)
+		bounds[key] = global_rect
+		lines.append(
+			"%s: %.0f,%.0f %.0fx%.0f" % [
+				names[key],
+				global_rect.position.x,
+				global_rect.position.y,
+				global_rect.size.x,
+				global_rect.size.y,
+			]
+		)
+	var safe := player_safe_area(viewport)
+	lines.append(
+		"PLAYER_SAFE_AREA: %.0f,%.0f %.0fx%.0f" % [
+			safe.position.x, safe.position.y, safe.size.x, safe.size.y
+		]
+	)
+	var overlap_count := count_content_overlaps(bounds)
+	lines.append("OVERLAP_COUNT: %d" % overlap_count)
+	return {"lines": lines, "bounds": bounds, "overlap_count": overlap_count, "player_safe": safe}
+
+static func count_content_overlaps(bounds: Dictionary) -> int:
+	var pairs := [
+		["profile", "status"],
+		["profile", "mission"],
+		["status", "mission"],
+		["status", "nav"],
+		["nav", "minimap"],
+		["mission", "zoom"],
+		["mission", "chat"],
+		["chat", "zoom"],
+		["consumables", "combat"],
+		["consumables", "chat"],
+		["combat", "minimap"],
+	]
+	var count := 0
+	for pair in pairs:
+		var a: Rect2 = bounds.get(pair[0], Rect2())
+		var b: Rect2 = bounds.get(pair[1], Rect2())
+		if VisibleContentBounds.major_overlap(a, b):
+			count += 1
+	return count
 
 static func safe_rect(viewport: Vector2) -> Rect2:
 	return PlatformService.safe_rect(viewport)
@@ -287,6 +359,14 @@ static func audit_lines(node: Node = null) -> PackedStringArray:
 	])
 	if detect_profile(logical) == Profile.PHONE_LANDSCAPE:
 		lines.append_array(zone_audit_lines(logical))
+	return lines
+
+static func audit_lines_with_content(zones: Dictionary, node: Node = null) -> PackedStringArray:
+	var lines := audit_lines(node)
+	var logical := logical_ui_viewport_size(node)
+	if detect_profile(logical) == Profile.PHONE_LANDSCAPE and not zones.is_empty():
+		var content := content_bounds_audit(zones, logical)
+		lines.append_array(content.lines)
 	return lines
 
 static func zone_visible(rect: Rect2, viewport: Vector2) -> bool:

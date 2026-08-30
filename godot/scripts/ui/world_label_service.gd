@@ -58,17 +58,36 @@ func _process(_delta: float) -> void:
 		if distance > DECLUTTER_DISTANCE and _overlaps_existing(label, occupied):
 			label.visible = false
 			continue
+		var label_rect := Rect2(label.position, label.size)
+		var adjusted := _resolve_label_overlap(label_rect, occupied, int(entry.priority))
+		label.position.y = adjusted.position.y
 		label.visible = true
 		occupied.append(Rect2(label.position, label.size))
 
 func _priority_for_id(anchor_id: String) -> int:
 	if anchor_id.begins_with("player"):
 		return 100
+	var target := TargetingSystem.current_target
+	if target != null and str(target.get_instance_id()) in anchor_id:
+		return 90
 	if anchor_id.contains("harbor"):
 		return 80
 	if anchor_id.contains("hostile") or anchor_id.contains("raider"):
 		return 70
 	return 50
+
+func _resolve_label_overlap(rect: Rect2, occupied: Array[Rect2], priority: int) -> Rect2:
+	var candidate := rect
+	for _attempt in range(4):
+		var blocked := false
+		for other in occupied:
+			if candidate.intersects(other.grow(2.0)):
+				blocked = true
+				break
+		if not blocked:
+			return candidate
+		candidate.position.y -= 10.0 if priority >= 70 else 8.0
+	return candidate
 
 func _overlaps_existing(label: Control, occupied: Array[Rect2]) -> bool:
 	var rect := Rect2(label.position, label.size).grow(4.0)

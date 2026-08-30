@@ -13,6 +13,14 @@ static func glass_panel() -> StyleBoxFlat:
 	style.content_margin_bottom = 4
 	return style
 
+static func compact_panel() -> StyleBoxFlat:
+	var style := glass_panel()
+	style.content_margin_left = 3
+	style.content_margin_right = 3
+	style.content_margin_top = 2
+	style.content_margin_bottom = 2
+	return style
+
 static func nav_button(enabled: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.08, 0.12, 0.16, 0.82 if enabled else 0.35)
@@ -23,6 +31,14 @@ static func nav_button(enabled: bool) -> StyleBoxFlat:
 	style.content_margin_right = 2
 	style.content_margin_top = 1
 	style.content_margin_bottom = 1
+	return style
+
+static func compact_nav_button(enabled: bool) -> StyleBoxFlat:
+	var style := nav_button(enabled)
+	style.content_margin_left = 1
+	style.content_margin_right = 1
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
 	return style
 
 static func round_button(radius: float, accent := Color(0.62, 0.48, 0.24, 0.72)) -> StyleBoxFlat:

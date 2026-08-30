@@ -13,6 +13,7 @@ var _root: Control
 var _zones: Dictionary = {}
 var _last_logical := Vector2.ZERO
 var _last_scale := 1.0
+var _last_nav_phone := false
 
 var _profile: PanelContainer
 var _status: PanelContainer
@@ -38,6 +39,7 @@ var _captain_level: Label
 var _guild_label: Label
 var _gold_label: Label
 var _pearl_label: Label
+var _xp_label: Label
 var _mission_title: Label
 var _mission_objective: Label
 var _mission_progress: ProgressBar
@@ -45,6 +47,16 @@ var _target_name: Label
 var _target_level: Label
 var _target_hp: ProgressBar
 var _chat_preview: Label
+
+const PHONE_NAV_PRIORITY := [
+	["S", "SHIPS"], ["W", "WERFT"], ["E", "EVENTS"], ["Q", "QUESTS"],
+	["G", "GUILD"], ["C", "CHAT"], ["M", "MENU"],
+]
+const DESKTOP_NAV := [
+	["S", "SHIPS"], ["W", "WERFT"], ["E", "EVENTS"], ["Q", "QUESTS"],
+	["P", "SHOP"], ["G", "GUILD"], ["C", "CHAT"], ["A", "ACHIEV"],
+	["L", "LOG"], ["R", "RANK"], ["B", "BONUS"], ["M", "MENU"],
+]
 
 func _ready() -> void:
 	add_to_group("gameplay_presentation_root")
@@ -222,17 +234,24 @@ func _build_nav() -> HBoxContainer:
 	row.name = "TopNavRow"
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.add_theme_constant_override("separation", 1)
-	for entry in [
-		["S", "SHIPS"], ["W", "WERFT"], ["E", "EVENTS"], ["Q", "QUESTS"],
-		["P", "SHOP"], ["G", "GUILD"], ["C", "CHAT"], ["A", "ACHIEV"],
-		["L", "LOG"], ["R", "RANK"], ["B", "BONUS"], ["M", "MENU"],
-	]:
+	for entry in DESKTOP_NAV:
 		row.add_child(_nav_btn(entry[0], entry[1]))
 	return row
 
-func _nav_btn(icon: String, label_text: String) -> Button:
+func _rebuild_nav(viewport: Vector2) -> void:
+	var is_phone := ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE
+	if is_phone == _last_nav_phone and _nav.get_child_count() > 0:
+		return
+	_last_nav_phone = is_phone
+	for child in _nav.get_children():
+		child.queue_free()
+	var entries := PHONE_NAV_PRIORITY if is_phone else DESKTOP_NAV
+	for entry in entries:
+		_nav.add_child(_nav_btn(entry[0], entry[1], is_phone))
+
+func _nav_btn(icon: String, label_text: String, compact := false) -> Button:
 	var button := Button.new()
-	button.text = "%s\n%s" % [icon, label_text]
+	button.text = label_text if compact else "%s\n%s" % [icon, label_text]
 	button.disabled = true
 	button.tooltip_text = "Coming soon"
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -244,10 +263,13 @@ func _nav_btn(icon: String, label_text: String) -> Button:
 func _build_currency() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", 4)
 	_gold_label = Label.new()
 	_gold_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
 	row.add_child(_gold_label)
+	_xp_label = Label.new()
+	_xp_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
+	row.add_child(_xp_label)
 	_pearl_label = Label.new()
 	_pearl_label.add_theme_color_override("font_color", PresentationTheme.label_color("gold"))
 	row.add_child(_pearl_label)
@@ -275,6 +297,8 @@ func _build_mission() -> HBoxContainer:
 	_mission_objective = Label.new()
 	_mission_objective.text = MockupCompositionProfile.HUD_MISSION_OBJECTIVE
 	_mission_objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_mission_objective.max_lines_visible = 2
+	_mission_objective.clip_text = true
 	_mission_objective.add_theme_color_override("font_color", PresentationTheme.label_color("muted"))
 	copy.add_child(_mission_objective)
 	_mission_progress = _bar(Color(0.78, 0.38, 0.22))
@@ -315,6 +339,8 @@ func _build_chat() -> VBoxContainer:
 	_chat_preview = Label.new()
 	_chat_preview.text = "[Global] CaptainX: Forming raid on Kraken!"
 	_chat_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_chat_preview.max_lines_visible = 2
+	_chat_preview.clip_text = true
 	_chat_preview.add_theme_color_override("font_color", PresentationTheme.label_color("muted"))
 	stack.add_child(_chat_preview)
 	var hint := Label.new()
@@ -397,6 +423,7 @@ func _bar(color: Color) -> ProgressBar:
 	return bar
 
 func _apply_layout(viewport: Vector2) -> void:
+	_rebuild_nav(viewport)
 	var zone_map := {
 		"profile": PresentationLayout.Zone.PROFILE,
 		"status": PresentationLayout.Zone.STATUS,
@@ -411,31 +438,39 @@ func _apply_layout(viewport: Vector2) -> void:
 		"fullscreen": PresentationLayout.Zone.FULLSCREEN,
 		"target": PresentationLayout.Zone.TARGET,
 	}
+	var qa := MobileWebDiagnostics.query_flag("qa")
 	for key in zone_map.keys():
 		var zone: Control = _zones[key]
 		var rect := PresentationLayout.zone_rect(viewport, zone_map[key])
 		PresentationLayout.apply_zone(zone, rect)
 		if zone.has_method("set_qa_outline"):
-			zone.call("set_qa_outline", MobileWebDiagnostics.query_flag("qa"))
+			zone.call("set_qa_outline", qa)
 	_style_content(viewport)
 	_layout_combat(viewport)
 	if _minimap != null:
 		_minimap.fill_parent_zone()
+	if qa:
+		var audit := ResponsiveHudMetrics.content_bounds_audit(_zones, viewport)
+		for key in audit.bounds.keys():
+			var zone: Control = _zones.get(key)
+			if zone != null and zone.has_method("set_qa_content_bounds"):
+				var bounds: Rect2 = audit.bounds[key]
+				var local := Rect2(bounds.position - zone.position, bounds.size)
+				zone.call("set_qa_content_bounds", local)
 
 func _style_content(viewport: Vector2) -> void:
 	var is_phone := ResponsiveHudMetrics.detect_profile(viewport) == ResponsiveHudMetrics.Profile.PHONE_LANDSCAPE
-	var bar_h := maxf(4.0 if is_phone else 6.0, viewport.y * (0.006 if is_phone else 0.009))
+	var bar_h := maxf(3.0 if is_phone else 6.0, viewport.y * (0.005 if is_phone else 0.009))
 	for bar in [_exp_bar, _hull_bar, _shield_bar, _target_hp, _mission_progress]:
 		if bar != null:
 			bar.custom_minimum_size.y = bar_h
-	var nav_h: float = (_zones["nav"] as Control).size.y * (0.9 if is_phone else 0.82)
+	var nav_h: float = (_zones["nav"] as Control).size.y * (0.88 if is_phone else 0.82)
 	for child in _nav.get_children():
 		if child is Button:
 			child.custom_minimum_size = Vector2(0.0, nav_h)
-			if is_phone:
-				var parts: PackedStringArray = (child as Button).text.split("\n")
-				if parts.size() > 1:
-					(child as Button).text = parts[1]
+			var nav_style := PresentationTheme.compact_nav_button(false) if is_phone else PresentationTheme.nav_button(false)
+			child.add_theme_stylebox_override("normal", nav_style)
+			child.add_theme_stylebox_override("disabled", nav_style)
 			child.add_theme_font_size_override(
 				"font_size",
 				HudLayout.font_size(viewport, 11.0, HudLayout.Semantic.NAVIGATION)
@@ -476,6 +511,7 @@ func _style_content(viewport: Vector2) -> void:
 	_captain_level.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PLAYER_STATUS))
 	_guild_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
 	_gold_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
+	_xp_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
 	_pearl_label.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.SECONDARY_ACTION))
 	for value in [_exp_value, _hull_value, _shield_value]:
 		if value != null:
@@ -488,18 +524,32 @@ func _style_content(viewport: Vector2) -> void:
 		if child is Button:
 			(child as Button).add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 9.0, HudLayout.Semantic.ZOOM))
 	if is_phone:
+		_profile.add_theme_stylebox_override("panel", PresentationTheme.compact_panel())
+		_status.add_theme_stylebox_override("panel", PresentationTheme.compact_panel())
+		_mission.add_theme_stylebox_override("panel", PresentationTheme.compact_panel())
+		_chat.add_theme_stylebox_override("panel", PresentationTheme.compact_panel())
 		_profile.add_theme_constant_override("margin_left", 2)
 		_profile.add_theme_constant_override("margin_right", 2)
-		_profile.add_theme_constant_override("margin_top", 2)
-		_profile.add_theme_constant_override("margin_bottom", 2)
-		_mission.add_theme_constant_override("margin_left", 3)
-		_mission.add_theme_constant_override("margin_right", 3)
-		_mission.add_theme_constant_override("margin_top", 2)
-		_mission.add_theme_constant_override("margin_bottom", 2)
-		_chat.add_theme_constant_override("margin_left", 3)
-		_chat.add_theme_constant_override("margin_right", 3)
-		_chat.add_theme_constant_override("margin_top", 2)
-		_chat.add_theme_constant_override("margin_bottom", 2)
+		_profile.add_theme_constant_override("margin_top", 1)
+		_profile.add_theme_constant_override("margin_bottom", 1)
+		_status.add_theme_constant_override("margin_left", 2)
+		_status.add_theme_constant_override("margin_right", 2)
+		_status.add_theme_constant_override("margin_top", 1)
+		_status.add_theme_constant_override("margin_bottom", 1)
+		_mission.add_theme_constant_override("margin_left", 2)
+		_mission.add_theme_constant_override("margin_right", 2)
+		_mission.add_theme_constant_override("margin_top", 1)
+		_mission.add_theme_constant_override("margin_bottom", 1)
+		_chat.add_theme_constant_override("margin_left", 2)
+		_chat.add_theme_constant_override("margin_right", 2)
+		_chat.add_theme_constant_override("margin_top", 1)
+		_chat.add_theme_constant_override("margin_bottom", 1)
+		(_status.get_child(0) as VBoxContainer).add_theme_constant_override("separation", 1)
+	else:
+		_profile.add_theme_stylebox_override("panel", PresentationTheme.glass_panel())
+		_status.add_theme_stylebox_override("panel", PresentationTheme.glass_panel())
+		_mission.add_theme_stylebox_override("panel", PresentationTheme.glass_panel())
+		_chat.add_theme_stylebox_override("panel", PresentationTheme.glass_panel())
 
 func _apply_label_font(node: Node, viewport: Vector2, semantic: HudLayout.Semantic) -> void:
 	if node is Label:
@@ -529,14 +579,15 @@ func _layout_combat(viewport: Vector2) -> void:
 	)
 	if fire != null:
 		fire.custom_minimum_size = Vector2(fire_size, fire_size)
-		fire.position = Vector2(rect.x - fire_size, rect.y - fire_size)
+		var edge := ResponsiveHudMetrics.safe_edge_margin(viewport) if is_phone else 0.0
+		fire.position = Vector2(rect.x - fire_size - edge * 0.25, rect.y - fire_size - edge * 0.25)
 		fire.add_theme_font_size_override("font_size", HudLayout.font_size(viewport, 10.0, HudLayout.Semantic.PRIMARY_ACTION))
 	var ability_offsets: Array[Vector2] = []
 	if is_phone:
 		ability_offsets = [
-			Vector2(-fire_size * 0.92, -fire_size * 0.08),
-			Vector2(-fire_size * 0.72, -fire_size * 0.58),
-			Vector2(-fire_size * 0.30, -fire_size * 0.88),
+			Vector2(-fire_size * 0.88, -fire_size * 0.05),
+			Vector2(-fire_size * 0.68, -fire_size * 0.52),
+			Vector2(-fire_size * 0.28, -fire_size * 0.82),
 		]
 	else:
 		for i in range(3):
@@ -601,7 +652,8 @@ func _refresh() -> void:
 	_captain_name.text = str(GameState.save_data.get("playerName", MockupCompositionProfile.HUD_PLAYER_NAME)).to_upper()
 	_captain_level.text = "Lv. %d" % int(GameState.save_data.get("level", MockupCompositionProfile.HUD_PLAYER_LEVEL))
 	_gold_label.text = "G %s" % _fmt_num(int(GameState.save_data.get("gold", 815600)))
-	_pearl_label.text = "P %d" % int(GameState.save_data.get("pearls", 3250))
+	_xp_label.text = "X %s" % _fmt_num(int(GameState.save_data.get("xp", 12400)))
+	_pearl_label.text = "D %d" % int(GameState.save_data.get("pearls", 3250))
 
 func _refresh_target() -> void:
 	var target := TargetingSystem.current_target
@@ -618,6 +670,9 @@ func _refresh_target() -> void:
 	if ship.health != null:
 		_target_hp.max_value = ship.health.max_health
 		_target_hp.value = ship.health.current_health
+
+func get_zones() -> Dictionary:
+	return _zones
 
 func _toggle_fullscreen() -> void:
 	if OS.get_name() == "Web" and ClassDB.class_exists("JavaScriptBridge"):

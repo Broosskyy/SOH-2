@@ -49,6 +49,9 @@ func _refresh() -> void:
 		_label.text = "QA ▶"
 		return
 	var lines := ResponsiveHudMetrics.audit_lines(self)
+	var hud := get_tree().get_first_node_in_group("gameplay_presentation_root")
+	if hud != null and hud.has_method("get_zones"):
+		lines = ResponsiveHudMetrics.audit_lines_with_content(hud.call("get_zones"), self)
 	lines.append("GIT: %s" % PresentationLayout.GIT_SHA)
 	lines.append("(tap to collapse)")
 	_label.text = "\n".join(lines)

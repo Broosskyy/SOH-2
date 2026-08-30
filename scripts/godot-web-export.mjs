@@ -10,7 +10,7 @@ const godotProject = path.join(rootDir, "godot", "project.godot");
 const exportPreset = "Web";
 const webBuildDir = path.join(rootDir, "godot", "build", "web");
 const viewportContractSource = path.join(rootDir, "godot", "export", "web-viewport-contract.js");
-const BUILD_MARKER = "G0.5.5-PHONE-COMPOSITION";
+const BUILD_MARKER = "G0.5.6-MASTER-RESPONSIVE-COMPOSITION";
 
 export async function patchWebExportArtifacts() {
   const htmlPath = path.join(webBuildDir, "index.html");

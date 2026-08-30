@@ -68,4 +68,8 @@ func update_projection(camera: Camera3D, world_position: Vector3) -> void:
 		)
 	var screen_position := camera.unproject_position(world_position)
 	var height := _label.size.y + (_hp_bar.custom_minimum_size.y if _hp_bar != null else 0.0)
-	position = screen_position + _offset - Vector2(_label.size.x * 0.5, height)
+	var pos := screen_position + _offset - Vector2(_label.size.x * 0.5, height)
+	var safe := PlatformService.safe_rect(render)
+	pos.x = clampf(pos.x, safe.position.x, safe.end.x - _label.size.x)
+	pos.y = clampf(pos.y, safe.position.y, safe.end.y - height)
+	position = pos
