@@ -2,7 +2,7 @@ extends SceneTree
 
 const OUTPUT_DIR := "user://qa_capture/"
 const SCENE := "res://scenes/entry.tscn"
-const WAIT_FRAMES := 90
+const DEFAULT_WAIT_FRAMES := 90
 
 func _initialize() -> void:
 	var scene_path := str(OS.get_environment("CAPTURE_SCENE") if OS.has_environment("CAPTURE_SCENE") else SCENE)
@@ -19,8 +19,12 @@ func _initialize() -> void:
 
 
 func _capture_after_wait(output_name: String) -> void:
-	for _i in WAIT_FRAMES:
+	var wait_frames := DEFAULT_WAIT_FRAMES
+	if OS.has_environment("CAPTURE_WAIT"):
+		wait_frames = maxi(1, int(OS.get_environment("CAPTURE_WAIT")))
+	for _i in wait_frames:
 		await process_frame
+	await RenderingServer.frame_post_draw
 	var image := root.get_viewport().get_texture().get_image()
 	var output_path := OUTPUT_DIR.path_join(output_name)
 	var err := image.save_png(output_path)

@@ -376,8 +376,8 @@ func _build_environment() -> void:
 func _create_player() -> CharacterBody3D:
 	var player := Factory.create_ship("PLAYER", Vector3(0.0, 0.55, 0.0), Color("1f536f"), true)
 	player.set_meta("visual_profile", "clipper")
-	add_child(player)
 	_add_ship_modules(player, 1000.0, true)
+	add_child(player)
 	return player
 
 

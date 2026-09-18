@@ -10,7 +10,7 @@ var guardian_clears:=0
 var entry_receipt:Dictionary={}
 var reentry_credit:=false
 const KILLS:=[3,4,1,5,5,1] # compatibility fallback
-func cfg(path:String,fallback:Variant)->Variant:return GameplayRuleset.get_path(get_tree(),"bonusmaps.abyss."+path,fallback)
+func cfg(path:String,fallback:Variant)->Variant:return GameplayRuleset.rule_value(get_tree(),"bonusmaps.abyss."+path,fallback)
 func runtime_waves()->Array:
 	var dynamic:=DynamicContentResolver.by_id(get_tree(),"encounter","abyss")
 	if not dynamic.is_empty() and dynamic.get("waves",[]) is Array and not (dynamic.get("waves",[]) as Array).is_empty():return dynamic.get("waves",[]) as Array

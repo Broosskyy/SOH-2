@@ -35,9 +35,9 @@ func _ready() -> void:
 	LootVisual.build(self, loot_type == "repair", loot_type == "admiral_chest", loot_tier, loot_type)
 	var collision := CollisionShape3D.new()
 	var shape := SphereShape3D.new()
-	lifetime=float(GameplayRuleset.get_path(get_tree(),"loot.pickup_lifetime",lifetime))
-	proximity_collect_radius=float(GameplayRuleset.get_path(get_tree(),"loot.proximity_collect_radius",proximity_collect_radius))
-	shape.radius=float(GameplayRuleset.get_path(get_tree(),"loot.pickup_radius",0.85))
+	lifetime=float(GameplayRuleset.rule_value(get_tree(),"loot.pickup_lifetime",lifetime))
+	proximity_collect_radius=float(GameplayRuleset.rule_value(get_tree(),"loot.proximity_collect_radius",proximity_collect_radius))
+	shape.radius=float(GameplayRuleset.rule_value(get_tree(),"loot.pickup_radius",0.85))
 	collision.shape = shape
 	add_child(collision)
 
@@ -84,7 +84,7 @@ func _collect(body: Node3D) -> void:
 				progression.add_coins(reward)
 		var inventory := body.get_node_or_null("Inventory") as PlayerInventory
 		if inventory != null and loot_type in ["salvage_chest", "admiral_chest"]:
-			var material_amount:=int(GameplayRuleset.get_path(get_tree(),"loot.admiral_material_amount",2)) if loot_type=="admiral_chest" else int(GameplayRuleset.get_path(get_tree(),"loot.salvage_material_amount",1))
+			var material_amount:=int(GameplayRuleset.rule_value(get_tree(),"loot.admiral_material_amount",2)) if loot_type=="admiral_chest" else int(GameplayRuleset.rule_value(get_tree(),"loot.salvage_material_amount",1))
 			var materials:=GameplayRuleset.array(get_tree(),"loot.salvage_materials",["wood","metal","components"])
 			var material_id:=str(materials[randi()%materials.size()]) if not materials.is_empty() else "wood"
 			var services:=ServiceLocator.from(get_tree())

@@ -98,10 +98,10 @@ func grant_dominion_drop(level:int,elite:bool,admiral:bool)->Dictionary:
 func item_exists(item:String)->bool:
 	return START_STOCK.has(item) or DynamicItemDefinition.exists(get_tree(),item)
 func max_stock_for(item:String)->int:
-	var fallback:=int(GameplayRuleset.get_path(get_tree(),"inventory.max_stock_default",MAX_STOCK))
+	var fallback:=int(GameplayRuleset.rule_value(get_tree(),"inventory.max_stock_default",MAX_STOCK))
 	return DynamicItemDefinition.stack_limit(get_tree(),item,fallback)
 func inventory_rule(path:String,fallback:Variant)->Variant:
-	return GameplayRuleset.get_path(get_tree(),"inventory."+path,fallback)
+	return GameplayRuleset.rule_value(get_tree(),"inventory."+path,fallback)
 
 func count(item: String) -> int:
 	return int(stock.get(item, 0))
@@ -210,15 +210,18 @@ func cannon_track_upgrade_status(id:String)->Dictionary:
 	return {"ok":true,"state":"ready","label":"Bereit","gold":gold,"oil":oil,"level":level,"max_level":max_level}
 func _refresh_m162_derived_stats()->void:
 	if progression!=null:progression._apply_upgrades()
+func _selected_ship_id() -> String:
+	return roster.selected_ship_id if roster != null else BeginnerRules.START_SHIP
+
 func equipped_special_deck()->String:
-	return str(equipped_special_deck_by_ship.get(roster.selected_ship_id,""))
+	return str(equipped_special_deck_by_ship.get(_selected_ship_id(), ""))
 func upgrade_special_deck(id:String)->bool:
 	var status:=special_deck_upgrade_status(id);if not bool(status.get("ok",false)):return false
 	var level:=special_deck_level(id);var cost:=int(status.get("gold",0))
 	progression.add_coins(-cost);special_deck_levels[id]=level+1;_refresh_m162_derived_stats();inventory_changed.emit();return true
 func equip_special_deck(id:String)->bool:
 	if special_deck_level(id)<=0:return false
-	equipped_special_deck_by_ship[roster.selected_ship_id]=id;_refresh_m162_derived_stats();inventory_changed.emit();return true
+	equipped_special_deck_by_ship[_selected_ship_id()]=id;_refresh_m162_derived_stats();inventory_changed.emit();return true
 func talent_rank(id:String)->int:return int(talent_ranks.get(id,0))
 func grant_talent_points(amount:int)->void:talent_points_unspent=maxi(0,talent_points_unspent+amount);inventory_changed.emit()
 func spend_talent_point(id:String)->bool:

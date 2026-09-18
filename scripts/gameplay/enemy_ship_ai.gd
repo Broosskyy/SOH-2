@@ -306,7 +306,7 @@ func _m217_disengage_defeated_or_protected_target(candidate: ShipMotor) -> void:
 		var respawn_at := int(candidate.get_meta("respawn_at_msec", 0))
 		var protection_until := int(candidate.get_meta("respawn_protection_until", 0))
 		if respawn_at > now:
-			var protection_seconds := float(GameplayRuleset.get_path(get_tree(), "respawn.protection_seconds", 5.0))
+			var protection_seconds := float(GameplayRuleset.rule_value(get_tree(), "respawn.protection_seconds", 5.0))
 			blocked_until = maxi(blocked_until, respawn_at + roundi(protection_seconds * 1000.0) + M217_POST_RESPAWN_DISENGAGE_BUFFER_MSEC)
 		blocked_until = maxi(blocked_until, protection_until + M217_POST_RESPAWN_DISENGAGE_BUFFER_MSEC)
 	_reacquire_block_until_msec = maxi(_reacquire_block_until_msec, blocked_until)

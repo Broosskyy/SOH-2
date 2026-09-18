@@ -284,7 +284,7 @@ func _restore_now() -> void:
 	current_shield = max_shield
 	is_sunk = false
 	ship.remove_meta("respawn_at_msec")
-	var protection_seconds := float(GameplayRuleset.get_path(get_tree(), "respawn.protection_seconds", PLAYER_RESPAWN_PROTECTION_SECONDS))
+	var protection_seconds := float(GameplayRuleset.rule_value(get_tree(), "respawn.protection_seconds", PLAYER_RESPAWN_PROTECTION_SECONDS))
 	if ship.is_in_group("player"):
 		ship.set_meta("respawn_protection_until", Time.get_ticks_msec() + roundi(protection_seconds * 1000.0))
 	ship.stop_ship()

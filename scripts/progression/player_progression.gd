@@ -20,7 +20,7 @@ var _base_speed := 6.5
 @onready var weapons: ShipWeapons = get_parent().get_node("Weapons") as ShipWeapons
 
 
-func rule(path:String,fallback:Variant)->Variant:return GameplayRuleset.get_path(get_tree(),"player_progression."+path,fallback)
+func rule(path:String,fallback:Variant)->Variant:return GameplayRuleset.rule_value(get_tree(),"player_progression."+path,fallback)
 
 func _ready() -> void:
 	level=int(rule("start_level",level));xp=int(rule("start_xp",xp));coins=int(rule("start_gold",coins))
