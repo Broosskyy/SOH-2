@@ -1,55 +1,12 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# misc
-.DS_Store
-*.pem
-/.dev-certs/
-/.tools/
-.godot-bin.local
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-next-env.d.ts
-/dist/
-/web-build/**/.vite/
-/.wrangler/
-/.sites-runtime/
-/outputs/
-/work/
-/godot/.godot/
-/godot/build/*
-!/godot/build/.gdignore
-/artifacts/godot-g0.1/
-/artifacts/godot-g0.2/
-/godot/assets/ships/player/kraken/Kraken_ship_player_30k_Baked_*.png
-*.apk
-*.aab
-*.ipa
+.godot/
+__pycache__/
+node_modules/
+.tools/
+builds/
+*.keystore
+*.jks
+*.p12
+*.mobileprovision
+.env
+tools/local_config.json
+tools/godot-4.7.2/

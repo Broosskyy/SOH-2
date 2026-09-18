@@ -1,63 +1,14 @@
 {
-  "name": "abyssal-dominion",
-  "version": "0.1.0",
+  "name": "abyssal-dominion-preview",
+  "version": "0.295.0",
   "private": true,
-  "engines": {
-    "node": ">=22.13.0"
-  },
+  "description": "Abyssal Dominion Godot/GDScript local preview launcher",
   "scripts": {
-    "install:ci": "bash scripts/install-ci.sh",
-    "dev": "node scripts/run-with-sites-env.mjs node node_modules/vite/bin/vite.js",
-    "prebuild": "npm run sync:game-data && node scripts/write-build-info.mjs",
-    "build": "bash scripts/build-verified.sh",
-    "start": "node scripts/run-with-sites-env.mjs node node_modules/vinext/dist/cli.js start",
-    "preview:web": "node scripts/run-with-sites-env.mjs node scripts/preview-web.mjs",
-    "typecheck": "tsc --noEmit --project tsconfig.app.json",
-    "sync:game-data": "node scripts/sync-game-data.mjs",
-    "sync:web-build": "node scripts/sync-web-build.mjs",
-    "test": "npm run build && node --test tests/*.test.mjs",
-    "test:architecture": "node --test tests/cross-platform-architecture.test.mjs tests/v20.*.test.mjs tests/ship-movement.test.mjs tests/world-density.test.mjs",
-    "test:godot-qa-tools": "node --test tests/godot-qa-tools.test.mjs",
-    "export:godot:web": "node scripts/godot-web-export.mjs",
-    "serve:godot:web": "node scripts/godot-web-serve.mjs",
-    "qa:godot:web": "node scripts/godot-web-runtime-qa.mjs",
-    "qa:godot:web:canvas": "node scripts/godot-web-canvas-qa.mjs",
-    "qa:godot:web:matrix": "node scripts/godot-web-runtime-matrix.mjs",
-    "qa:godot:web:breakdown": "node scripts/godot-web-build-breakdown.mjs",
-    "qa:godot:windows": "node scripts/godot-windows-smoke.mjs",
-    "qa:godot:android": "node scripts/godot-android-smoke.mjs",
-    "validate:artifact": "bash scripts/validate-artifact.sh",
-    "lint": "bash scripts/sites-env.sh -- eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "bash scripts/sites-env.sh -- drizzle-kit generate"
-  },
-  "dependencies": {
-    "@types/three": "^0.179.0",
-    "drizzle-orm": "0.45.2",
-    "next": "16.2.6",
-    "react": "19.2.6",
-    "react-dom": "19.2.6",
-    "three": "^0.179.1",
-    "troika-three-text": "^0.52.5"
-  },
-  "devDependencies": {
-    "@cloudflare/vite-plugin": "1.37.1",
-    "@tailwindcss/postcss": "4.2.1",
-    "@types/node": "22.19.19",
-    "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3",
-    "@vitejs/plugin-react": "6.0.2",
-    "@vitejs/plugin-rsc": "0.5.26",
-    "drizzle-kit": "0.31.10",
-    "eslint": "9.39.4",
-    "eslint-config-next": "16.2.6",
-    "playwright": "^1.62.1",
-    "react-server-dom-webpack": "19.2.6",
-    "tailwindcss": "4.2.1",
-    "typescript": "5.9.3",
-    "vinext": "0.0.50",
-    "vite": "8.0.13",
-    "wrangler": "4.92.0"
-  },
-  "type": "module",
-  "displayName": "Abyssal Dominion"
+    "start": "node tools/launch_preview.cjs",
+    "preview": "node tools/launch_preview.cjs",
+    "preview:lan": "node tools/launch_preview.cjs --lan",
+    "preview:watch": "node tools/launch_preview.cjs --watch",
+    "build:web": "node tools/launch_preview.cjs --build-only --rebuild",
+    "doctor": "node tools/launch_preview.cjs --doctor"
+  }
 }

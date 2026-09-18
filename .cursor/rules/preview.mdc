@@ -1,0 +1,14 @@
+---
+description: Godot M13 project, preview startup and platform boundaries
+alwaysApply: true
+---
+
+Read START_HERE_CURSOR.md before work. This is SeeFight reconstruction, not Abyssal Dominion.
+"Start server" means run `npm start` or `python3 tools/preview.py` from the project root.
+The bundled current Web build starts without Godot. Do not replace this with a mock HTML game.
+After changes, use `--watch` or `--rebuild` with an installed Godot and matching templates.
+Report the exact ready URL only after HTTP and browser checks. localhost belongs to the host PC, not the user's phone.
+`--lan` exposes only the exported game to a trusted LAN; external access requires an authorized HTTPS proxy/hosting step. Never silently open firewalls or publish extracted assets.
+No original game services, credentials or account endpoints. Offline gameplay; network transport probe is not shared combat, cross-save or finished crossplay.
+Preserve existing work. No git remote is assumed. Do not force-push or invent successful exports.
+Keep one GDScript codebase and Compatibility renderer for Web/Android/iOS/Desktop. Do not change to C# or Forward+.

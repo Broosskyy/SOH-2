@@ -1,0 +1,20 @@
+{
+  "engine": "4.7.2.stable.official.ed1daf0bf",
+  "renderer": "OpenGL 3.3 Compatibility / NVIDIA RTX 5060",
+  "captured_at": "2026-09-18",
+  "notes": "GDScript compile issues fixed on 2026-09-18. Entry splash/login renders; M299 QA scene shows ship placeholders.",
+  "records": [
+    {
+      "file": "entry_menu.png",
+      "scene": "res://scenes/entry.tscn",
+      "status": "ok",
+      "kind": "native Godot desktop capture via tools/capture_screenshot.gd"
+    },
+    {
+      "file": "m299_ships_fixed.png",
+      "scene": "res://scenes/qa/m299_ship_animation_visual_qa.tscn",
+      "status": "ok",
+      "kind": "native Godot desktop capture via tools/capture_screenshot.gd"
+    }
+  ]
+}

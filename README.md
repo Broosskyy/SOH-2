@@ -1,41 +1,43 @@
-# Abyssal Dominion V20.3.2
+# Abyssal Dominion — M301
 
-Cross-Platform-2D/2,5D-Fantasy-Seeschlachtspiel mit vollständiger
-3D-Darstellung für Web, Android und iOS. Der
-funktionierende Webclient kombiniert React und Three.js. Parallel enthält das
-Repository eine echte Godot-4-Migrationsbasis für den schrittweisen gemeinsamen
-Godot-Web-/Android-/iOS-Client. V20.3.2 bleibt als funktionale, Gameplay-,
-Balancing- und visuelle Referenz erhalten.
+Current source: M301 / 0.301.0 / build 301. Master basis: V3.8.
 
-## Lokal starten
+## M301
+Server-only SQLite domain for war-gated attacking/attackable guild towers, scheduled Halloween NPC combat, collectible pumpkins, harpoon-only pumpkin wrecks, event-NPC-specific pumpkin cannon ammo and boss top-damage/last-hit pending rewards. Godot world adds distinct non-authoritative visual previews and one unframed shared pumpkin-ammo icon. LOCAL_DEVELOPMENT event claims are fail-closed outside local preview. No connected backend or live deployment exists: pending rewards require authenticated M266 settlement, native QA remains NOT_EVALUATED. See `M301_SERVER_SLICE_REPORT.md`.
 
-```bash
-npm install
-npm run dev
-```
+## M300
+Guild Islands remain map-level-2 local previews with five separate tower roles; enemy/war previews now show visual-only warning beacons. Halloween portal, wreck, phase fleets and guild decoration remain a local event prototype. Decoration is now scoped to the current sector and removed when Halloween ends or the layer is rebuilt. Neither preview adds server damage, durable rewards or ownership. One complete GLB remains the initial model rule for every ship; see `M300_PRODUCTION_REPORT.md` and `data/m300_guild_halloween_closure_contract.json`. Native QA remains NOT_EVALUATED.
 
-## Prüfen
+## M299
+An isolated oblique LOCAL_DEVELOPMENT QA scene now shows all eight complete starter/early-NPC ships at once, with responsive desktop/portrait layout and selectable sailing, impact and sinking demos. The UI explicitly leaves native QA NOT_EVALUATED; its scene-tagged preview cannot become a server event or game reward. M287 verified motion-event handoff and M285 preview-vs-server precedence are hardened. Open `scenes/qa/m299_ship_animation_visual_qa.tscn` in Godot for first native inspection; see `M299_PRODUCTION_REPORT.md` and `data/m299_ship_animation_visual_qa_matrix.json`.
 
-```bash
-npm run typecheck
-npm run lint
-npm test
-npm run validate:artifact
-```
+## M298
+The three starter and five early NPC placeholder ships gain gentle animation of the complete visual model (heave/pitch/roll/turn heel and M286 verified staged sinking) using M287 motion presentation and M285 confirmed reactions. The ship motor, collision, navigation and combat remain unchanged; replacement GLBs and UI previews are untouched. Reduced motion/mobile budgets and data profiles are included. A BROKEN shield state no longer generates an unconfirmed impact flash. See `M298_PRODUCTION_REPORT.md`, `data/m298_ship_visual_animation_contract.json` and `scripts/visual/m298_ship_visual_animation_rig.gd`.
 
-## Godot
+## M297
+The remaining early Scout and Heavy NPC ships now have separate complete GLB placeholders with baked structural silhouettes. All five early NPC slots resolve to distinct replaceable complete models instead of applying runtime structural ship parts to these active assets. Collision, movement, combat and rewards remain unchanged. See `M297_PRODUCTION_REPORT.md`, `data/m297_early_npc_complete_model_contract.json` and `tools/m297_build_remaining_npc_glbs.py`.
 
-Öffne `godot/project.godot` mit Godot 4.7.2 Stable. G0.2 lockt Perspective
-Naval als Production-Kamera, Kraken- und Floating-HUD-Kalibrierung, hybrides
-Tap-/Kamera-Pan-Touch-Input, erste authored Island Presentations sowie
-validierte Web-/Windows- und Android-Exports. Der vollständige V20.3.2-Port ist
-noch nicht behauptet.
+## M296
+The friendly coastal sloop and NPC gunship now have individually replaceable, complete one-node/one-mesh GLB placeholders. The gunship broadside/deck details and coastal aft deck are baked into their own models; runtime structural decorators are skipped for these exact GLBs. No movement, combat or economy truth is changed. See `M296_PRODUCTION_REPORT.md`, `data/m296_complete_npc_models_contract.json` and `tools/m296_build_npc_glbs.py`.
 
-Die Perspektive ist verbindlich: Schiffe spielen auf X/Z, die Kamera folgt aus
-einer festen schrägen Richtung und erlaubt Zoom, aber keine freie Orbit-, Ego-
-oder Third-Person-Verfolgung. Siehe `docs/GAMEPLAY_CAMERA_CONTRACT.md`.
+## M295
+NPC Scout and Raider no longer use identical complete GLBs. The Raider now has a separately replaceable complete single-node/single-mesh GLB placeholder with a wider silhouette and dark/crimson palette; its old runtime hull/sail decorator is bypassed for this model. Gameplay stats, collision, controls and server truth are unchanged. See `M295_PRODUCTION_REPORT.md`, `data/m295_raider_single_model_placeholder_contract.json` and `tools/m295_build_raider_glb.py`.
 
-Der Webspielstand liegt hinter einer Repository-Schnittstelle weiterhin in
-IndexedDB. Godot speichert lokal über `user://profiles`; Cloud Save und
-Multiplayer bleiben spätere Dienste. Der exakte Status steht in
-`docs/godot-migration/V20_3_2_FEATURE_MIGRATION_MATRIX.md`.
+## M294
+Tap-to-Sail route observation distinguishes water-tap intent from locally observed ship movement, arrival and interruption. The Command Deck exposes that sequence without granting server movement truth or native QA. Existing course marker, clean-room naval readability and complete individual ship GLB placeholders remain in use. See `M294_PRODUCTION_REPORT.md` and `data/m294_sailing_observation_contract.json`.
+
+## M293
+Port proximity events now apply only to the player's ship. Passive first-sortie world guidance points only to Haven's Reach for home/return and yields to tracked quests, selected combat targets, open menus/charts and sinking. Stale or sunk enemy placeholders are ignored; the same replaceable world beacon and complete individual ship GLBs remain in use. See `M293_PRODUCTION_REPORT.md` and `data/m293_world_guidance_priority_contract.json`.
+
+## M292
+First-sortie guidance now uses the existing mission panel when no quest is selected; a tracked quest remains primary, with only a width-safe secondary counter. Local observations and server receipts are counted separately in the Command Deck. Existing single-GLB ship placeholders and the external world beacon are reused, not modularized. See `M292_PRODUCTION_REPORT.md` and `data/m292_sortie_hud_guidance_contract.json`.
+
+## M291
+First Sea Sortie Evidence Causality: an actual Haven's Reach undock or harbor exit observes departure; water-tap intent alone does not. A genuine return-to-harbor interaction can close the ten-step regular journey without forcing the player to sink. Defeat/respawn stay optional, separately tracked native-QA cases. Fire/repair/navigation intent remains observation only; no fabricated hits, recovery, travel or native PASS. Existing one-piece GLB ship placeholders and the external single world beacon are reused. See `M291_PRODUCTION_REPORT.md` and `data/m291_sortie_causality_contract.json`.
+
+## M290
+First Sea Sortie Runtime Integration / Gameplay Event Binding / Visible Guidance / Stable Single-Model Placeholder Slots. M290 binds the M289 12-stage journey to passive gameplay observations, adds one restrained world-guidance placeholder and shows compact sortie progress inside the existing mission area. It never drives navigation, target selection, combat, loot, progression, respawn or release approval. Seafight and Battle of Sea remain clean-room genre/UX references only.
+
+Initial ship-production lock: **one ship equals one complete individual 3D/GLB model**. Hull, bow, stern, deck, masts, sails and characteristic design parts stay together. M285–M290 sockets and QA hooks host external presentation/integration layers only; they are not a modular ship-construction system. True modular ships remain deferred.
+
+See `M289_DEEP_AUDIT_FOR_M290.md`, `M290_PRODUCTION_REPORT.md` and `START_HERE_CURSOR.md`.
