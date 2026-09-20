@@ -88,6 +88,10 @@ func start_game() -> void:
 	if not session.active() or _loading or is_instance_valid(game):
 		return
 	menu.show_screen("loading")
+	if bool(get_tree().root.get_meta("qa_video_sync_load", false)):
+		_loading = true
+		call_deferred("_qa_video_mount_game")
+		return
 	var error := ResourceLoader.load_threaded_request(GAME_SCENE)
 	if error != OK:
 		menu.show_screen("home")
@@ -118,6 +122,17 @@ func _process(delta: float) -> void:
 		var extent := get_viewport().get_visible_rect().size
 		snapshot["viewport"] = [extent.x, extent.y]
 		JavaScriptBridge.eval("window.sfEntryState = " + JSON.stringify(snapshot) + ";")
+
+
+func _qa_video_mount_game() -> void:
+	_loading = false
+	var packed := load(GAME_SCENE) as PackedScene
+	if packed == null:
+		if is_instance_valid(menu):
+			menu.show_screen("home")
+			menu.show_error("Spielszene konnte nicht geladen werden (QA sync).")
+		return
+	_mount_game(packed)
 
 
 func _mount_game(scene: PackedScene) -> void:

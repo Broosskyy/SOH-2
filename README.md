@@ -1,6 +1,6 @@
 # Abyssal Dominion — M301
 
-Current source: M301 / 0.301.0 / build 301. Master basis: V3.8.
+Current source: M302 / 0.302.0 / build 302. Master basis: V3.8.
 
 ## M301
 Server-only SQLite domain for war-gated attacking/attackable guild towers, scheduled Halloween NPC combat, collectible pumpkins, harpoon-only pumpkin wrecks, event-NPC-specific pumpkin cannon ammo and boss top-damage/last-hit pending rewards. Godot world adds distinct non-authoritative visual previews and one unframed shared pumpkin-ammo icon. LOCAL_DEVELOPMENT event claims are fail-closed outside local preview. No connected backend or live deployment exists: pending rewards require authenticated M266 settlement, native QA remains NOT_EVALUATED. See `M301_SERVER_SLICE_REPORT.md`.

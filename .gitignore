@@ -10,3 +10,6 @@ builds/
 .env
 tools/local_config.json
 tools/godot-4.7.2/
+docs/qa_m302/videos/
+docs/qa_m302/**/frames/
+user://qa_video_m302/
