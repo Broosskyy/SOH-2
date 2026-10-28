@@ -8,6 +8,9 @@ const ISLAND_SNOW = "res://assets/placeholder_pack/models/island_snow.glb"
 const ISLAND_ROCK = "res://assets/placeholder_pack/models/island_rock.glb"
 const ISLAND_TROPICAL = "res://assets/placeholder_pack/models/island_tropical.glb"
 const MINI_MAP = preload("res://scripts/classic/classic_minimap.gd")
+const SHIP_SPRITE = preload("res://scripts/classic/classic_ship_visual.gd")
+const CAPTAIN_ATLAS = "res://assets/classic/sprites/captain_16dir.svg"
+const CORSAIR_ATLAS = "res://assets/classic/sprites/corsair_16dir.svg"
 const OFFSET = Vector3(0.0, 68.0, 43.0)
 
 var ship: Node3D
@@ -66,11 +69,18 @@ func _make_light() -> void:
 	add_child(world)
 
 
-func _asset(file: String, where: Vector3, scale_factor: float, label: String) -> Node3D:
+func _asset(file: String, where: Vector3, scale_factor: float, label: String, atlas_path: String = "") -> Node3D:
 	var holder := Node3D.new()
 	holder.name = label
 	holder.position = where
 	add_child(holder)
+	if not atlas_path.is_empty():
+		var sheet := SHIP_SPRITE.new()
+		sheet.name = "ShipSprite"
+		holder.add_child(sheet)
+		if sheet.configure(atlas_path, 0.029 * scale_factor):
+			return holder
+		sheet.queue_free()
 	var packed := load(file) as PackedScene
 	if packed != null:
 		var model := packed.instantiate() as Node3D
@@ -104,7 +114,7 @@ func _build_world() -> void:
 		var item: Dictionary = land[i]
 		islands.append({"position": item.p, "radius": item.r})
 		_asset(str(item.mesh), item.p, float(item.s), "Island_%d" % i)
-	ship = _asset(SHIP, Vector3(0, 0.65, 0), 0.9, "PlayerShip")
+	ship = _asset(SHIP, Vector3(0, 0.65, 0), 0.9, "PlayerShip", CAPTAIN_ATLAS)
 	_nameplate(ship, "Kapitän", Color("78ec92"))
 	var fleet := [
 		{"p": Vector3(-13,.65,-25), "name": "Korsar"},
@@ -115,7 +125,7 @@ func _build_world() -> void:
 	]
 	for i in fleet.size():
 		var entry: Dictionary = fleet[i]
-		var vessel := _asset(ENEMY, entry.p, 0.8, "NPC_%d" % i)
+		var vessel := _asset(ENEMY, entry.p, 0.8, "NPC_%d" % i, CORSAIR_ATLAS)
 		var plate := _nameplate(vessel, str(entry.name), Color("f2bd83"))
 		enemies.append({"node": vessel, "name": entry.name, "hp": 100, "plate": plate})
 
@@ -282,6 +292,9 @@ func _sail(delta: float) -> void:
 		return
 	ship.position = next
 	ship.rotation.y = lerp_angle(ship.rotation.y,atan2(-direction.x,-direction.z),minf(1.0,delta*5.0))
+	var display := ship.get_node_or_null("ShipSprite")
+	if display != null:
+		display.set_heading(ship.rotation.y)
 
 
 func _world_click(screen: Vector2) -> void:
