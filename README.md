@@ -1,4 +1,18 @@
-# Abyssal Dominion — M301
+# Abyssal Dominion — Classic-Seafight-Rebuild M303
+
+**Neuer eigenständiger Neustart-Branch:** `rebuild/classic-seafight-m303`. Der unveränderte alte M302-Stand bleibt auf `main` erhalten.
+
+- Startszene im Branch: `scenes/classic/classic_sea_map.tscn` (lokaler Grafik-/Steuerungsprototyp, keine echte Onlinewelt).
+- Basis-M303: eigene schräge Seekarten-Kamera, vorhandene Platzhalter-Schiffs-/Insel-GLBs, Wasser-Shader, Click-/Tap-to-Sail, Minimap, NPC-Auswahl und **ausdrücklich lokale** Kanonen-Testsimulation.
+- Produkt-/Abnahmeplan: [CLASSIC_REBUILD_M303.md](CLASSIC_REBUILD_M303.md).
+- Bild-/Urheber-/Assetrecherche: [ASSET_PROVENANCE_M303.md](ASSET_PROVENANCE_M303.md).
+- **Status:** Code in GitHub committed, native Godot-/Browser-/Android-QA noch nicht durchgeführt; kein Release und keine APK.
+
+---
+
+## Archivierter M302-Verlauf (frühere README)
+
+# Abyssal Dominion — M302 archival notes
 
 Current source: M302 / 0.302.0 / build 302. Master basis: V3.8.
 
