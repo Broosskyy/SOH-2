@@ -406,7 +406,7 @@ func _repair() -> void:
 	elif hull >= 100:
 		hint = "Schiff ist vollständig repariert"
 	else:
-		hull = mini(100, hull + 35)
+		hull = min(100, hull + 35)
 		repair_cooldown = 18.0
 		hint = "Rumpf repariert (lokale Demo)"
 	_refresh()
@@ -422,7 +422,7 @@ func _enemy_attack() -> void:
 			nearby += 1
 	if nearby <= 0:
 		return
-	hull = maxi(0, hull - mini(nearby, 2) * 5)
+	hull = maxi(0, hull - min(nearby, 2) * 5)
 	hint = "Gegnerische Kanonen getroffen! Rumpf: %d" % hull
 	if hull <= 0:
 		firing = false
