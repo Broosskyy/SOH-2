@@ -1,4 +1,4 @@
-; SeeFight 3D clean-room reconstruction test
+; Abyssal Dominion M303 independent classic-chart local prototype
 ; Godot 4.7.2 / Compatibility renderer
 
 config_version=5
@@ -8,8 +8,8 @@ config_version=5
 ; Keep the actual M29 storage identity (M28); renaming would orphan user saves.
 ; EntryFlow sets the visible native window title to the current milestone.
 config/name="Abyssal Dominion"
-config/version="0.302.0"
-run/main_scene="res://scenes/entry.tscn"
+config/version="0.303.0"
+run/main_scene="res://scenes/classic/classic_sea_map.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/production/ui/app_icon.svg"
 boot_splash/image="res://assets/production/ui/splash.png"
