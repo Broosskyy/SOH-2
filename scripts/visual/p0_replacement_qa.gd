@@ -11,8 +11,8 @@ static func ids()->Array[String]:
 static func status(id:String)->Dictionary:
 	for row in data().get("assets",[]):
 		if str(row.get("id",""))!=id:continue
-		var info:=row.duplicate(true)
-		var override:=VisualAssetCatalog.model_override(id)
+		var info: Dictionary = row.duplicate(true)
+		var override: Dictionary = VisualAssetCatalog.model_override(id)
 		info["replacement_active"]=not override.is_empty()
 		info["runtime_state"]="FINAL/OVERRIDE" if not override.is_empty() else "FALLBACK"
 		info["forward_axis"]="+Z"
