@@ -5,6 +5,8 @@ extends "res://scripts/classic/m3034_fullscreen_sea_map.gd"
 const ASSET_BRIDGE = preload("res://scripts/classic/m3035_render_adapter.gd")
 var _graphics_button: Button
 var _asset_mode := "private_sprite"
+var _sea_speed := 0.0
+var _wake_visual: MeshInstance3D
 
 func _ready() -> void:
 	_asset_mode = str(get_tree().root.get_meta("m3035_graphic_mode", "private_sprite"))
@@ -41,6 +43,58 @@ func _asset(file: String, where: Vector3, scale_factor: float, label: String, at
 	if _asset_mode == "complete_3d":
 		return super._asset(file, where, scale_factor, label, "")
 	return super._asset(file, where, scale_factor, label, atlas_path)
+
+
+func _build_world() -> void:
+	super._build_world()
+	# Thin restrained stern wake. Visual only; fixes M302's broad white-fan issue.
+	_wake_visual = MeshInstance3D.new()
+	_wake_visual.name = "ClassicSternWake"
+	var surface := PlaneMesh.new()
+	surface.size = Vector2(0.95, 5.4)
+	_wake_visual.mesh = surface
+	_wake_visual.position = Vector3(0.0, -0.43, -3.0)
+	var foam := StandardMaterial3D.new()
+	foam.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	foam.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	foam.albedo_color = Color(0.76, 0.91, 0.94, 0.24)
+	foam.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+	_wake_visual.material_override = foam
+	_wake_visual.visible = false
+	ship.add_child(_wake_visual)
+
+
+func _sail(delta: float) -> void:
+	if route.is_empty():
+		_sea_speed = move_toward(_sea_speed, 0.0, 20.0 * delta)
+		if _wake_visual != null:
+			_wake_visual.visible = false
+		return
+	var displacement := route[0] - ship.position
+	displacement.y = 0.0
+	if displacement.length() < 0.8:
+		route.remove_at(0)
+		return
+	var direction := displacement.normalized()
+	# Ported from M302 motor feel: measured acceleration and rotation rate,
+	# with course-following independent of the heading/sprite presentation.
+	_sea_speed = move_toward(_sea_speed, 11.0, 19.0 * delta)
+	var next_point := ship.position + direction * minf(_sea_speed * delta, displacement.length())
+	if _blocked(next_point):
+		route.clear()
+		_sea_speed = 0.0
+		hint = "Küste erreicht – neuer Kurs nötig"
+		_refresh()
+		return
+	ship.position = next_point
+	var desired_heading := atan2(-direction.x, -direction.z)
+	ship.rotation.y = rotate_toward(ship.rotation.y, desired_heading, deg_to_rad(112.0) * delta)
+	var appearance := ship.get_node_or_null("ShipSprite")
+	if appearance != null and appearance.has_method("set_heading"):
+		appearance.set_heading(ship.rotation.y)
+	if _wake_visual != null:
+		_wake_visual.visible = _sea_speed > 0.3
+		_wake_visual.scale.z = 0.35 + 0.7 * _sea_speed / 11.0
 
 
 func _make_hud() -> void:
