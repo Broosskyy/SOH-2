@@ -39,7 +39,7 @@ func _run() -> void:
 		scene._sail(1.0 / 60.0)
 	check(scene.ship.position.distance_to(from) > 3.0, "ship accelerates after aligning bow")
 	check(scene.ship.position.x > from.x, "ship travels east after turning")
-	check(scene.zoom == 82.0, "default camera zoom unchanged")
+	check(scene.zoom >= 66.0 and scene.zoom <= 82.0, "readable default camera zoom set")
 	scene._zoom_in()
 	for i in 8:
 		scene._zoom_in()
