@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a separately installable, locally signed M303.5 ARM64 test APK.
+"""Build a separately installable, locally signed M303.7 ARM64 test APK.
 
 Requires Godot 4.7.2, its Android debug template, JDK 17 and Android SDK tools.
 No artifact, signing key, private pack, or screenshot is pushed to GitHub.
@@ -67,7 +67,7 @@ def main():
     parser.add_argument("--java-home", type=Path)
     parser.add_argument("--debug-keystore", type=Path)
     parser.add_argument("--editor-settings", type=Path, default=editor_settings_default())
-    parser.add_argument("--output", type=Path, default=ROOT / "builds/android/ABYSSAL_DOMINION_M303_6_TEST.apk")
+    parser.add_argument("--output", type=Path, default=ROOT / "builds/android/ABYSSAL_DOMINION_M303_7_TEST.apk")
     parser.add_argument("--allow-placeholders", action="store_true")
     args = parser.parse_args()
     version = subprocess.check_output([args.godot, "--version"], text=True).strip()
@@ -94,7 +94,7 @@ def main():
         env["ANDROID_HOME"] = str(args.android_sdk.resolve())
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run([args.godot, "--headless", "--path", str(ROOT), "--export-debug", "Android M303.5 Local Test", str(output)], env=env, check=True)
+    subprocess.run([args.godot, "--headless", "--path", str(ROOT), "--export-debug", "Android M303.7 Local Test", str(output)], env=env, check=True)
     with zipfile.ZipFile(output) as archive:
         if archive.testzip() is not None:
             raise RuntimeError("APK ZIP integrity failed")
@@ -122,7 +122,7 @@ def main():
     subprocess.run([str(zipalign), "-c", "-P", "16", "4", str(output)], env=env, check=True)
     result = {"engine": version, "apk": output.name, "size_bytes": output.stat().st_size,
               "sha256": hashlib.file_digest(output.open("rb"), "sha256").hexdigest(),
-              "package": "com.abyssaldominion.m3035test", "version_name": "0.303.6-test.1",
+              "package": "com.abyssaldominion.m3035test", "version_name": "0.303.7-test.1",
               "architecture": "arm64-v8a", "private_graphics_included": not args.allow_placeholders,
               "zip_integrity": "PASS", "signature_verification": "PASS", "alignment_16k": "PASS",
               "device_installation": "NOT_TESTED"}
