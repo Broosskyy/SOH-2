@@ -1,4 +1,5 @@
 extends SceneTree
+## Historical M303.6 regression: instantiate its script directly because the active scene now runs M303.7.
 var failures: Array[String] = []
 
 func _initialize() -> void:
@@ -11,7 +12,7 @@ func check(value: bool, label: String) -> void:
 func _run() -> void:
 	# A stale comparison choice must not create a third player-facing mode.
 	root.set_meta("m3035_graphic_mode", "complete_3d")
-	var scene: Node3D = (load("res://scenes/classic/classic_sea_map.tscn") as PackedScene).instantiate()
+	var scene: Node3D = (load("res://scripts/classic/m3036_unified_sea_map.gd") as Script).new()
 	root.add_child(scene)
 	current_scene = scene
 	await process_frame
