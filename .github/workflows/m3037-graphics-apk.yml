@@ -9,6 +9,7 @@ on:
       - 'tests/m3037_combat_smoke.gd'
       - 'tools/build_m3035_android.py'
       - 'scripts/classic/**'
+      - 'scripts/visual/p0_replacement_qa.gd'
       - 'scenes/classic/**'
       - 'export_presets.cfg'
   workflow_dispatch:
@@ -81,7 +82,11 @@ jobs:
       - name: Build Android test APK with real integrated graphics (no placeholder option)
         run: |
           set -euo pipefail
-          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M303_7_GRAPHICS_TEST.apk
+          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M303_7_GRAPHICS_TEST.apk 2>&1 | tee /tmp/m3037-apk-export.log
+          if grep -Eq 'SCRIPT ERROR|Parse Error|ERROR: Failed to load script' /tmp/m3037-apk-export.log; then
+            echo "Godot reported script errors during Android export"
+            exit 1
+          fi
       - name: Upload combined M303.7 test APK (reference graphics; not public release)
         if: success()
         uses: actions/upload-artifact@v4
