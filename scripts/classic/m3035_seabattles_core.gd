@@ -45,6 +45,31 @@ func _asset(file: String, where: Vector3, scale_factor: float, label: String, at
 	return super._asset(file, where, scale_factor, label, atlas_path)
 
 
+func _make_ocean() -> void:
+	# Optional local texture slot. The baseline still works entirely offline
+	# with the existing lightweight wave shader.
+	var water_path := "res://assets/classic/private_seabattles/ocean/water.png"
+	if _asset_mode != "private_sprite" or not ResourceLoader.exists(water_path):
+		super._make_ocean()
+		return
+	var texture := load(water_path) as Texture2D
+	if texture == null:
+		super._make_ocean()
+		return
+	var water := MeshInstance3D.new()
+	water.name = "SeaBattlesReferenceOcean"
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(280, 210)
+	water.mesh = plane
+	var shader := Shader.new()
+	shader.code = "shader_type spatial; render_mode unshaded; uniform sampler2D sea_tex : source_color; void fragment() { vec2 uv = fract(UV * vec2(8.0, 8.0) + vec2(TIME * 0.004, TIME * 0.002)); ALBEDO = texture(sea_tex, uv).rgb; }"
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	material.set_shader_parameter("sea_tex", texture)
+	water.material_override = material
+	add_child(water)
+
+
 func _build_world() -> void:
 	super._build_world()
 	# Thin restrained stern wake. Visual only; fixes M302's broad white-fan issue.
