@@ -48,7 +48,16 @@ func _run() -> void:
 	await create_timer(1.2).timeout
 	verify(int(scene.enemies[0].hp) == enemy_hp - 24, "cannonball hits after visible flight")
 	# Monster target: unique long harpoon geometry (not a renamed sphere).
-	scene.target = scene.enemies.size() - 1
+	var monster_index := -1
+	for i in scene.enemies.size():
+		if str(scene.enemies[i]["kind"]) == "monster":
+			monster_index = i
+			break
+	verify(monster_index >= 0, "monster exists for harpoon test")
+	if monster_index < 0:
+		_done()
+		return
+	scene.target = monster_index
 	scene._choose_harpoon()
 	scene.ship.position = scene.enemies[scene.target].node.position + Vector3(8.0, 0.0, 0.0)
 	var harpoon_count: int = scene.harpoons
