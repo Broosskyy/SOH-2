@@ -1,3 +1,22 @@
+# Abyssal Dominion — M303.5 Godot SeaBattles Reference Core
+
+**Current branch**: `rebuild/classic-seafight-m303` (separate from unchanged M302 `main`).
+
+**Boot:** `scenes/classic/classic_sea_map.tscn` → `scripts/classic/m3035_seabattles_core.gd`, using Godot 4.7.2.
+
+- Native fullscreen / sensor landscape (Android), independent responsive HUD and touch controls.
+- Local sea-chart prototype: sailing/shore avoidance, NPC/monster selection, cannon/harpoon, repairs and loot.
+- Separate rendering adapter: original replaceable 16-dir placeholder sprites, optional **local** 4×2 SeaBattles PNG texture atlases, existing GLB 3D models; in-game graphics switch.
+- Compatible optional local texture slots for islands and sea; fallback visuals always work.
+- Offline Unity Texture2D importer from user's APK collection: `tools/import_seabattles_local.py`. It only writes to `assets/classic/private_seabattles/` which is excluded from Git.
+- **Important status:** APK graphic conversion and Godot native Android/Web runtime are **NOT TESTED** in this branch. Public GitHub does not contain third-party APK original graphics; no playable release APK was produced.
+
+Full integration and QA report: [M303_5_VISUAL_CORE_REPORT.md](M303_5_VISUAL_CORE_REPORT.md).
+
+---
+
+## Earlier M303 / M302 notes
+
 # Abyssal Dominion — Classic-Seafight-Rebuild M303.1
 
 **Aktive Entwicklung:** `rebuild/classic-seafight-m303`. Der M302-Bestand auf `main` bleibt unverändert.
