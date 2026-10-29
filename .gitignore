@@ -13,3 +13,6 @@ tools/godot-4.7.2/
 docs/qa_m302/videos/
 docs/qa_m302/**/frames/
 user://qa_video_m302/
+
+# Private, non-redistributable SeaBattles APK analysis graphics.
+assets/classic/private_seabattles/
