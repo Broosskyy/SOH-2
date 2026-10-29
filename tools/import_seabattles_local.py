@@ -33,6 +33,8 @@ MONSTER_NAMES = {
     "tiamat": "monsters/tiamat.png",
     "glasciadon": "monsters/glasciadon.png",
 }
+SURFACE_NAMES = {"water": "ocean/water.png", "ocean": "ocean/water.png", "seawater": "ocean/water.png"}
+UI_NAMES = {"topbar": "ui/topbar.png", "hudframe": "ui/hudframe.png", "minimapframe": "ui/minimapframe.png"}
 ISLAND_RULES = {
     "snow": "islands/snow.png",
     "tropical": "islands/tropical.png",
@@ -51,6 +53,10 @@ def destination_for(name: str) -> str | None:
         return SHIP_NAMES[key]
     if key in MONSTER_NAMES:
         return MONSTER_NAMES[key]
+    if key in SURFACE_NAMES:
+        return SURFACE_NAMES[key]
+    if key in UI_NAMES:
+        return UI_NAMES[key]
     lowered = name.casefold()
     if any(token in lowered for token in ISLAND_TOKENS):
         for token, output in ISLAND_RULES.items():
