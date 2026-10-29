@@ -24,9 +24,9 @@ func _asset(file: String, where: Vector3, scale_factor: float, label: String, at
 			var source: String = ASSET_BRIDGE.local_path(label)
 			var success := false
 			if label.begins_with("NPC_") or label == "PlayerShip":
-				# Confirmed initial atlas hypothesis: 4 columns × 2 rows.
+				# Provisional layout of the private diagnostic atlas: 4 × 2.
 				# Metadata alone cannot verify frame direction order, tune heading_bias.
-				success = adapter.set_ship_atlas(source, 4, 2, 0.03 * scale_factor)
+				success = adapter.set_ship_atlas(source, 4, 2, 5.6 * scale_factor)
 			else:
 				var radius := 12.0
 				for obstacle in islands:
