@@ -11,6 +11,7 @@ on:
       - 'scripts/classic/**'
       - 'assets/classic/original_ui/**'
       - 'tests/m3038_ammo_visual_smoke.gd'
+      - 'tests/m3038_world_loot_smoke.gd'
       - 'project.godot'
       - 'scripts/visual/p0_replacement_qa.gd'
       - 'scenes/classic/**'
@@ -84,6 +85,8 @@ jobs:
         run: godot --headless --path . --script res://tests/m3037_graphics_integration_smoke.gd
       - name: Verify actual in-game ammo meshes and functional quickbar
         run: godot --headless --path . --script res://tests/m3038_ammo_visual_smoke.gd
+      - name: Verify extra NPCs and physical treasure pickup
+        run: godot --headless --path . --script res://tests/m3038_world_loot_smoke.gd
       - name: Build Android test APK with real integrated graphics (no placeholder option)
         run: |
           set -euo pipefail
@@ -92,7 +95,7 @@ jobs:
             echo "Godot reported script errors during Android export"
             exit 1
           fi
-      - name: Upload combined M303.7 test APK (reference graphics; not public release)
+      - name: Upload M303.8 playable test APK (reference graphics; not public release)
         if: success()
         uses: actions/upload-artifact@v4
         with:
