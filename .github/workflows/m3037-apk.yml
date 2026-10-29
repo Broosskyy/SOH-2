@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/m3037-apk.yml'
       - 'scripts/classic/**'
+      - 'scripts/ui/asset_preview.gd'
       - 'scenes/classic/**'
       - 'tests/m3037_combat_smoke.gd'
       - 'tests/m3036_unified_smoke.gd'
