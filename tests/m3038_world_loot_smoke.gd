@@ -20,7 +20,7 @@ func _run() -> void:
 	root.add_child(scene)
 	current_scene = scene
 	await process_frame
-	check(scene.enemies.size() == 9, "5 base ships + 1 monster + 3 new AI patrol ships")
+	check(scene.enemies.size() == 12, "5 base ships + 1 monster + 3 M303.8 patrols + 3 new ship classes")
 	for i in range(6, 9):
 		var npc: Dictionary = scene.enemies[i]
 		check(str(npc["kind"]) == "ship" and int(npc["hp"]) == 100, "extra NPC has combat state")
