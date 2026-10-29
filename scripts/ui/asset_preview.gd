@@ -132,9 +132,9 @@ func _rebuild_choices() -> void:
 	choices.clear()
 	selector.clear()
 	var kind_labels := ["", "models", "ui", "vfx", "audio"]
-	var wanted_kind := kind_labels[kind_filter.selected] if kind_filter != null else ""
+	var wanted_kind: String = kind_labels[kind_filter.selected] if kind_filter != null else ""
 	var wanted_status := status_filter.selected if status_filter != null else 0
-	var wanted_priority := ["", "P0", "P1", "P2", "P0_FIRST13", "M58_WAVE", "M59_HUD", "M60_TARGET", "M61_COMBAT", "M62_WORLD", "M63_ENV", "M65_SHIPS", "M66_SHIPS", "M67_WORLD", "M68_MONSTER", "M69_NPC", "M70_CONTENT", "M71_WORLD", "M72_POI", "M73_DRESSING", "M74_FEEDBACK", "M75_CLOSURE", "M76_SESSION", "M78_WORLD", "M79_PRIORITY", "M80_CONSOLIDATE", "M81_CLOSURE", "M82_CROSSPLAY", "M86_HUD_WORLD"][priority_filter.selected] if priority_filter != null else ""
+	var wanted_priority: String = ["", "P0", "P1", "P2", "P0_FIRST13", "M58_WAVE", "M59_HUD", "M60_TARGET", "M61_COMBAT", "M62_WORLD", "M63_ENV", "M65_SHIPS", "M66_SHIPS", "M67_WORLD", "M68_MONSTER", "M69_NPC", "M70_CONTENT", "M71_WORLD", "M72_POI", "M73_DRESSING", "M74_FEEDBACK", "M75_CLOSURE", "M76_SESSION", "M78_WORLD", "M79_PRIORITY", "M80_CONSOLIDATE", "M81_CLOSURE", "M82_CROSSPLAY", "M86_HUD_WORLD"][priority_filter.selected] if priority_filter != null else ""
 	for choice in all_choices:
 		var kind := str(choice.kind)
 		if not wanted_kind.is_empty() and kind != wanted_kind: continue
