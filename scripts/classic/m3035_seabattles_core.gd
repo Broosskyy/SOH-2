@@ -99,11 +99,14 @@ func _sail(delta: float) -> void:
 	displacement.y = 0.0
 	if displacement.length() < 0.8:
 		route.remove_at(0)
+		if route.is_empty():
+			_sea_speed = 0.0
 		return
 	var direction := displacement.normalized()
 	# Ported from M302 motor feel: measured acceleration and rotation rate,
 	# with course-following independent of the heading/sprite presentation.
-	_sea_speed = move_toward(_sea_speed, 11.0, 19.0 * delta)
+	var desired_speed := minf(11.0, maxf(3.0, displacement.length() * 2.0))
+	_sea_speed = move_toward(_sea_speed, desired_speed, 19.0 * delta)
 	var next_point := ship.position + direction * minf(_sea_speed * delta, displacement.length())
 	if _blocked(next_point):
 		route.clear()
@@ -159,44 +162,9 @@ func _switch_graphics() -> void:
 	get_tree().reload_current_scene()
 
 
-# M303.5 motion pass: keep movement independent from ship artwork.
-# The navigation authority is still only a local demo, not network truth.
-var _local_sailing_speed := 0.0
+# M303.5: local NPC cruise presentation only; affects no server state.
 var _npc_animation_clock := 0.0
 var _npc_initial_positions: Array[Vector3] = []
-
-
-func _sail(delta: float) -> void:
-	if ship == null:
-		return
-	if route.is_empty():
-		_local_sailing_speed = move_toward(_local_sailing_speed, 0.0, 18.0 * delta)
-		return
-	var desired: Vector3 = route[0] - ship.position
-	desired.y = 0.0
-	var distance := desired.length()
-	if distance < 0.85:
-		route.remove_at(0)
-		if route.is_empty():
-			_local_sailing_speed = 0.0
-		return
-	var direction := desired.normalized()
-	# Short final approach prevents overshooting waypoints.
-	var destination_speed := minf(10.5, maxf(3.0, distance * 2.0))
-	_local_sailing_speed = move_toward(_local_sailing_speed, destination_speed, 16.0 * delta)
-	var next := ship.position + direction * minf(_local_sailing_speed * delta, distance)
-	if _blocked(next):
-		route.clear()
-		_local_sailing_speed = 0.0
-		hint = "Küste erreicht · neues Fahrziel wählen"
-		_refresh()
-		return
-	ship.position = next
-	var heading := atan2(-direction.x, -direction.z)
-	ship.rotation.y = lerp_angle(ship.rotation.y, heading, minf(1.0, delta * 5.4))
-	var display := ship.get_node_or_null("ShipSprite")
-	if display != null:
-		display.set_heading(ship.rotation.y)
 
 
 func _process(delta: float) -> void:
