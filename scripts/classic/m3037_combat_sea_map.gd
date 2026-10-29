@@ -191,13 +191,18 @@ func _player_impact(index: int, actor: Node3D, damage: int) -> void:
 		_create_loot(actor.position, 45 if str(enemy.get("kind", "")) == "monster" else 25)
 		var sinking := create_tween()
 		sinking.tween_property(actor, "position:y", actor.position.y - 3.0, 0.75)
-		sinking.tween_callback(func() -> void: actor.visible = false)
+		sinking.tween_callback(Callable(self, "_hide_sunken_ship").bind(actor))
 		kills += 1
 		if target == index:
 			target = -1
 			firing = false
 		hint = "Gegner versenkt · Beute einsammeln"
 	_refresh()
+
+
+func _hide_sunken_ship(actor: Node3D) -> void:
+	if is_instance_valid(actor):
+		actor.visible = false
 
 
 func _enemy_impact(damage: int) -> void:
