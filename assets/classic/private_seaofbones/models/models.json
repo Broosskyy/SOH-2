@@ -1,0 +1,56 @@
+[
+  {
+    "name": "elite_8",
+    "status": "ready",
+    "mesh": "elite_8.obj",
+    "albedo": "elite_8.png",
+    "slot": "ships/sob_elite8.png",
+    "frames": 8,
+    "texture_mapping": "explicit source name pair; visually reviewed, not full Unity material recreation"
+  },
+  {
+    "name": "elite_2",
+    "status": "ready",
+    "mesh": "elite_2.obj",
+    "albedo": "elite_2.png",
+    "slot": "ships/sob_elite2.png",
+    "frames": 8,
+    "texture_mapping": "explicit source name pair; visually reviewed, not full Unity material recreation"
+  },
+  {
+    "name": "elite_6",
+    "status": "ready",
+    "mesh": "elite_6.obj",
+    "albedo": "elite_6.png",
+    "slot": "ships/sob_elite6.png",
+    "frames": 8,
+    "texture_mapping": "explicit source name pair; visually reviewed, not full Unity material recreation"
+  },
+  {
+    "name": "12_kraken",
+    "status": "ready",
+    "mesh": "12_kraken.obj",
+    "albedo": "12_kraken.png",
+    "slot": "monsters/kraken.png",
+    "frames": 1,
+    "texture_mapping": "explicit source name pair; visually reviewed, not full Unity material recreation"
+  },
+  {
+    "name": "island",
+    "status": "ready",
+    "mesh": "island.obj",
+    "albedo": "island.png",
+    "slot": "islands/tropical.png",
+    "frames": 1,
+    "texture_mapping": "explicit source name pair; visually reviewed, not full Unity material recreation"
+  },
+  {
+    "name": "isla_invierno_01",
+    "status": "ready",
+    "mesh": "isla_invierno_01.obj",
+    "albedo": "isla_invierno_01.png",
+    "slot": "islands/snow.png",
+    "frames": 1,
+    "texture_mapping": "explicit source name pair; visually reviewed, not full Unity material recreation"
+  }
+]

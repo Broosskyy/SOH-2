@@ -1,0 +1,93 @@
+{
+  "source_label": "SeaOfBones 1.3.68",
+  "package": "com.seaofbones.game",
+  "repository_base": "5e56cbfb708ecd83dfe0f56298350753a3e8e3ce",
+  "source_is_seabattles": false,
+  "actors": {
+    "PlayerShip": {
+      "path": "ships/sob_elite8.png",
+      "columns": 4,
+      "rows": 2,
+      "world_width": 12.0,
+      "source_mesh": "elite_8",
+      "heading_offset": 90.0
+    },
+    "NPC_0": {
+      "path": "ships/sob_elite6.png",
+      "columns": 4,
+      "rows": 2,
+      "world_width": 12.0,
+      "source_mesh": "elite_6",
+      "heading_offset": 90.0
+    },
+    "NPC_1": {
+      "path": "ships/sob_elite2.png",
+      "columns": 4,
+      "rows": 2,
+      "world_width": 12.0,
+      "source_mesh": "elite_2",
+      "heading_offset": 90.0
+    },
+    "NPC_2": {
+      "path": "ships/sob_elite8.png",
+      "columns": 4,
+      "rows": 2,
+      "world_width": 12.0,
+      "source_mesh": "elite_8",
+      "heading_offset": 90.0
+    },
+    "NPC_3": {
+      "path": "ships/sob_elite2.png",
+      "columns": 4,
+      "rows": 2,
+      "world_width": 12.0,
+      "source_mesh": "elite_2",
+      "heading_offset": 90.0
+    },
+    "NPC_4": {
+      "path": "ships/sob_elite6.png",
+      "columns": 4,
+      "rows": 2,
+      "world_width": 12.0,
+      "source_mesh": "elite_6",
+      "heading_offset": 90.0
+    },
+    "SeaMonster": {
+      "path": "monsters/kraken.png",
+      "columns": 1,
+      "rows": 1,
+      "world_width": 16.0,
+      "source_mesh": "12_kraken"
+    },
+    "Island_3": {
+      "path": "islands/tropical.png",
+      "columns": 1,
+      "rows": 1
+    },
+    "Island_0": {
+      "path": "islands/tropical.png",
+      "columns": 1,
+      "rows": 1,
+      "source_mesh": "island",
+      "note": "Suitable tropical source image reused for this test slot; no snow-island identity is claimed."
+    },
+    "Island_1": {
+      "path": "islands/tropical.png",
+      "columns": 1,
+      "rows": 1,
+      "source_mesh": "island",
+      "note": "Suitable tropical source image reused for this test slot; no snow-island identity is claimed."
+    }
+  },
+  "ocean": {
+    "path": "ocean/wave_noise.png",
+    "usage": "noise"
+  },
+  "notice": "Private test. Three ship sheets and island/monster views are derived from meshes. No original SeaBattles artwork is claimed.",
+  "excluded_from_integration": [
+    {
+      "source": "isla_invierno_01",
+      "reason": "Source mesh contains opaque rectangular water/base geometry. PNG alpha is correct around the mesh. A suitable tropical source view is reused in the local test."
+    }
+  ]
+}

@@ -1,0 +1,274 @@
+{
+  "source_label": "SeaBattles 1.24.0",
+  "package": "com.RoyaleGames.SeaBattles",
+  "source_is_seabattles": true,
+  "actors": {
+    "PlayerShip": {
+      "path": "ships/elite8.png",
+      "columns": 4,
+      "rows": 2,
+      "idle_frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "moving_frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "world_width": 12.0,
+      "heading_offset": 45.0,
+      "source_layout": "Four diagonal headings; upper row furled sails, lower row deployed sails"
+    },
+    "NPC_0": {
+      "path": "ships/warship.png",
+      "columns": 4,
+      "rows": 2,
+      "idle_frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "moving_frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "world_width": 12.0,
+      "heading_offset": 45.0,
+      "source_layout": "Four diagonal headings; upper row furled sails, lower row deployed sails"
+    },
+    "NPC_1": {
+      "path": "ships/pinnace.png",
+      "columns": 4,
+      "rows": 2,
+      "idle_frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "moving_frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "world_width": 12.0,
+      "heading_offset": 45.0,
+      "source_layout": "Four diagonal headings; upper row furled sails, lower row deployed sails"
+    },
+    "NPC_2": {
+      "path": "ships/flyingdutchman.png",
+      "columns": 4,
+      "rows": 2,
+      "idle_frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "moving_frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "world_width": 12.0,
+      "heading_offset": 45.0,
+      "source_layout": "Four diagonal headings; upper row furled sails, lower row deployed sails"
+    },
+    "NPC_3": {
+      "path": "ships/elite8.png",
+      "columns": 4,
+      "rows": 2,
+      "idle_frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "moving_frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "world_width": 12.0,
+      "heading_offset": 45.0,
+      "source_layout": "Four diagonal headings; upper row furled sails, lower row deployed sails"
+    },
+    "NPC_4": {
+      "path": "ships/warship.png",
+      "columns": 4,
+      "rows": 2,
+      "idle_frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "moving_frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "world_width": 12.0,
+      "heading_offset": 45.0,
+      "source_layout": "Four diagonal headings; upper row furled sails, lower row deployed sails"
+    },
+    "SeaMonster": {
+      "path": "monsters/tiamat.png",
+      "columns": 4,
+      "rows": 8,
+      "idle_frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "animation_rows": 8,
+      "animation_fps": 7.0,
+      "world_width": 17.0,
+      "heading_offset": 45.0
+    },
+    "Island_0": {
+      "path": "islands/snow.png"
+    },
+    "Island_1": {
+      "path": "islands/snow2.png"
+    },
+    "Island_2": {
+      "path": "islands/rock.png"
+    },
+    "Island_3": {
+      "path": "islands/tropical.png"
+    }
+  },
+  "ocean": {
+    "path": "ocean/wave_noise.png",
+    "usage": "noise"
+  },
+  "shot_effect": {
+    "path": "effects/cannon_flash.png",
+    "world_width": 1.7
+  },
+  "selected": [
+    {
+      "slot": "ships/elite8.png",
+      "id": "01cfeb25dc28e0340a3e1309896dbbce:1",
+      "name": "elite8",
+      "source_png": "png/ships/texture2d/elite8__a8ec16a24d68.png",
+      "source_sha256": "fb27e37358e70016c45fad9af4f0d51d2ff3b21e7af0d46a51a34be85a17b53c"
+    },
+    {
+      "slot": "ships/warship.png",
+      "id": "acf30e60df3b7474e8216b6a8730ee75:1",
+      "name": "Warship",
+      "source_png": "png/ships/texture2d/Warship__ae3c9e5d37f3.png",
+      "source_sha256": "6a1223278e92867da6f443a8fcaedc409b6f02e6742abfa3ed47ac1ec034c433"
+    },
+    {
+      "slot": "ships/pinnace.png",
+      "id": "3602f33411dee0c46be4e5ec9c682241:1",
+      "name": "Pinnace",
+      "source_png": "png/ships/texture2d/Pinnace__a22ec987bd20.png",
+      "source_sha256": "85aa19fd0f0394043a4e902ebf52e64f0a492093500f38daac06cd63c45afa25"
+    },
+    {
+      "slot": "ships/flyingdutchman.png",
+      "id": "3540fe60383ea264faf390faf471835c:1",
+      "name": "FlyingDutchman",
+      "source_png": "png/ships/texture2d/FlyingDutchman__41c443270275.png",
+      "source_sha256": "12e2b8d7976d2da50c5890dfbd3925c7fcc1379ffd8037c8d913e6298643ce34"
+    },
+    {
+      "slot": "monsters/tiamat.png",
+      "id": "efec81a9b8502e449a63c27457026def:1",
+      "name": "Tiamat",
+      "source_png": "png/monsters/texture2d/Tiamat__e0f25e5955ff.png",
+      "source_sha256": "7c6940364ccdce71c1bc3d6e7e05eecb916927ded2a26cc6270b47741988995d"
+    },
+    {
+      "slot": "islands/snow.png",
+      "id": "17b90585340354e37b4c231e2b07b451:1",
+      "name": "8",
+      "source_png": "png/islands/texture2d/8__8b4dd732516d.png",
+      "source_sha256": "b437dbd7169f7f64972a904efc07f2c1825e29d2739b3bf9873c871c5c9e4325"
+    },
+    {
+      "slot": "islands/snow2.png",
+      "id": "e5a7937dfb2ab4a36979b7c17fd0e953:1",
+      "name": "7",
+      "source_png": "png/islands/texture2d/7__0932cae74eb8.png",
+      "source_sha256": "059f8c89072fd5b20e86ff4f67baebe5f332329880be7128f91aa6f6c72d5b52"
+    },
+    {
+      "slot": "islands/rock.png",
+      "id": "57e9e303722d74b189316842c16c6458:1",
+      "name": "5",
+      "source_png": "png/islands/texture2d/5__db4a080058c2.png",
+      "source_sha256": "ad00ba9bc5f6c12e681e14d72836e28fbde0df00ded4b7714a10f49c6ee6cd75"
+    },
+    {
+      "slot": "islands/tropical.png",
+      "id": "10804415ce2f9449783e705a6a0d2991:1",
+      "name": "9",
+      "source_png": "png/islands/texture2d/9__718784af7509.png",
+      "source_sha256": "55e6a4717ba987daeab1b2f08ae74fb13069bde56978ccceb7d8df5b7decae78"
+    },
+    {
+      "slot": "ocean/wave_noise.png",
+      "id": "sharedassets1.assets:34",
+      "name": "WaveNoise",
+      "source_png": "png/water/texture2d/WaveNoise__fc3d86372169.png",
+      "source_sha256": "5187208d67e7d0dea16aa4ed1cef716b3bcde7be192575b84b767270d2bba79b"
+    },
+    {
+      "slot": "ui/button_normal.png",
+      "id": "sharedassets0.assets:435",
+      "name": "login-button",
+      "source_png": "png/ui/sprite/login-button__802601d38544.png",
+      "source_sha256": "50678ab108ac00c9acf855841ee655004c2995a8286f974afed25b8f5e6ca1c2"
+    },
+    {
+      "slot": "ui/button_hover.png",
+      "id": "sharedassets0.assets:639",
+      "name": "gold-button",
+      "source_png": "png/ui/sprite/gold-button__b6329fd7a7c9.png",
+      "source_sha256": "3c59cd7f5ddccad9186d6f9b1642ce57634cce995503d93abc1c1b4eb8b6c724"
+    },
+    {
+      "slot": "ui/button_pressed.png",
+      "id": "sharedassets0.assets:849",
+      "name": "80_subMenuBtnBkgMC_bmpref0",
+      "source_png": "png/ui/sprite/80_subMenuBtnBkgMC_bmpref0__da8c7fb33287.png",
+      "source_sha256": "30e15042eec494b9403fa24b80b03f12e394452636469ecc332c8c68adfb4a48"
+    },
+    {
+      "slot": "effects/cannon_flash.png",
+      "id": "080526292afe5024ca5ab623f88c22f4:2",
+      "name": "CannonShootEffect",
+      "source_png": "png/effects/sprite/CannonShootEffect__2ef6f74aac96.png",
+      "source_sha256": "94825fe9aaa6ff55803d907afb0dda8b44deac09404d1807a8b3e9fd7429912a"
+    },
+    {
+      "slot": "ui/minimap.png",
+      "id": "sharedassets0.assets:767",
+      "name": "13_minimap",
+      "source_png": "png/ui/sprite/13_minimap__beeb6c662b45.png",
+      "source_sha256": "32c994e5f27b0856187162f54cf3d3187b8a7b2d2c4914216cd4f98ac2b6a411"
+    }
+  ],
+  "notes": [
+    "Original source PNGs; no model rasterization used for this pack.",
+    "Four headings and two sail states must not be treated as eight headings.",
+    "Existing circular collision bounds are independent of image silhouettes."
+  ]
+}

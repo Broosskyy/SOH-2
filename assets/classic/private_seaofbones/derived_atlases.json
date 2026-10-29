@@ -1,0 +1,92 @@
+[
+	{
+		"camera": [
+			0,
+			68,
+			43
+		],
+		"cell": 512,
+		"columns": 4,
+		"derived": true,
+		"heading_degrees": "frame * 360 / frames",
+		"png": "ships/sob_elite8.png",
+		"rows": 2,
+		"source_mesh": "elite_8",
+		"transparent_viewport": true
+	},
+	{
+		"camera": [
+			0,
+			68,
+			43
+		],
+		"cell": 512,
+		"columns": 4,
+		"derived": true,
+		"heading_degrees": "frame * 360 / frames",
+		"png": "ships/sob_elite2.png",
+		"rows": 2,
+		"source_mesh": "elite_2",
+		"transparent_viewport": true
+	},
+	{
+		"camera": [
+			0,
+			68,
+			43
+		],
+		"cell": 512,
+		"columns": 4,
+		"derived": true,
+		"heading_degrees": "frame * 360 / frames",
+		"png": "ships/sob_elite6.png",
+		"rows": 2,
+		"source_mesh": "elite_6",
+		"transparent_viewport": true
+	},
+	{
+		"camera": [
+			0,
+			68,
+			43
+		],
+		"cell": 512,
+		"columns": 1,
+		"derived": true,
+		"heading_degrees": "frame * 360 / frames",
+		"png": "monsters/kraken.png",
+		"rows": 1,
+		"source_mesh": "12_kraken",
+		"transparent_viewport": true
+	},
+	{
+		"camera": [
+			0,
+			68,
+			43
+		],
+		"cell": 512,
+		"columns": 1,
+		"derived": true,
+		"heading_degrees": "frame * 360 / frames",
+		"png": "islands/tropical.png",
+		"rows": 1,
+		"source_mesh": "island",
+		"transparent_viewport": true
+	},
+	{
+		"camera": [
+			0,
+			68,
+			43
+		],
+		"cell": 512,
+		"columns": 1,
+		"derived": true,
+		"heading_degrees": "frame * 360 / frames",
+		"png": "islands/snow.png",
+		"rows": 1,
+		"source_mesh": "isla_invierno_01",
+		"transparent_viewport": true
+	}
+]
