@@ -1,5 +1,10 @@
 # Abyssal Dominion M303.5 – local artwork integration
 
+**Current player entry: M303.6.** See [M303_6_UNIFIED_PRESENTATION.md](M303_6_UNIFIED_PRESENTATION.md).
+Only SeaBattles and SeaOfBones are selectable in the current app. The four-mode
+comparison described below is historical; the main HUD/world is unified and
+graphics changes no longer reload the scene.
+
 Updated 2026-10-29. Current build instructions are in
 [M303_5_LOCAL_GRAPHICS_AND_ANDROID.md](M303_5_LOCAL_GRAPHICS_AND_ANDROID.md).
 

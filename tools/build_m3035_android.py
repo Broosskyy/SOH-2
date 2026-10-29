@@ -67,7 +67,7 @@ def main():
     parser.add_argument("--java-home", type=Path)
     parser.add_argument("--debug-keystore", type=Path)
     parser.add_argument("--editor-settings", type=Path, default=editor_settings_default())
-    parser.add_argument("--output", type=Path, default=ROOT / "builds/android/ABYSSAL_DOMINION_M303_5_TEST.apk")
+    parser.add_argument("--output", type=Path, default=ROOT / "builds/android/ABYSSAL_DOMINION_M303_6_TEST.apk")
     parser.add_argument("--allow-placeholders", action="store_true")
     args = parser.parse_args()
     version = subprocess.check_output([args.godot, "--version"], text=True).strip()
@@ -122,7 +122,7 @@ def main():
     subprocess.run([str(zipalign), "-c", "-P", "16", "4", str(output)], env=env, check=True)
     result = {"engine": version, "apk": output.name, "size_bytes": output.stat().st_size,
               "sha256": hashlib.file_digest(output.open("rb"), "sha256").hexdigest(),
-              "package": "com.abyssaldominion.m3035test", "version_name": "0.303.5-test.1",
+              "package": "com.abyssaldominion.m3035test", "version_name": "0.303.6-test.1",
               "architecture": "arm64-v8a", "private_graphics_included": not args.allow_placeholders,
               "zip_integrity": "PASS", "signature_verification": "PASS", "alignment_16k": "PASS",
               "device_installation": "NOT_TESTED"}

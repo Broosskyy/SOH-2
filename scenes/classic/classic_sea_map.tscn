@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/classic/m3035_seabattles_core.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/classic/m3036_unified_sea_map.gd" id="1_script"]
 
 [node name="ClassicSeaMap" type="Node3D"]
 script = ExtResource("1_script")

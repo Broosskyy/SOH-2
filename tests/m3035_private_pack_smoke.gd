@@ -1,5 +1,5 @@
 extends SceneTree
-## Exercises the actual M303.5 scene and its private/fallback graphics paths.
+## Historical M303.5 comparison prototype; current player flow uses M303.6.
 var failures: Array[String] = []
 var evidence: Dictionary = {}
 
@@ -11,11 +11,11 @@ func check(condition: bool, label: String) -> void:
 		failures.append(label)
 
 func _run() -> void:
-	var packed := load("res://scenes/classic/classic_sea_map.tscn") as PackedScene
+	var packed := load("res://scripts/classic/m3035_seabattles_core.gd") as GDScript
 	if packed == null:
 		quit(1)
 		return
-	var scene: Node3D = packed.instantiate()
+	var scene: Node3D = packed.new()
 	root.add_child(scene)
 	current_scene = scene
 	await process_frame
@@ -64,7 +64,7 @@ func _run() -> void:
 	check(had_smoke, "successful shot spawns alpha smoke")
 	for mode: String in ["seaofbones_sprite", "complete_3d", "placeholder_sprite"]:
 		root.set_meta("m3035_graphic_mode", mode)
-		var fallback: Node3D = packed.instantiate()
+		var fallback: Node3D = packed.new()
 		root.add_child(fallback)
 		await process_frame
 		check(fallback.ship.get_child_count() > 0, "fallback renders: " + mode)

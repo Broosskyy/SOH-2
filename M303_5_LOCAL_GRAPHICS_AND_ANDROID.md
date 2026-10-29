@@ -1,5 +1,9 @@
 # M303.5 private graphics adapters and Android test build
 
+**M303.6 update:** the main player flow now exposes only SeaBattles and SeaOfBones,
+under MENU. Both use one HUD, water and coastline, and switching keeps live game
+state. See [M303_6_UNIFIED_PRESENTATION.md](M303_6_UNIFIED_PRESENTATION.md).
+
 The local test supports SeaBattles, SeaOfBones, existing 3D models and the own 2D
 fallbacks. Artwork is optional and independent of movement, combat and rewards.
 The public repository contains code and configuration only for the new packs.
@@ -27,7 +31,7 @@ native decoder. Both tools are offline and do not execute APK code.
 Use Godot 4.7.2 and its matching Android debug export template, JDK 17, Android
 platform-tools and build-tools. The `Android M303.5 Local Test` preset creates
 an ARM64 debug-signed APK with package `com.abyssaldominion.m3035test`, version
-`0.303.5-test.1` / code `303501`. It installs separately from older game packages.
+`0.303.6-test.1` / code `303601`. It updates the M303.5 test package using the same key.
 
 ```bash
 python3 tools/build_m3035_android.py --godot /path/to/godot \

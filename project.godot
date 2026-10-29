@@ -8,7 +8,7 @@ config_version=5
 ; Keep the actual M29 storage identity (M28); renaming would orphan user saves.
 ; EntryFlow sets the visible native window title to the current milestone.
 config/name="Abyssal Dominion"
-config/version="0.303.5"
+config/version="0.303.6"
 run/main_scene="res://scenes/classic/classic_sea_map.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/production/ui/app_icon.svg"

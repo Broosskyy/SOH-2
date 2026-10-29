@@ -23,6 +23,7 @@ assets/private/seabattles/
 # Private test captures and locally signed application packages.
 qa_private/
 qa_seabattles/
+qa_m3036/
 *.apk
 *.apks
 SeaBattles*.zip
