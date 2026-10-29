@@ -9,7 +9,14 @@ const WORLD_SHIP_VARIANTS: Array[Dictionary] = [
 	{"name": "Geisterkorsar", "position": Vector3(-31, 0.65, 51), "hp": 130, "class": "spectral", "gold": 45, "tint": Color("83d9bf"), "scale": 1.08}
 ]
 const START_ZOOM := 72.0
+const PLAYER_COATINGS: Array[Dictionary] = [
+	{"name": "Kapitänssegler", "actor": "PlayerShip", "tint": Color.WHITE, "scale": 1.0},
+	{"name": "Eisenfregatte", "actor": "NPC_0", "tint": Color("bac6d4"), "scale": 1.14},
+	{"name": "Geistersegler", "actor": "NPC_2", "tint": Color("9ad9c8"), "scale": 1.12}
+]
 var _shore_halos: Array[MeshInstance3D] = []
+var _coating_index := 0
+var _coating_button: Button
 
 func _ready() -> void:
 	super._ready()
@@ -20,6 +27,7 @@ func _ready() -> void:
 	_fix_stern_wake()
 	_reduce_target_ring()
 	_apply_fleet_palette()
+	_apply_player_coating()
 	_refresh()
 
 
@@ -60,6 +68,8 @@ func _asset(file: String, where: Vector3, factor: float, label: String, atlas: S
 	# There are four audited island variants and five NPC bindings. Reuse
 	# supported texture slots rather than silently substituting placeholders.
 	var slot := label
+	if label == "PlayerShip" and _coating_index > 0:
+		slot = str(PLAYER_COATINGS[_coating_index]["actor"])
 	if label.begins_with("Island_"):
 		var number: int = label.substr(7).to_int()
 		if number >= 4:
@@ -158,6 +168,7 @@ func _apply_fleet_palette() -> void:
 func _switch_graphics() -> void:
 	super._switch_graphics()
 	_apply_fleet_palette()
+	_apply_player_coating()
 
 
 func _refresh() -> void:
@@ -191,3 +202,52 @@ func _player_impact(index: int, actor: Node3D, damage: int) -> void:
 		# Base combat already spawns a chest with 25 gold for ship kills.
 		# Extra class rewards appear in a second nearby collectible chest.
 		_create_loot(actor.position + Vector3(2.6, 0.0, 0.0), class_gold)
+
+
+func _make_hud() -> void:
+	super._make_hud()
+	_coating_button = _control("SCHIFFSBESCHICHTUNG", Callable(self, "_cycle_player_coating"))
+	_coating_button.name = "ShipCoatingSelector"
+	_ui_root.remove_child(_coating_button)
+	_options.add_child(_coating_button)
+	_coating_button.tooltip_text = "Wechselt die Schiffsoptik ohne Rücksetzen von HP, Kurs oder Beute"
+
+
+func _layout_hud() -> void:
+	super._layout_hud()
+	if _coating_button == null or _options == null:
+		return
+	var bounds := get_viewport().get_visible_rect().size
+	var margin := 10.0 if bounds.y < 540.0 or bounds.x < 1024.0 else 16.0
+	var menu_width := minf(310.0, bounds.x - 2.0 * margin)
+	_place(_options, bounds.x - menu_width - margin, 42.0 + margin, menu_width, 315.0)
+	_place(_coating_button, 18.0, 216.0, menu_width - 36.0, 42.0)
+	_place(_build_label, 18.0, 270.0, menu_width - 36.0, 22.0)
+
+
+func _cycle_player_coating() -> void:
+	if ship == null:
+		return
+	_coating_index = (_coating_index + 1) % PLAYER_COATINGS.size()
+	# Keep the SAME player node and gameplay state, swapping only the visual
+	# source sheet by way of the existing live sprite replacement adapter.
+	_replace_visual(ship, SHIP, 0.9, "PlayerShip", CAPTAIN_ATLAS)
+	_apply_player_coating()
+	hint = "Schiffsbeschichtung: " + str(PLAYER_COATINGS[_coating_index]["name"])
+	_refresh()
+
+
+func _apply_player_coating() -> void:
+	if ship == null:
+		return
+	var adapter: Node = ship.get_node_or_null("ShipSprite")
+	if adapter == null:
+		return
+	var sprite: Sprite3D = adapter.get("visual") as Sprite3D
+	if sprite == null:
+		return
+	sprite.modulate = PLAYER_COATINGS[_coating_index]["tint"]
+	# Called on a fresh source adapter (not every frame).
+	sprite.pixel_size *= float(PLAYER_COATINGS[_coating_index]["scale"])
+	if _coating_button != null:
+		_coating_button.text = "SCHIFF: " + str(PLAYER_COATINGS[_coating_index]["name"])
