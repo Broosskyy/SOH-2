@@ -49,7 +49,23 @@ func _run() -> void:
 	scene._player_impact(11, victim["node"], 24)
 	check(int(scene.enemies[11]["hp"]) == 0, "ghost ship sinks with real damage")
 	check(scene.loot_items.size() == before + 2, "class-specific bonus gold appears in collectable chest")
+	# Real player customization: selecting a ship coating must not reset the game.
+	var ship_id: int = scene.ship.get_instance_id()
+	var current_hull: int = scene.hull
+	var current_kills: int = scene.kills
+	var current_ammo: int = scene.cannonballs
+	check(scene._coating_button != null, "ship coating control exists in actual UI")
+	scene._cycle_player_coating()
+	check(scene._coating_index == 1, "player can switch to frigate visual")
+	check(scene.ship.get_instance_id() == ship_id, "coating does not replace playable ship")
+	check(scene.hull == current_hull and scene.kills == current_kills and scene.cannonballs == current_ammo,
+		"coating preserves gameplay state")
+	var adapter: Node = scene.ship.get_node_or_null("ShipSprite")
+	check(adapter != null and adapter.get("visual") != null, "coating has valid imported ship texture")
+	check(scene._coating_button.text.contains("Eisenfregatte"), "selected coating visible in menu")
 	scene._switch_graphics()
+	check(scene._coating_index == 1, "coating selection survives source pack swap")
+	check(scene.ship.get_instance_id() == ship_id, "source pack swap also preserves ship node")
 	check(scene.enemies.size() == 12, "ships survive swap to SeaOfBones")
 	for n in 3:
 		var visual: Node = scene.enemies[9+n]["node"].get_node_or_null("ShipSprite")
