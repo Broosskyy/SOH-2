@@ -75,7 +75,8 @@ def safely_copy_zip_members(zf: zipfile.ZipFile, target: Path) -> int:
         candidate = item.filename.casefold()
         # Unity's streamed .resS must remain next to its matching .assets files.
         if not (candidate.startswith("assets/bin/data/") or
-                candidate.startswith("assets/streamingassets/")):
+                candidate.startswith("assets/streamingassets/") or
+                candidate.startswith("assets/aa/")):
             continue
         output = target.joinpath(*parts)
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -92,9 +93,14 @@ def candidate_asset(filename: str) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("apk_collection", type=Path)
+    parser.add_argument("--all", action="store_true", help="Export and audit every Texture2D and Sprite")
+    parser.add_argument("--output", type=Path, default=DEST, help="Local-only graphics/report directory")
     args = parser.parse_args()
     if not args.apk_collection.is_file():
         parser.error("APK collection is missing")
+    if args.all:
+        from unity_graphics_audit import extract_all
+        return extract_all(args.apk_collection, args.output)
     try:
         import UnityPy
     except ImportError:
@@ -141,7 +147,7 @@ def main() -> int:
                         if getattr(obj.type, "name", "") != "Texture2D":
                             continue
                         data = obj.read()
-                        name = str(getattr(data, "name", ""))
+                        name = str(getattr(data, "m_Name", getattr(data, "name", "")))
                         label = (name, int(getattr(obj, "path_id", 0)))
                         if label in seen:
                             continue

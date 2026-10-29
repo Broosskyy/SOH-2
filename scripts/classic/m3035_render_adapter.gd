@@ -4,6 +4,7 @@ extends Node3D
 ## This code neither decrypts Unity bundles nor downloads any third-party data.
 const PRIVATE_RES = "res://assets/classic/private_seabattles/"
 const PRIVATE_USER = "user://seabattles/"
+static var active_pack := "seabattles"
 const COMPATIBLE_2D = {
 	"PlayerShip": "ships/elite8.png",
 	"NPC_0": "ships/warship.png",
@@ -21,6 +22,14 @@ const ISLANDS = {
 var visual: Sprite3D
 var frame_count := 8
 var heading_bias := 0.0
+var _idle_frames: Array[int] = []
+var _moving_frames: Array[int] = []
+var _moving := false
+var _heading_index := 0
+var _animation_rows := 1
+var _animation_fps := 0.0
+var _animation_time := 0.0
+var _animation_row := 0
 
 static func _is_available(path: String) -> bool:
 	return ResourceLoader.exists(path) or FileAccess.file_exists(path)
@@ -28,16 +37,29 @@ static func _is_available(path: String) -> bool:
 static func _path_for(relative: String) -> String:
 	if relative.is_empty():
 		return ""
-	# The local diagnostic preview from the previous M303.3 test can be
-	# placed under ships/elite8_apk_diagnostic_8dir.png as well.
-	var options: Array[String] = [PRIVATE_RES + relative, PRIVATE_USER + relative]
-	if relative == "ships/elite8.png":
-		options.append(PRIVATE_RES + "ships/elite8_apk_diagnostic_8dir.png")
-		options.append(PRIVATE_USER + "ships/elite8_apk_diagnostic_8dir.png")
+	# Never silently use the earlier atlas with known color decoding errors.
+	var resource_root := PRIVATE_RES if active_pack == "seabattles" else "res://assets/classic/private_seaofbones/"
+	var user_root := PRIVATE_USER if active_pack == "seabattles" else "user://seaofbones/"
+	var options: Array[String] = [resource_root + relative, user_root + relative]
 	for path in options:
 		if _is_available(path):
 			return path
 	return ""
+
+static func pack_config() -> Dictionary:
+	var path := _path_for("pack.json")
+	if path.is_empty():
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return parsed if parsed is Dictionary else {}
+
+static func actor_config(actor_name: String) -> Dictionary:
+	var actors: Dictionary = pack_config().get("actors", {})
+	var entry: Variant = actors.get(actor_name, {})
+	return entry if entry is Dictionary else {}
+
+static func has_local_actor(actor_name: String) -> bool:
+	return not local_path(actor_name).is_empty()
 
 static func has_local_ship(actor_name: String) -> bool:
 	return not _path_for(str(COMPATIBLE_2D.get(actor_name, ""))).is_empty()
@@ -46,6 +68,9 @@ static func has_local_island(actor_name: String) -> bool:
 	return not _path_for(str(ISLANDS.get(actor_name, ""))).is_empty()
 
 static func local_path(actor_name: String) -> String:
+	var entry := actor_config(actor_name)
+	if not entry.is_empty():
+		return _path_for(str(entry.get("path", "")))
 	if COMPATIBLE_2D.has(actor_name):
 		return _path_for(str(COMPATIBLE_2D[actor_name]))
 	if ISLANDS.has(actor_name):
@@ -83,7 +108,7 @@ func set_ship_atlas(path: String, columns: int, rows: int, world_width: float, h
 	visual.pixel_size = maxf(world_width, 0.1) / float(texture.get_width() / columns)
 	visual.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	visual.shaded = false
-	visual.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	visual.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
 	visual.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	visual.position = Vector3(0.0, 1.7, 0.0)
 	add_child(visual)
@@ -96,10 +121,13 @@ func set_island_image(path: String, diameter: float) -> bool:
 	visual = Sprite3D.new()
 	visual.name = "IslandImage"
 	visual.texture = texture
+	# This is a camera-baked 2D silhouette on a 3D sea plane. Its lower half
+	# must not disappear behind that plane merely because the quad crosses it.
+	visual.no_depth_test = true
 	visual.pixel_size = diameter / maxf(1.0, float(maxi(texture.get_width(), texture.get_height())))
 	visual.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	visual.shaded = false
-	visual.alpha_cut = SpriteBase3D.ALPHA_CUT_DISCARD
+	visual.alpha_cut = SpriteBase3D.ALPHA_CUT_DISABLED
 	visual.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	visual.position.y = 1.4
 	add_child(visual)
@@ -109,4 +137,36 @@ func set_heading(world_yaw: float) -> void:
 	if visual == null or frame_count < 2:
 		return
 	var degrees := wrapf(rad_to_deg(world_yaw) + heading_bias, 0.0, 360.0)
-	visual.frame = posmod(roundi(degrees / 360.0 * float(frame_count)), frame_count)
+	_heading_index = posmod(roundi(degrees / 360.0 * float(frame_count)), frame_count)
+	_apply_frame()
+
+func configure_frames(entry: Dictionary) -> void:
+	# SeaBattles ship rows represent sail state, not eight headings.
+	_idle_frames.assign(entry.get("idle_frames", []))
+	_moving_frames.assign(entry.get("moving_frames", []))
+	if not _idle_frames.is_empty():
+		frame_count = _idle_frames.size()
+	_animation_rows = maxi(1, int(entry.get("animation_rows", 1)))
+	_animation_fps = maxf(0.0, float(entry.get("animation_fps", 0.0)))
+	_apply_frame()
+
+func set_moving(value: bool) -> void:
+	_moving = value
+	_apply_frame()
+
+func _apply_frame() -> void:
+	if visual == null:
+		return
+	var frames := _moving_frames if _moving and not _moving_frames.is_empty() else _idle_frames
+	var frame := _heading_index if frames.is_empty() else frames[posmod(_heading_index, frames.size())]
+	frame += _animation_row * visual.hframes
+	visual.frame = clampi(frame, 0, visual.hframes * visual.vframes - 1)
+
+func _process(delta: float) -> void:
+	if _animation_rows < 2 or _animation_fps <= 0.0:
+		return
+	_animation_time += delta
+	var row := int(_animation_time * _animation_fps) % _animation_rows
+	if row != _animation_row:
+		_animation_row = row
+		_apply_frame()

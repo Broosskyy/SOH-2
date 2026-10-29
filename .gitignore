@@ -16,5 +16,14 @@ user://qa_video_m302/
 
 # Private, non-redistributable SeaBattles APK analysis graphics.
 assets/classic/private_seabattles/
+assets/classic/private_seaofbones/
 
 assets/private/seabattles/
+
+# Private test captures and locally signed application packages.
+qa_private/
+qa_seabattles/
+*.apk
+*.apks
+SeaBattles*.zip
+SeaOfBones*.zip
