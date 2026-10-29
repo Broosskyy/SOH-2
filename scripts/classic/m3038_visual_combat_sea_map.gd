@@ -259,3 +259,95 @@ func _water_impact(at: Vector3) -> void:
 	tween.tween_property(splash, "scale", Vector3.ONE * 2.8, 0.58)
 	tween.tween_property(splash, "transparency", 1.0, 0.58)
 	tween.chain().tween_callback(splash.queue_free)
+
+
+## Reuse the audited reference-art ship slots when spawning a denser local fleet.
+## Never create NPC_6+ with missing source images and fall back to 2D placeholders.
+func _asset(file: String, where: Vector3, factor: float, label: String, atlas: String = "") -> Node3D:
+	var source_label := label
+	if label.begins_with("NPC_"):
+		var number := label.substr(4).to_int()
+		if number >= 5:
+			source_label = "NPC_%d" % posmod(number, 5)
+	var holder: Node3D = super._asset(file, where, factor, source_label, atlas)
+	holder.name = label
+	return holder
+
+
+func _build_world() -> void:
+	super._build_world()
+	# Existing SeaBattles / SeaOfBones ship sheets; real shootable/patrol ships.
+	# The first five NPCs and the monster remain unchanged.
+	var patrols := [
+		{"where": Vector3(-76.0, 0.65, -57.0), "name": "Nordmeer-Wache"},
+		{"where": Vector3(3.0, 0.65, 57.0), "name": "Sturmfregatte"},
+		{"where": Vector3(86.0, 0.65, 67.0), "name": "Schatzjäger"}
+	]
+	for config in patrols:
+		var index: int = enemies.size()
+		var vessel: Node3D = _asset(ENEMY, config["where"], 0.8, "NPC_%d" % index, CORSAIR_ATLAS)
+		var tag: Label3D = _nameplate(vessel, str(config["name"]), Color("e9be80"))
+		enemies.append({
+			"node": vessel, "name": config["name"],
+			"hp": 100, "plate": tag, "kind": "ship"
+		})
+
+
+func _create_loot(where: Vector3, amount: int) -> void:
+	# Real pickup world object; keeps the existing reward and proximity logic.
+	var chest := Node3D.new()
+	chest.name = "LootChest_%d" % loot_items.size()
+	chest.position = where
+	add_child(chest)
+	var wood := StandardMaterial3D.new()
+	wood.albedo_color = Color("62402a")
+	wood.roughness = 0.88
+	var brass := StandardMaterial3D.new()
+	brass.albedo_color = Color("c59c50")
+	brass.metallic = 0.68
+	brass.roughness = 0.42
+	var body := BoxMesh.new()
+	body.size = Vector3(2.0, 0.92, 1.2)
+	_add_mesh(chest, body, wood, Vector3(0.0, 0.65, 0.0))
+	var lid := BoxMesh.new()
+	lid.size = Vector3(2.08, 0.25, 1.27)
+	_add_mesh(chest, lid, wood, Vector3(0.0, 1.24, 0.0))
+	for x in [-0.75, 0.75]:
+		var strap := BoxMesh.new()
+		strap.size = Vector3(0.19, 0.33, 1.31)
+		_add_mesh(chest, strap, brass, Vector3(x, 1.12, 0.0))
+	var lock := BoxMesh.new()
+	lock.size = Vector3(0.3, 0.3, 0.13)
+	_add_mesh(chest, lock, brass, Vector3(0.0, 0.89, -0.66))
+	_nameplate(chest, "BEUTE · %d GOLD" % amount, Color("ffda76"))
+	loot_items.append({"node": chest, "gold": amount})
+
+
+func _world_click(screen: Vector2) -> void:
+	# World taps select ships, treasure or course without hijacking HUD buttons.
+	var origin := camera.project_ray_origin(screen)
+	var direction := camera.project_ray_normal(screen)
+	if absf(direction.y) > 0.001:
+		var t := -origin.y / direction.y
+		if t >= 0.0:
+			var hit := origin + direction * t
+			# Enemy targeting has priority on overlapping tap positions.
+			var enemy_nearby := false
+			for entry in enemies:
+				if int(entry["hp"]) <= 0:
+					continue
+				var actor: Node3D = entry["node"]
+				if Vector2(hit.x, hit.z).distance_to(Vector2(actor.position.x, actor.position.z)) < 6.0:
+					enemy_nearby = true
+					break
+			if not enemy_nearby:
+				for drop in loot_items:
+					var crate: Node3D = drop["node"]
+					if not is_instance_valid(crate):
+						continue
+					if Vector2(hit.x, hit.z).distance_to(Vector2(crate.position.x, crate.position.z)) < 5.0:
+						_course(crate.position)
+						hint = "Beute angefahren · in Reichweite automatisch einsammeln"
+						_refresh()
+						return
+	super._world_click(screen)
