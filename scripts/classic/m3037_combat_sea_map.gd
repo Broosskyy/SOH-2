@@ -189,7 +189,9 @@ func _player_impact(index: int, actor: Node3D, damage: int) -> void:
 	if int(enemy["hp"]) <= 0:
 		_impact_flash(actor.global_position + Vector3(0.0, 2.4, 0.0), Color("ff744d"))
 		_create_loot(actor.position, 45 if str(enemy.get("kind", "")) == "monster" else 25)
-		actor.visible = false
+		var sinking := create_tween()
+		sinking.tween_property(actor, "position:y", actor.position.y - 3.0, 0.75)
+		sinking.tween_callback(func() -> void: actor.visible = false)
 		kills += 1
 		if target == index:
 			target = -1
