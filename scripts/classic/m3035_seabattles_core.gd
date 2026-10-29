@@ -132,3 +132,75 @@ func _switch_graphics() -> void:
 	get_tree().root.set_meta("m3035_graphic_mode", _asset_mode)
 	# Asset-reload is a LOCAL-TEST reset; no durable save or online state exists.
 	get_tree().reload_current_scene()
+
+
+# M303.5 motion pass: keep movement independent from ship artwork.
+# The navigation authority is still only a local demo, not network truth.
+var _local_sailing_speed := 0.0
+var _npc_animation_clock := 0.0
+var _npc_initial_positions: Array[Vector3] = []
+
+
+func _sail(delta: float) -> void:
+	if ship == null:
+		return
+	if route.is_empty():
+		_local_sailing_speed = move_toward(_local_sailing_speed, 0.0, 18.0 * delta)
+		return
+	var desired: Vector3 = route[0] - ship.position
+	desired.y = 0.0
+	var distance := desired.length()
+	if distance < 0.85:
+		route.remove_at(0)
+		if route.is_empty():
+			_local_sailing_speed = 0.0
+		return
+	var direction := desired.normalized()
+	# Short final approach prevents overshooting waypoints.
+	var destination_speed := minf(10.5, maxf(3.0, distance * 2.0))
+	_local_sailing_speed = move_toward(_local_sailing_speed, destination_speed, 16.0 * delta)
+	var next := ship.position + direction * minf(_local_sailing_speed * delta, distance)
+	if _blocked(next):
+		route.clear()
+		_local_sailing_speed = 0.0
+		hint = "Küste erreicht · neues Fahrziel wählen"
+		_refresh()
+		return
+	ship.position = next
+	var heading := atan2(-direction.x, -direction.z)
+	ship.rotation.y = lerp_angle(ship.rotation.y, heading, minf(1.0, delta * 5.4))
+	var display := ship.get_node_or_null("ShipSprite")
+	if display != null:
+		display.set_heading(ship.rotation.y)
+
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	if enemies.is_empty():
+		return
+	if _npc_initial_positions.is_empty():
+		for data in enemies:
+			var node: Node3D = data["node"]
+			_npc_initial_positions.append(node.position)
+	_npc_animation_clock += delta
+	for i in enemies.size():
+		var enemy: Dictionary = enemies[i]
+		if str(enemy.get("kind", "")) != "ship" or int(enemy["hp"]) <= 0:
+			continue
+		var ship_node: Node3D = enemy["node"]
+		var initial := _npc_initial_positions[i]
+		var t := _npc_animation_clock * (0.24 + float(i % 3) * 0.04) + float(i) * 1.4
+		var next_target := initial + Vector3(sin(t) * 4.5, 0.0, cos(t * 0.85) * 4.0)
+		var travel := next_target - ship_node.position
+		travel.y = 0.0
+		if travel.length() < 0.08:
+			continue
+		var toward := travel.normalized()
+		var candidate := ship_node.position + toward * minf(delta * 2.1, travel.length())
+		if _blocked(candidate):
+			continue
+		ship_node.position = candidate
+		ship_node.rotation.y = lerp_angle(ship_node.rotation.y, atan2(-toward.x, -toward.z), minf(1.0, delta * 2.5))
+		var sprite := ship_node.get_node_or_null("ShipSprite")
+		if sprite != null:
+			sprite.set_heading(ship_node.rotation.y)
