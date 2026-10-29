@@ -76,7 +76,7 @@ func _run() -> void:
 	scene._fire()
 	var after_fire_ammo: int = scene.cannonballs
 	var after_fire_route: Array = scene.route.duplicate()
-	var ship_id := scene.ship.get_instance_id()
+	var ship_id: int = scene.ship.get_instance_id()
 	var mode_before: String = scene._asset_mode
 	scene._switch_graphics()
 	check(scene._asset_mode != mode_before, "graphics pack changes without scene reload")
