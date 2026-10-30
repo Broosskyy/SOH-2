@@ -33,3 +33,19 @@ Base: last verified M304.2 code commit `5d9f9b6`, documentation-only head `43a01
 3. Buy frigate and ghost ship; verify actual changing hull/sail silhouettes without teleport.
 4. Fire iron, harpoon and chainshot; collect gold; shipyard open/close; original/reference switching.
 5. Review frame rate, camera distance, ocean, wake and ship details from a real device capture.
+
+
+## Verified Godot and Android CI result (2026-10-30)
+
+- Validated source commit: `5f293f5e8b6ee414f76e039bc15a4b9db22cb264`.
+- GitHub Actions: `https://github.com/Broosskyy/SOH-2/actions/runs/41022623175` — **SUCCESS**.
+- **PASS**: Godot 4.7.2 GDScript import and all M303.7–M304.2 regression tests.
+- **PASS**: New M304.3 integration test (model silhouette families, true-HP damage visibility, live graphics toggles and shipyard).
+- **PASS**: Android ARM64 APK export, signature verification, ZIP integrity and 16K alignment.
+- APK: `ABYSSAL_DOMINION_M3043_ORIGINAL_FLEET.apk`, SHA256 `42fe7bdabc17166a355590243a05b7ab548a636dc4326aa07d23337db3df13c7`.
+- GitHub artifact ID: `12962516297`, `https://github.com/Broosskyy/SOH-2/actions/runs/41022623175/artifacts/12962516297`.
+- Archive size: 74,785,397 bytes. Expires 2026-11-06 07:52 UTC; back up locally before expiration.
+- APK contains legacy reference sprites because this is a *private/local test build*. Do not redistribute the proprietary source art without authorization.
+- **NOT_TESTED**: real Android device installation, actual in-game rendered look and frame rate. These require on-device testing.
+- The build is signed with an ephemeral debug key; replacing a previous test APK may require removing the old package after backing up local data.
+- The source branch and original graphics scripts and SVG are permanently versioned on GitHub. The APK is an Actions artifact, not yet a permanent Release.
