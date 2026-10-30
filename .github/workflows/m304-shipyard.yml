@@ -20,6 +20,10 @@ on:
       - 'export_presets.cfg'
   workflow_dispatch:
 
+concurrency:
+  group: abyssal-dominion-m304-android
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -79,19 +83,32 @@ jobs:
           set -euo pipefail
           mkdir -p "$HOME/.android"
           keytool -genkeypair -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Abyssal Dominion,C=DE"
-      - name: Import source with all private test sprites
-        run: godot --headless --path . --editor --import --quit
+      - name: Import source with all private test sprites and fail on GDScript errors
+        timeout-minutes: 4
+        run: |
+          set -euo pipefail
+          godot --headless --path . --editor --import --quit 2>&1 | tee /tmp/m304-import.log
+          if grep -Eq 'SCRIPT ERROR|Parse Error|ERROR: Failed to load script' /tmp/m304-import.log; then
+            echo "Godot script compilation failed; Android export blocked."
+            exit 1
+          fi
       - name: Headless M303.7 gameplay regression test
+        timeout-minutes: 3
         run: godot --headless --path . --script res://tests/m3037_combat_smoke.gd
       - name: Verify both graphics packs in actual game scene and live swap
+        timeout-minutes: 3
         run: godot --headless --path . --script res://tests/m3037_graphics_integration_smoke.gd
       - name: Verify actual in-game ammo meshes and functional quickbar
+        timeout-minutes: 3
         run: godot --headless --path . --script res://tests/m3038_ammo_visual_smoke.gd
       - name: Verify extra NPCs and physical treasure pickup
+        timeout-minutes: 3
         run: godot --headless --path . --script res://tests/m3038_world_loot_smoke.gd
       - name: Verify shoreline, combat ship classes, and wake correction
+        timeout-minutes: 3
         run: godot --headless --path . --script res://tests/m3039_world_ships_smoke.gd
       - name: Verify purchasable shipyard, combat upgrades and bounty quest
+        timeout-minutes: 3
         run: godot --headless --path . --script res://tests/m304_shipyard_quest_smoke.gd
       - name: Build Android test APK with real integrated graphics (no placeholder option)
         run: |
