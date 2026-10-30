@@ -36,7 +36,9 @@ func _make_hud() -> void:
 	_ammo_heading.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_ammo_heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	for ammo: Button in [_ammo_cannon, _ammo_harpoon, _ammo_chain]:
-		ammo.expand_icon = false
+		# Original 72px icons must shrink inside a mobile quickslot instead of
+		# expanding the Button minimum width across its neighbor.
+		ammo.expand_icon = true
 		ammo.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		ammo.alignment = HORIZONTAL_ALIGNMENT_CENTER
 		ammo.add_theme_font_size_override("font_size", 13)
