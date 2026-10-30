@@ -98,7 +98,7 @@ func set_ship_atlas(path: String, columns: int, rows: int, world_width: float, h
 	var texture := _read_texture(path)
 	if texture == null or texture.get_width() < columns or texture.get_height() < rows:
 		return false
-	// Atlas rows are NOT automatically additional orientations: only columns encode yaw.
+	# Atlas rows are NOT automatically additional orientations: only columns encode yaw.
 	frame_count = columns
 	heading_bias = heading_offset
 	visual = Sprite3D.new()
