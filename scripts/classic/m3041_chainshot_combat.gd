@@ -24,6 +24,7 @@ func _make_hud() -> void:
 	_restock_chain_button = _control("KETTENGESCHOSSE · +15 / 20 GOLD", Callable(self, "_restock_chain"))
 	_restock_chain_button.name = "ChainShotRestock"
 	# Place the ammunition counter at the bottom of the live shipyard.
+	_ui_root.remove_child(_restock_chain_button)
 	_yard_panel.add_child(_restock_chain_button)
 
 
