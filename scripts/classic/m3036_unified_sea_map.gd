@@ -221,7 +221,8 @@ func _refresh() -> void:
 			var texture := AtlasTexture.new()
 			texture.atlas = sprite.texture
 			var cell := Vector2(sprite.texture.get_width() / sprite.hframes, sprite.texture.get_height() / sprite.vframes)
-			var frame := 4 if _asset_mode == "private_sprite" else 0
+			# Show the intact first frame until a verified HP-dependent damaged portrait exists.
+			var frame := 0
 			texture.region = Rect2(Vector2(frame % sprite.hframes, frame / sprite.hframes).floor() * cell, cell)
 			_portrait.texture = texture
 		_portrait_pack = _asset_mode
