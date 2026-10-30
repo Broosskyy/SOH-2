@@ -44,6 +44,7 @@ func _make_hud() -> void:
 	# Weapon choice is now handled by the three visible, independently active
 	# ammo slots; the old cycling button had caused duplicate overlapping UI.
 	harpoon_button.visible = false
+	_hud_controls["center"].text = "KURS"
 	_hud_controls["repair"].icon = REPAIR_ICON
 	_hud_controls["repair"].expand_icon = false
 	_hud_controls["repair"].icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
@@ -183,7 +184,7 @@ func _refresh() -> void:
 	elif weapon_mode == "chain":
 		mode_name = "KETTENGESCHOSS"
 	_ammo_heading.text = "MUNITION · " + mode_name
-	_hud_controls["repair"].text = "REPARIEREN"
+	_hud_controls["repair"].text = "REP."
 	attack_button.text = "STOPP" if firing else "FEUER"
 	# The old mode-cycling button is redundant; it must remain hidden even
 	# after an inherited refresh or resize.
