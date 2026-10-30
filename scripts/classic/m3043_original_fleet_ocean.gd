@@ -113,6 +113,8 @@ func _apply_graphics_mode() -> void:
 			"SeaMonster" if monster else "NPC_%d" % i, "" if monster else CORSAIR_ATLAS)
 	_apply_fleet_palette()
 	_apply_player_coating()
+	if _coating_button != null:
+		_coating_button.text = "WERFT · SCHIFFE"
 	var water := get_node_or_null("UnifiedOcean") as MeshInstance3D
 	if water != null and _fleet_enabled:
 		var shader := Shader.new()
