@@ -20,7 +20,7 @@ func _ready() -> void:
 	# Never shrink mobile text below 1x; scale high-resolution screens upward.
 	_sync_ui_scale()
 	var mode := str(get_tree().root.get_meta("m3035_graphic_mode", "private_sprite"))
-	if mode not in ["private_sprite", "seaofbones_sprite"]:
+	if mode not in ["private_sprite", "seaofbones_sprite", "original_fleet"]:
 		get_tree().root.set_meta("m3035_graphic_mode", "private_sprite")
 	super._ready()
 
