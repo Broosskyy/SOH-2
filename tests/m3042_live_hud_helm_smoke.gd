@@ -50,7 +50,7 @@ func _run() -> void:
 			check(sprite.frame < sprite.hframes, "all heading changes remain on intact atlas row")
 			adapter.set_heading(0.0)
 	# A real mid-range viewport check rather than assuming 1280px desktop.
-	get_window().size = Vector2i(844, 390)
+	root.size = Vector2i(844, 390)
 	await process_frame
 	game._layout_hud()
 	var actionable: Array[Control] = [
@@ -75,7 +75,7 @@ func _run() -> void:
 	check(game._yard_close.position.y >= game._restock_chain_button.position.y + game._restock_chain_button.size.y,
 		"shipyard close no longer overlaps restock")
 	# Basic heading-smoothed navigation is integrated in the playable scene.
-	var starting_heading := game.ship.rotation.y
+	var starting_heading: float = game.ship.rotation.y
 	game.route.clear()
 	game.route.append(game.ship.position + Vector3(20.0, 0.0, 0.0))
 	game._sail(0.016)
