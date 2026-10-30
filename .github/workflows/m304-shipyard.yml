@@ -15,6 +15,7 @@ on:
       - 'tests/m3039_world_ships_smoke.gd'
       - 'tests/m304_shipyard_quest_smoke.gd'
       - 'tests/m3042_live_hud_helm_smoke.gd'
+      - 'tests/m3041_chainshot_load_probe.gd'
       - 'project.godot'
       - 'scripts/visual/p0_replacement_qa.gd'
       - 'scenes/classic/**'
