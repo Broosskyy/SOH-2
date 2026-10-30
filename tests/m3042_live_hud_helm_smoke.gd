@@ -61,6 +61,7 @@ func _run() -> void:
 	]
 	for i in actionable.size():
 		var a := actionable[i]
+		print("M3042_TOUCH_RECT ", a.name, " ", a.position, " ", a.size)
 		if not a.visible:
 			continue
 		for j in range(i + 1, actionable.size()):
