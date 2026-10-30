@@ -21,7 +21,14 @@ func _run() -> void:
 	root.add_child(game)
 	current_scene = game
 	await process_frame
-	check(game.get_script().resource_path.ends_with("m3042_navigation_hud_stability.gd"), "new script is active")
+	var inherited_script: Script = game.get_script()
+	var has_m3042 := false
+	while inherited_script != null:
+		if inherited_script.resource_path.ends_with("m3042_navigation_hud_stability.gd"):
+			has_m3042 = true
+			break
+		inherited_script = inherited_script.get_base_script()
+	check(has_m3042, "M304.2 behavior remains active in the inherited M304.3 scene")
 	check(game._ammo_cannon != null and game._ammo_harpoon != null and game._ammo_chain != null,
 		"three independent functional ammo buttons")
 	check(game._ammo_backplate != null and game._ammo_heading != null, "new ammo HUD exists")
