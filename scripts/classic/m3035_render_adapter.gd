@@ -140,7 +140,13 @@ func set_heading(world_yaw: float) -> void:
 	if visual == null or frame_count < 2:
 		return
 	var degrees := wrapf(rad_to_deg(world_yaw) + heading_bias, 0.0, 360.0)
-	_heading_index = posmod(roundi(degrees / 360.0 * float(frame_count)), frame_count)
+	var next_frame := posmod(roundi(degrees / 360.0 * float(frame_count)), frame_count)
+	# Preserve the current cardinal art until heading clears a small deadband.
+	# Prevents rapid back/forth frame switching close to a 45-degree boundary.
+	var old_center := float(_heading_index) * 360.0 / float(frame_count)
+	var angular_distance := absf(wrapf(degrees - old_center, -180.0, 180.0))
+	if angular_distance > 180.0 / float(frame_count) + 6.0:
+		_heading_index = next_frame
 	_apply_frame()
 
 func configure_frames(entry: Dictionary) -> void:
