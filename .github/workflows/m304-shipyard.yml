@@ -92,7 +92,10 @@ jobs:
           godot --headless --path . --editor --import --quit 2>&1 | tee /tmp/m304-import.log
           if grep -Eq 'SCRIPT ERROR|Parse Error|ERROR: Failed to load script' /tmp/m304-import.log; then
             echo "Godot script compilation failed; diagnose parent chainshot script before abort."
-            godot --headless --path . --script res://tests/m3041_chainshot_load_probe.gd || true
+            for script in scripts/classic/m3035_render_adapter.gd scripts/classic/m3036_unified_sea_map.gd scripts/classic/m304_shipyard_hud.gd scripts/classic/m3041_chainshot_combat.gd scripts/classic/m3042_navigation_hud_stability.gd; do
+              echo "CHECKING $script"
+              timeout 14s godot --headless --path . --check-only -s "res://$script" || true
+            done
             exit 1
           fi
       - name: Headless M303.7 gameplay regression test
