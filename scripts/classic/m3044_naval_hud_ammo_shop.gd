@@ -188,8 +188,8 @@ func _layout_hud() -> void:
 	var ammo_w := 56.0 * 3.0 + 8.0 if compact else 74.0 * 3.0 + 12.0
 	var toggle_w := 170.0 if not compact else 148.0
 	_place(_ammo_menu_button, (w - toggle_w) * 0.5, bottom - 66.0, toggle_w, 34.0)
-	var repair_x := _hud_controls["repair"].position.x
-	var right_cluster_w := w - repair_x - m
+	var repair_x: float = (_hud_controls["repair"] as Control).position.x
+	var right_cluster_w: float = w - repair_x - m
 	_place(_dock_quick_button, repair_x, bottom - 64.0, right_cluster_w, 37.0)
 	# Keep the status above the ocean in the free space BETWEEN the side cards.
 	var player_right := _hud_player_frame.position.x + _hud_player_frame.size.x + 12.0
