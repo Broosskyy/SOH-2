@@ -68,9 +68,9 @@ func configure(ship_profile: String, visual_scale: float) -> void:
 	add_child(_rig)
 	var masts: Array[float] = [-1.55, 1.05]
 	if heavy:
-		masts = [-2.25, 0.0, 2.2]
+		masts.assign([-2.25, 0.0, 2.2])
 	elif scout:
-		masts = [-0.6]
+		masts.assign([-0.6])
 	for mast_index in masts.size():
 		var mast_z: float = masts[mast_index]
 		var mast_height := 7.4 if heavy else (6.45 if scout else 6.9)
