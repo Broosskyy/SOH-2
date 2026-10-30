@@ -57,12 +57,14 @@ func _run() -> void:
 		"new graphics preserve player identity and position")
 	scene.hull = 61
 	scene._refresh()
+	scene._toggle_original_fleet()
+	check(scene._asset_mode == "private_sprite", "original toggle activates reference sprites")
 	scene._switch_graphics()
-	check(scene._asset_mode == "private_sprite", "switch to test reference sprites")
+	check(scene._asset_mode == "seaofbones_sprite", "legacy reference toggle opens second pack")
 	scene._switch_graphics()
-	check(scene._asset_mode == "seaofbones_sprite", "switch to second reference pack")
-	scene._switch_graphics()
-	check(scene._asset_mode == "original_fleet", "switch back to original 3D art")
+	check(scene._asset_mode == "private_sprite", "legacy reference toggle returns to first pack")
+	scene._toggle_original_fleet()
+	check(scene._asset_mode == "original_fleet", "separate original button restores 3D art")
 	check(scene.ship.get_node_or_null("OriginalVessel") != null, "original 3D visual restored")
 	check(scene.hull == 61 and scene.gold == 0 and scene.ship.get_instance_id() == ship_id,
 		"graphic switching never resets hull, currency or ship identity")
