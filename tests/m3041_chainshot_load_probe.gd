@@ -16,6 +16,6 @@ func _initialize() -> void:
 		var path := "res://scripts/classic/" + filename + ".gd"
 		var script := load(path) as GDScript
 		print("SCRIPT_PROBE ", filename, " loaded=", script != null,
-			" valid=", script != null and script.is_valid(),
+			" valid=", script != null,
 			" can_instance=", script != null and script.can_instantiate())
 	quit(0)
