@@ -30,6 +30,8 @@ var _animation_rows := 1
 var _animation_fps := 0.0
 var _animation_time := 0.0
 var _animation_row := 0
+var _motion_frames_verified := false
+var _last_drawn_frame := -1
 
 static func _is_available(path: String) -> bool:
 	return ResourceLoader.exists(path) or FileAccess.file_exists(path)
@@ -96,7 +98,8 @@ func set_ship_atlas(path: String, columns: int, rows: int, world_width: float, h
 	var texture := _read_texture(path)
 	if texture == null or texture.get_width() < columns or texture.get_height() < rows:
 		return false
-	frame_count = columns * rows
+	// Atlas rows are NOT automatically additional orientations: only columns encode yaw.
+	frame_count = columns
 	heading_bias = heading_offset
 	visual = Sprite3D.new()
 	visual.name = "MultiDirectionShip"
@@ -141,26 +144,49 @@ func set_heading(world_yaw: float) -> void:
 	_apply_frame()
 
 func configure_frames(entry: Dictionary) -> void:
-	# SeaBattles ship rows represent sail state, not eight headings.
-	_idle_frames.assign(entry.get("idle_frames", []))
-	_moving_frames.assign(entry.get("moving_frames", []))
-	if not _idle_frames.is_empty():
-		frame_count = _idle_frames.size()
+	# Protect healthy ships from damaged/wreck atlas rows. The original imported
+	# row mapping is not a validated damage or sailing-state mapping.
+	_idle_frames.clear()
+	_moving_frames.clear()
+	var columns := visual.hframes if visual != null else 4
+	for frame in entry.get("idle_frames", []):
+		if int(frame) >= 0 and int(frame) < columns:
+			_idle_frames.append(int(frame))
+	if _idle_frames.is_empty():
+		for frame in columns:
+			_idle_frames.append(frame)
+	frame_count = _idle_frames.size()
+	_motion_frames_verified = bool(entry.get("verified_sailing_row", false))
+	if _motion_frames_verified:
+		for frame in entry.get("moving_frames", []):
+			if int(frame) >= 0 and int(frame) < visual.hframes * visual.vframes:
+				_moving_frames.append(int(frame))
+		if _moving_frames.size() != frame_count:
+			_motion_frames_verified = false
+			_moving_frames.clear()
 	_animation_rows = maxi(1, int(entry.get("animation_rows", 1)))
 	_animation_fps = maxf(0.0, float(entry.get("animation_fps", 0.0)))
+	_last_drawn_frame = -1
 	_apply_frame()
 
 func set_moving(value: bool) -> void:
+	if _moving == value:
+		return
 	_moving = value
-	_apply_frame()
+	if _motion_frames_verified:
+		_apply_frame()
 
 func _apply_frame() -> void:
 	if visual == null:
 		return
-	var frames := _moving_frames if _moving and not _moving_frames.is_empty() else _idle_frames
+	var frames := _moving_frames if _motion_frames_verified and _moving and not _moving_frames.is_empty() else _idle_frames
 	var frame := _heading_index if frames.is_empty() else frames[posmod(_heading_index, frames.size())]
-	frame += _animation_row * visual.hframes
-	visual.frame = clampi(frame, 0, visual.hframes * visual.vframes - 1)
+	if _animation_rows > 1:
+		frame += _animation_row * visual.hframes
+	frame = clampi(frame, 0, visual.hframes * visual.vframes - 1)
+	if frame != _last_drawn_frame:
+		visual.frame = frame
+		_last_drawn_frame = frame
 
 func _process(delta: float) -> void:
 	if _animation_rows < 2 or _animation_fps <= 0.0:
