@@ -46,7 +46,7 @@ func configure(ship_profile: String, visual_scale: float) -> void:
 		_beam(hull_root, Vector3(side * 1.15, 1.2, 3.0), Vector3(side * 0.64, 1.2, 4.1), 0.09, trim_mat)
 		for i in 4:
 			var z := -2.25 + float(i) * 1.38
-			var x := side * 1.61
+			var x: float = float(side) * 1.61
 			_beam(hull_root, Vector3(x, 0.91, z), Vector3(x, 1.41, z), 0.055, trim_mat)
 	var cabin := BoxMesh.new()
 	cabin.size = Vector3(2.3 if heavy else 1.95, 0.72, 1.48)
@@ -152,8 +152,8 @@ func _build_hull(parent: Node3D, hull_mat: Material, deck_mat: Material) -> void
 		var z0 := stations[i]
 		var z1 := stations[i+1]
 		for side in [-1.0, 1.0]:
-			var w0 := side * widths[i]
-			var w1 := side * widths[i+1]
+			var w0: float = float(side) * widths[i]
+			var w1: float = float(side) * widths[i+1]
 			_quad(hull_mesh,
 				Vector3(w0, 1.15, z0), Vector3(w1, 1.15, z1),
 				Vector3(w1 * 0.86, 0.08, z1), Vector3(w0 * 0.86, 0.08, z0))
