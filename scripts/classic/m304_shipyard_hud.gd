@@ -27,6 +27,7 @@ var _quest_claimed: bool = false
 func _ready() -> void:
 	super._ready()
 	_hud_header.text = "ABYSSAL DOMINION · M304 · NORDMEER 10/2"
+	_coating_button.text = "WERFT · SCHIFFE"
 	_refresh()
 
 
@@ -56,7 +57,7 @@ func _make_hud() -> void:
 	for i in SHIP_CLASSES.size():
 		var action := Callable(self, "_purchase_or_equip").bind(i)
 		var button := _control("", action)
-		_yard_panel.get_node(".").add_child(button)
+		_yard_panel.add_child(button)
 		button.name = "HullClass_%d" % i
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.add_theme_font_size_override("font_size", 14)
@@ -126,6 +127,7 @@ func _purchase_or_equip(index: int) -> void:
 	if ship != null:
 		_replace_visual(ship, SHIP, 0.9, "PlayerShip", CAPTAIN_ATLAS)
 		_apply_player_coating()
+		_coating_button.text = "WERFT · SCHIFFE"
 		_portrait_pack = ""
 	hint = "%s ausgerüstet" % str(blueprint["name"])
 	_refresh()
@@ -176,3 +178,9 @@ func _enemy_impact(damage: int) -> void:
 	var upgrade: Dictionary = SHIP_CLASSES[_ship_class_index]
 	var protected_damage := maxi(1, damage - int(upgrade["armor"]))
 	super._enemy_impact(protected_damage)
+
+
+func _switch_graphics() -> void:
+	super._switch_graphics()
+	if _coating_button != null:
+		_coating_button.text = "WERFT · SCHIFFE"
