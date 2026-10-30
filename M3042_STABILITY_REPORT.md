@@ -32,3 +32,19 @@ Entry: `scenes/classic/classic_sea_map.tscn` -> `scripts/classic/m3042_navigatio
 
 ## Next prioritized graphic step
 Art-direct an original fleet sheet with recognizable silhouettes (brig, frigate, ghost ship), individual sprite directions, mapped healthy/damaged states, synchronized sink stages, original shoreline textures, ocean foam and a dedicated target ring. Keep original and reference resources separate.
+
+
+## Verified integration result — 30 October 2026, 07:37 UTC
+
+- **PASS**: GitHub Actions run `41021092231` (`https://github.com/Broosskyy/SOH-2/actions/runs/41021092231`).
+- **Validated code SHA**: `5d9f9b6fcd2b6fb1a2c14938b0627ba3e6e28c4a`.
+- **PASS**: Godot editor import and GDScript parsing on Godot 4.7.2.
+- **PASS**: prior M303.7, M303.8, M303.9 and M304 gameplay regression tests.
+- **PASS**: M304.2 interactive combat ammo, intact sprite frame, mobile control bounds at 844x390, shipyard row bounds, and helm test.
+- **PASS**: Android test APK build with tested source graphics, ZIP check, APK signing and 16-kilobyte zipalign validation.
+- **Artifact**: `Abyssal-Dominion-M3042-HELM-HUD-TEST-Reference-Art` (artifact `12961308945`, ca. 74.8 MB).
+- **Artifact link**: `https://github.com/Broosskyy/SOH-2/actions/runs/41021092231/artifacts/12961308945`.
+- **Expires**: 2026-11-06 07:37 UTC. Download and retain the APK before then.
+- **Unverified**: real-device installation and camera/HUD appearance. All functional PASS claims above are headless tests.
+- **Signing**: GitHub Actions currently creates a new ephemeral debug key for each run, so an Android install over a previous test APK can fail due to signer mismatch. Keep user data backed up; uninstalling the previous test app may be required.
+- All validations apply to the listed SHA; any later documentation-only commit does not change the validated Godot code.
