@@ -90,7 +90,8 @@ jobs:
           set -euo pipefail
           godot --headless --path . --editor --import --quit 2>&1 | tee /tmp/m304-import.log
           if grep -Eq 'SCRIPT ERROR|Parse Error|ERROR: Failed to load script' /tmp/m304-import.log; then
-            echo "Godot script compilation failed; Android export blocked."
+            echo "Godot script compilation failed; diagnose parent chainshot script before abort."
+            godot --headless --path . --script res://tests/m3041_chainshot_load_probe.gd || true
             exit 1
           fi
       - name: Headless M303.7 gameplay regression test
