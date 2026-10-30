@@ -22,9 +22,10 @@ func _draw() -> void:
 	var region := radius - 5.0
 	# The grid is intentionally subtle and directly positioned in map space.
 	for t in [-0.5, 0.0, 0.5]:
-		var x := center.x + region * t
-		var y := center.y + region * t
-		var edge := sqrt(maxf(0.0, region * region - (region * t) * (region * t)))
+		var offset: float = region * float(t)
+		var x: float = center.x + offset
+		var y: float = center.y + offset
+		var edge: float = sqrt(maxf(0.0, region * region - offset * offset))
 		draw_line(Vector2(x, center.y - edge), Vector2(x, center.y + edge), Color("32617a68"), 1.0)
 		draw_line(Vector2(center.x - edge, y), Vector2(center.x + edge, y), Color("32617a68"), 1.0)
 	draw_arc(center, region * 0.48, 0.0, TAU, 80, Color("43758a88"), 1.0, true)
