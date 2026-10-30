@@ -54,7 +54,8 @@ func _make_hud() -> void:
 	_hud_controls["center"].icon = HELM_ICON
 	_hud_controls["center"].expand_icon = false
 	_hud_controls["center"].icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_graphics_button.visible = false
+	if _graphics_button != null:
+		_graphics_button.visible = false
 
 
 func _layout_hud() -> void:
@@ -148,7 +149,8 @@ func _layout_hud() -> void:
 	_place(_hud_status_frame, (w - status_w) * 0.5, status_y, status_w, 37.0)
 	_place(status, (w - status_w) * 0.5 + 9.0, status_y + 2.0, status_w - 18.0, 31.0)
 	# Only one graphical-pack selector: keep the actual menu control.
-	_graphics_button.visible = false
+	if _graphics_button != null:
+		_graphics_button.visible = false
 	# Popups use reserved rows: three ship choices, chainshot restock, close.
 	var modal_w := minf(520.0, w - margin * 2.0)
 	var modal_h := minf(368.0, h - margin * 2.0)
