@@ -110,17 +110,14 @@ func _switch_graphics() -> void:
 	_refresh()
 
 
+
 func _cycle_player_coating() -> void:
-	super._cycle_player_coating()
+	# The original hull is chosen by the purchased class, not by an art tint.
 	if _asset_mode == "original_fleet":
-		var vessel: Node = ship.get_node_or_null("OriginalVessel")
-		if vessel != null:
-			vessel.queue_free()
-			var fresh := ORIGINAL_VESSEL.new()
-			fresh.name = "OriginalVessel"
-			ship.add_child(fresh)
-			fresh.configure(_ship_profile("PlayerShip"), 0.9 * 0.76)
-	_refresh()
+		hint = "Neues Schiff in der Werft erwerben und ausrüsten"
+		_refresh()
+		return
+	super._cycle_player_coating()
 
 
 func _refresh() -> void:
