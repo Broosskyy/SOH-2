@@ -57,12 +57,14 @@ func _make_hud() -> void:
 	for i in SHIP_CLASSES.size():
 		var action := Callable(self, "_purchase_or_equip").bind(i)
 		var button := _control("", action)
+		_ui_root.remove_child(button)
 		_yard_panel.add_child(button)
 		button.name = "HullClass_%d" % i
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		button.add_theme_font_size_override("font_size", 14)
 		_yard_buttons.append(button)
 	_yard_close = _control("SCHLIESSEN", Callable(self, "_toggle_shipyard"))
+	_ui_root.remove_child(_yard_close)
 	_yard_panel.add_child(_yard_close)
 	_quest_frame = _panel(_ui_root)
 	_quest_frame.name = "M304QuestCard"
