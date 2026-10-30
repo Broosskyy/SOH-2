@@ -1,8 +1,8 @@
-name: Abyssal Dominion M304 shipyard and navigational HUD Android test
+name: Abyssal Dominion M304.2 helm, HUD and graphics stability Android QA
 
 on:
   push:
-    branches: [rebuild/m304-shipyard-hud]
+    branches: [rebuild/m3042-navigation-hud-stability]
     paths:
       - '.github/workflows/m304-shipyard.yml'
       - 'tests/m3037_graphics_integration_smoke.gd'
@@ -14,6 +14,7 @@ on:
       - 'tests/m3038_world_loot_smoke.gd'
       - 'tests/m3039_world_ships_smoke.gd'
       - 'tests/m304_shipyard_quest_smoke.gd'
+      - 'tests/m3042_live_hud_helm_smoke.gd'
       - 'project.godot'
       - 'scripts/visual/p0_replacement_qa.gd'
       - 'scenes/classic/**'
@@ -21,7 +22,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: abyssal-dominion-m304-android
+  group: abyssal-dominion-m3042-android
   cancel-in-progress: true
 
 permissions:
@@ -110,22 +111,25 @@ jobs:
       - name: Verify purchasable shipyard, combat upgrades and bounty quest
         timeout-minutes: 3
         run: godot --headless --path . --script res://tests/m304_shipyard_quest_smoke.gd
+      - name: Verify M304.2 chainshot, healthy sprite frames, collision-safe helm and touch HUD
+        timeout-minutes: 3
+        run: godot --headless --path . --script res://tests/m3042_live_hud_helm_smoke.gd
       - name: Build Android test APK with real integrated graphics (no placeholder option)
         run: |
           set -euo pipefail
-          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M304_SHIPYARD.apk 2>&1 | tee /tmp/m304-apk-export.log
+          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M3042_HELM_HUD.apk 2>&1 | tee /tmp/m304-apk-export.log
           if grep -Eq 'SCRIPT ERROR|Parse Error|ERROR: Failed to load script' /tmp/m304-apk-export.log; then
             echo "Godot reported script errors during Android export"
             exit 1
           fi
-      - name: Upload M304 playable test APK (reference graphics; not public release)
+      - name: Upload M304.2 playable test APK (reference graphics; not public release)
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Abyssal-Dominion-M304-Shipyard-HUD-TEST-Reference-Art
+          name: Abyssal-Dominion-M3042-HELM-HUD-TEST-Reference-Art
           path: |
-            builds/android/ABYSSAL_DOMINION_M304_SHIPYARD.apk
-            builds/android/ABYSSAL_DOMINION_M304_SHIPYARD.build.json
-            builds/android/ABYSSAL_DOMINION_M304_SHIPYARD.signature.txt
+            builds/android/ABYSSAL_DOMINION_M3042_HELM_HUD.apk
+            builds/android/ABYSSAL_DOMINION_M3042_HELM_HUD.build.json
+            builds/android/ABYSSAL_DOMINION_M3042_HELM_HUD.signature.txt
           if-no-files-found: error
           retention-days: 7
