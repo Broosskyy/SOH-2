@@ -6,6 +6,7 @@ const SHIP_EMBLEM: Texture2D = preload("res://assets/classic/original_ui/captain
 const ORIGINAL_SEA_SHADER := "shader_type spatial; render_mode cull_disabled; void fragment() { vec2 q=UV*vec2(37.0,29.0); float sw=sin(q.x*1.83+TIME*0.37)*sin(q.y*1.47-TIME*0.29); float lw=sin(q.x*0.66+q.y*1.21+TIME*0.23); float ripple=sin(q.x*3.11-q.y*2.31+TIME*1.23); float crest=smoothstep(0.77,1.19,sw*0.51+lw*0.51+ripple*0.13+0.56); vec3 deep=vec3(0.018,0.095,0.143); vec3 light=vec3(0.055,0.211,0.237); ALBEDO=mix(deep,light,clamp(0.5+sw*0.22+lw*0.26,0.0,1.0)); ALBEDO+=vec3(0.20,0.24,0.23)*crest*0.19; ROUGHNESS=mix(0.40,0.18,crest); METALLIC=0.04; SPECULAR=0.72; }"
 
 var _fleet_enabled := false
+var _original_mode_button: Button
 
 
 func _ready() -> void:
@@ -20,6 +21,16 @@ func _ready() -> void:
 		camera.size = 64.0
 	_hud_header.text = "ABYSSAL DOMINION · M304.3"
 	_refresh()
+
+
+
+func _make_hud() -> void:
+	super._make_hud()
+	_original_mode_button = _control("ORIGINAL 3D", Callable(self, "_toggle_original_fleet"))
+	_original_mode_button.name = "OriginalFleetToggle"
+	_original_mode_button.tooltip_text = "Eigene echte 3D-Schiffsmodelle aktivieren"
+	_ui_root.remove_child(_original_mode_button)
+	_options.add_child(_original_mode_button)
 
 
 func _ship_profile(label: String) -> String:
@@ -74,14 +85,19 @@ func _apply_player_coating() -> void:
 	super._apply_player_coating()
 
 
+
 func _switch_graphics() -> void:
-	# Swap artwork in-place. Preserve ship node, HP, course, loot and inventory.
-	if _asset_mode == "original_fleet":
-		_asset_mode = "private_sprite"
-	elif _asset_mode == "private_sprite":
-		_asset_mode = "seaofbones_sprite"
-	else:
-		_asset_mode = "original_fleet"
+	# Preserve legacy two-pack toggle for all existing regression tests.
+	_asset_mode = "seaofbones_sprite" if _asset_mode == "private_sprite" else "private_sprite"
+	_apply_graphics_mode()
+
+
+func _toggle_original_fleet() -> void:
+	_asset_mode = "private_sprite" if _asset_mode == "original_fleet" else "original_fleet"
+	_apply_graphics_mode()
+
+
+func _apply_graphics_mode() -> void:
 	_fleet_enabled = _asset_mode == "original_fleet"
 	ASSET_BRIDGE.active_pack = "seaofbones" if _asset_mode == "seaofbones_sprite" else "seabattles"
 	get_tree().root.set_meta("m3035_graphic_mode", _asset_mode)
@@ -122,9 +138,11 @@ func _cycle_player_coating() -> void:
 
 func _refresh() -> void:
 	super._refresh()
+	if _original_mode_button != null:
+		_original_mode_button.text = "ORIGINAL 3D ✓" if _asset_mode == "original_fleet" else "ORIGINAL 3D AKTIVIEREN"
 	if _pack_button != null:
 		if _asset_mode == "original_fleet":
-			_pack_button.text = "GRAFIK: ORIGINAL 3D"
+			_pack_button.text = "REFERENZ 2D ANZEIGEN"
 		elif _asset_mode == "private_sprite":
 			_pack_button.text = "GRAFIK: REFERENZ 2D"
 		else:
@@ -158,9 +176,17 @@ func _process(delta: float) -> void:
 
 func _layout_hud() -> void:
 	super._layout_hud()
-	# When the UI is compact, its most important actions remain touch-sized.
-	if _pack_button != null:
-		_pack_button.tooltip_text = "Originale 3D-Schiffe oder vorhandene lokale Testgrafiken"
+	if _original_mode_button == null:
+		return
+	var screen := get_viewport().get_visible_rect().size
+	var w := minf(305.0, screen.x - 16.0)
+	var h := minf(322.0, screen.y - (36.0 if screen.y < 540.0 else 42.0) - 16.0)
+	_place(_original_mode_button, 12.0, 41.0, w - 24.0, 40.0)
+	_place(_pack_button, 12.0, 87.0, w - 24.0, 39.0)
+	_place(_full_button, 12.0, 133.0, w - 24.0, 36.0)
+	_place(_coating_button, 12.0, 175.0, w - 24.0, 39.0)
+	_place(_options_close, 12.0, 222.0, w - 24.0, 38.0)
+	_place(_build_label, 12.0, h - 27.0, w - 24.0, 18.0)
 
 
 func _purchase_or_equip(index: int) -> void:
