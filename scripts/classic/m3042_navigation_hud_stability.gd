@@ -75,10 +75,12 @@ func _layout_hud() -> void:
 	var bottom := h - margin - button_h
 	var gap := 4.0 if compact else 6.0
 	var left_keys: Array[String] = ["center", "left", "right", "zoom_out", "zoom_in"]
-	var widths: Array[float] = [70.0, 37.0, 37.0, 36.0, 36.0] if compact else [102.0, 46.0, 46.0, 43.0, 43.0]
+	var widths: Array[float] = [70.0, 37.0, 37.0, 36.0, 36.0]
+	if not compact:
+		widths.assign([102.0, 46.0, 46.0, 43.0, 43.0])
 	if tiny:
 		left_keys = ["center", "zoom_out", "zoom_in"]
-		widths = [61.0, 35.0, 35.0]
+		widths.assign([61.0, 35.0, 35.0])
 	for key in ["left", "right"]:
 		_hud_controls[key].visible = not tiny
 	var nav_width := 0.0
