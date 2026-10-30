@@ -21,7 +21,14 @@ func _run() -> void:
 	current_scene = scene
 	await process_frame
 	check(scene._asset_mode == "original_fleet", "default original source mode")
-	check(scene.get_script().resource_path.ends_with("m3043_original_fleet_ocean.gd"), "M304.3 scene active")
+	var has_original := false
+	var current_script: Script = scene.get_script()
+	while current_script != null:
+		if current_script.resource_path.ends_with("m3043_original_fleet_ocean.gd"):
+			has_original = true
+			break
+		current_script = current_script.get_base_script()
+	check(has_original, "M304.3 3D fleet remains active through inherited M304.4 scene")
 	var model: Node = scene.ship.get_node_or_null("OriginalVessel")
 	check(model != null, "main ship is original 3D graphics")
 	if model != null:
