@@ -82,13 +82,15 @@ func _run() -> void:
 		"shipyard restock no longer overlaps last ship choice")
 	check(game._yard_close.position.y >= game._restock_chain_button.position.y + game._restock_chain_button.size.y,
 		"shipyard close no longer overlaps restock")
-	# Basic heading-smoothed navigation is integrated in the playable scene.
-	var starting_heading: float = game.ship.rotation.y
+	# M304.6 retains the same HUD while responding to taps immediately.
+	var before: Vector3 = game.ship.position
 	game.route.clear()
 	game.route.append(game.ship.position + Vector3(20.0, 0.0, 0.0))
 	game._sail(0.016)
-	check(absf(angle_difference(starting_heading, game.ship.rotation.y)) < deg_to_rad(110.0) * 0.016,
-		"helmsman turns within the limited yaw rate")
+	check(game.ship.position.x > before.x + 0.05,
+		"new helm advances in first frame without rotating in place")
+	check(absf(angle_difference(game.ship.rotation.y, -PI / 2.0)) < 0.05,
+		"ship faces movement direction instantly")
 	check(game._sea_speed >= 0.0 and game._sea_speed <= game.SEA_MAX_SPEED,
 		"speed remains inside physically safe range")
 	_finish()
