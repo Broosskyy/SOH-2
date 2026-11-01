@@ -40,8 +40,8 @@ static func _path_for(relative: String) -> String:
 	if relative.is_empty():
 		return ""
 	# Never silently use the earlier atlas with known color decoding errors.
-	var resource_root := PRIVATE_RES if active_pack == "seabattles" else "res://assets/classic/private_seaofbones/"
-	var user_root := PRIVATE_USER if active_pack == "seabattles" else "user://seaofbones/"
+	var resource_root := PRIVATE_RES if active_pack == "seabattles" else ("res://assets/classic/private_captainofsea/" if active_pack == "captainofsea" else "res://assets/classic/private_seaofbones/")
+	var user_root := PRIVATE_USER if active_pack == "seabattles" else ("user://captainofsea/" if active_pack == "captainofsea" else "user://seaofbones/")
 	var options: Array[String] = [resource_root + relative, user_root + relative]
 	for path in options:
 		if _is_available(path):
