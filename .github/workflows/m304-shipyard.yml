@@ -19,6 +19,7 @@ on:
       - 'tests/m3044_ammo_shipyard_hud_smoke.gd'
       - 'tests/m3045_original_world_smoke.gd'
       - 'tests/m3046_immediate_course_smoke.gd'
+      - 'tests/m3046_reference_sprite_capture.gd'
       - 'tests/m3045_visual_capture.gd'
       - 'tests/m3041_chainshot_load_probe.gd'
       - 'project.godot'
@@ -133,13 +134,13 @@ jobs:
       - name: Verify real original world, biomes, kraken, wave shader and untouched gameplay
         timeout-minutes: 4
         run: godot --headless --path . --script res://tests/m3045_original_world_smoke.gd
-      - name: Render three in-engine desktop visual QA screenshots (not Android)
+      - name: Render the actual SeaBattles test sprites, ammunition menu and shipyard (not Android)
         timeout-minutes: 3
         continue-on-error: true
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb libgl1-mesa-dri >/dev/null
-          xvfb-run -a -s "-screen 0 1280x720x24" godot --rendering-method gl_compatibility --path . --script res://tests/m3045_visual_capture.gd
+          xvfb-run -a -s "-screen 0 1280x720x24" godot --rendering-method gl_compatibility --path . --script res://tests/m3046_reference_sprite_capture.gd
       - name: Verify immediate tap speed and reference-art first launch
         timeout-minutes: 4
         run: godot --headless --path . --script res://tests/m3046_immediate_course_smoke.gd
