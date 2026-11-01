@@ -44,7 +44,7 @@ func _run() -> void:
 	check(examined >= 4, "player plus 3 NPC classes were graphically checked")
 	game.hull = 100
 	game._refresh()
-	var healthy := game.ship.get_node_or_null("ShipSprite")
+	var healthy: Node = game.ship.get_node_or_null("ShipSprite")
 	check(healthy.visual.frame >= healthy.visual.hframes, "full HP uses correct sails")
 	game.hull = 35
 	game._refresh()
@@ -74,7 +74,7 @@ func _run() -> void:
 		writer.close()
 	game._find_private_art_pack()
 	check(not game._private_reference_manifest.is_empty(), "private reference pack discovered")
-	var stable_ship_id := game.ship.get_instance_id()
+	var stable_ship_id: int = game.ship.get_instance_id()
 	game._replace_visual(game.ship, game.SHIP, 0.9, "PlayerShip", game.CAPTAIN_ATLAS)
 	var top_view: Node = game.ship.get_node_or_null("ShipSprite")
 	check(top_view != null and top_view.has_method("set_hull_ratio"),
