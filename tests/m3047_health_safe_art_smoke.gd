@@ -21,8 +21,14 @@ func _run() -> void:
 	root.add_child(game)
 	current_scene = game
 	await process_frame
-	check(game.get_script().resource_path.ends_with("m3047_user_reference_art_mode.gd"),
-		"new healthy-art game integration active")
+	var inherited: Script = game.get_script()
+	var includes_m3047 := false
+	while inherited != null:
+		if inherited.resource_path.ends_with("m3047_user_reference_art_mode.gd"):
+			includes_m3047 = true
+			break
+		inherited = inherited.get_base_script()
+	check(includes_m3047, "health-safe art loader persists through M304.8")
 	var examined := 0
 	for node: Node3D in [game.ship, game.enemies[0]["node"], game.enemies[1]["node"], game.enemies[2]["node"]]:
 		var adapter: Node = node.get_node_or_null("ShipSprite")
