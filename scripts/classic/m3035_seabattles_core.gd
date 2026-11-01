@@ -14,7 +14,7 @@ func _ready() -> void:
 	super._ready()
 
 func _uses_private_art() -> bool:
-	return _asset_mode == "private_sprite" or _asset_mode == "seaofbones_sprite"
+	return _asset_mode in ["private_sprite", "seaofbones_sprite", "captain_sprite"]
 
 
 func _asset(file: String, where: Vector3, scale_factor: float, label: String, atlas_path: String = "") -> Node3D:
