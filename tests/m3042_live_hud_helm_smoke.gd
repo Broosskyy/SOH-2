@@ -54,7 +54,12 @@ func _run() -> void:
 			adapter.set_moving(false)
 			check(sprite.frame == healthy_frame, "healthy ship never flips atlas row while stopping")
 			adapter.set_heading(PI)
-			check(sprite.frame < sprite.hframes, "all heading changes remain on intact atlas row")
+			if game._asset_mode == "private_sprite":
+				check(sprite.frame >= sprite.hframes and sprite.frame < sprite.hframes * 2,
+					"verified full-sail SeaBattles row stays active at 100 percent HP")
+			else:
+				check(sprite.frame >= 0 and sprite.frame < sprite.hframes * sprite.vframes,
+					"heading frame remains inside valid source atlas bounds")
 			adapter.set_heading(0.0)
 	# A real mid-range viewport check rather than assuming 1280px desktop.
 	root.size = Vector2i(844, 390)
