@@ -25,7 +25,7 @@ func _run() -> void:
 	check(scene.enemies.size() == 12, "three additional shootable ship classes")
 	check(scene.get_node_or_null("Island_6") != null, "rock island uses supported source asset slot")
 	check(scene.get_node_or_null("Island_7") != null, "tropical island uses supported source asset slot")
-	check(scene.zoom == 72.0, "camera starts close enough to read game ships")
+	check(scene.zoom == 59.0, "M304.6 camera brings reference ships closer to screen")
 	check(scene._wake_visual.mesh == null, "old rectangular wake mesh removed")
 	check(scene._wake_visual.get_child_count() == 2, "narrow port and starboard foamy wakes")
 	check(not scene._wake_visual.visible, "wake disabled when ship stopped")
