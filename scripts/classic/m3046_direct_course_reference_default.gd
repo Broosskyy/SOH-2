@@ -138,3 +138,31 @@ func _unhandled_input(event: InputEvent) -> void:
 			if Time.get_ticks_msec() - _last_native_touch_ms < TAP_MOUSE_DEBOUNCE_MS:
 				return
 	super._unhandled_input(event)
+
+
+func _captain_pack_available() -> bool:
+	# The original Captain of Sea APK has only been indexed, not decoded into
+	# ready-to-use sprites in this repository. Show the option only after a
+	# complete, privately provided PNG+pack.json test pack is actually present.
+	return FileAccess.file_exists("res://assets/classic/private_captainofsea/pack.json") or FileAccess.file_exists("user://captainofsea/pack.json")
+
+
+func _switch_graphics() -> void:
+	# Keep legacy SeaBattles <-> Sea of Bones cycle untouched for old game tests.
+	# If the user has a local Captain pack, insert it as the third reference.
+	if _captain_pack_available():
+		if _asset_mode == "seaofbones_sprite":
+			_asset_mode = "captain_sprite"
+			_apply_graphics_mode()
+			return
+		if _asset_mode == "captain_sprite":
+			_asset_mode = "private_sprite"
+			_apply_graphics_mode()
+			return
+	super._switch_graphics()
+
+
+func _refresh() -> void:
+	super._refresh()
+	if _pack_button != null and _asset_mode == "captain_sprite":
+		_pack_button.text = "GRAFIK: CAPTAIN OF SEA"
