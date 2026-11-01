@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/classic/m3045_original_world_pass.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/classic/m3046_direct_course_reference_default.gd" id="1_script"]
 
 [node name="ClassicSeaMap" type="Node3D"]
 script = ExtResource("1_script")
