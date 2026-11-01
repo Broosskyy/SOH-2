@@ -20,7 +20,14 @@ func _run() -> void:
 	root.add_child(game)
 	current_scene = game
 	await process_frame
-	check(game.get_script().resource_path.ends_with("m3045_original_world_pass.gd"), "M304.5 scene is active")
+	var current_script: Script = game.get_script()
+	var includes_original_world := false
+	while current_script != null:
+		if current_script.resource_path.ends_with("m3045_original_world_pass.gd"):
+			includes_original_world = true
+			break
+		current_script = current_script.get_base_script()
+	check(includes_original_world, "M304.5 original world persists in M304.6 inheritance")
 	check(game._asset_mode == "original_fleet", "original fleet selected")
 	check(game.ship.get_node_or_null("OriginalVessel") != null, "player retains first-party ship")
 	var island_count := 0
