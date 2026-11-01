@@ -1,8 +1,8 @@
-name: Abyssal Dominion M304.5 original island and kraken art, ocean, visual QA and Android
+name: Abyssal Dominion M304.6 instant click-to-sail and high-quality reference graphics QA
 
 on:
   push:
-    branches: [rebuild/m3045-original-world-visual-qa]
+    branches: [rebuild/m3046-direct-tap-and-reference-art]
     paths:
       - '.github/workflows/m304-shipyard.yml'
       - 'tests/m3037_graphics_integration_smoke.gd'
@@ -18,6 +18,7 @@ on:
       - 'tests/m3043_original_fleet_smoke.gd'
       - 'tests/m3044_ammo_shipyard_hud_smoke.gd'
       - 'tests/m3045_original_world_smoke.gd'
+      - 'tests/m3046_immediate_course_smoke.gd'
       - 'tests/m3045_visual_capture.gd'
       - 'tests/m3041_chainshot_load_probe.gd'
       - 'project.godot'
@@ -27,7 +28,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: abyssal-dominion-m3045-android
+  group: abyssal-dominion-m3046-android
   cancel-in-progress: true
 
 permissions:
@@ -139,23 +140,26 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb libgl1-mesa-dri >/dev/null
           xvfb-run -a -s "-screen 0 1280x720x24" godot --rendering-method gl_compatibility --path . --script res://tests/m3045_visual_capture.gd
+      - name: Verify immediate tap speed and reference-art first launch
+        timeout-minutes: 4
+        run: godot --headless --path . --script res://tests/m3046_immediate_course_smoke.gd
       - name: Build Android test APK with real integrated graphics (no placeholder option)
         run: |
           set -euo pipefail
-          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M3045_WORLD_ART.apk 2>&1 | tee /tmp/m304-apk-export.log
+          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.apk 2>&1 | tee /tmp/m304-apk-export.log
           if grep -Eq 'SCRIPT ERROR|Parse Error|ERROR: Failed to load script' /tmp/m304-apk-export.log; then
             echo "Godot reported script errors during Android export"
             exit 1
           fi
-      - name: Upload M304.5 playable test APK (reference graphics; not public release)
+      - name: Upload M304.6 playable test APK (reference graphics; not public release)
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Abyssal-Dominion-M3045-ORIGINAL-WORLD-VISUAL-QA-TEST
+          name: Abyssal-Dominion-M3046-DIRECT-TAP-REFERENCE-SPRITES-TEST
           path: |
-            builds/android/ABYSSAL_DOMINION_M3045_WORLD_ART.apk
-            builds/android/ABYSSAL_DOMINION_M3045_WORLD_ART.build.json
-            builds/android/ABYSSAL_DOMINION_M3045_WORLD_ART.signature.txt
+            builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.apk
+            builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.build.json
+            builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.signature.txt
             builds/visual/*.png
           if-no-files-found: error
           retention-days: 7
