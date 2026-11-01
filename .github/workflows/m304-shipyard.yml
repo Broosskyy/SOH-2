@@ -1,8 +1,8 @@
-name: Abyssal Dominion M304.6 instant click-to-sail and high-quality reference graphics QA
+name: Abyssal Dominion M304.7 ship atlas health-state audit and artwork integration QA
 
 on:
   push:
-    branches: [rebuild/m3046-direct-tap-and-reference-art]
+    branches: [rebuild/m3047-ship-art-health-qa]
     paths:
       - '.github/workflows/m304-shipyard.yml'
       - 'tests/m3037_graphics_integration_smoke.gd'
@@ -20,6 +20,7 @@ on:
       - 'tests/m3045_original_world_smoke.gd'
       - 'tests/m3046_immediate_course_smoke.gd'
       - 'tests/m3046_reference_sprite_capture.gd'
+      - 'tests/m3047_atlas_visual_audit.gd'
       - 'tests/m3045_visual_capture.gd'
       - 'tests/m3041_chainshot_load_probe.gd'
       - 'project.godot'
@@ -29,7 +30,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: abyssal-dominion-m3046-android
+  group: abyssal-dominion-m3047-android
   cancel-in-progress: true
 
 permissions:
@@ -104,6 +105,9 @@ jobs:
             done
             exit 1
           fi
+      - name: Extract and audit real ship atlas frames before graphical acceptance
+        timeout-minutes: 5
+        run: godot --headless --path . --script res://tests/m3047_atlas_visual_audit.gd
       - name: Headless M303.7 gameplay regression test
         timeout-minutes: 3
         run: godot --headless --path . --script res://tests/m3037_combat_smoke.gd
@@ -162,5 +166,6 @@ jobs:
             builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.build.json
             builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.signature.txt
             builds/visual/*.png
+            builds/atlas_audit/**
           if-no-files-found: error
           retention-days: 7
