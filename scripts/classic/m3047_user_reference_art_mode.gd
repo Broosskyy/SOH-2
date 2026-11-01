@@ -20,7 +20,7 @@ func _ready() -> void:
 
 func _find_private_art_pack() -> void:
 	for root_path in [USER_ART_RES, USER_ART_DATA]:
-		var manifest_path := root_path + "pack.json"
+		var manifest_path: String = str(root_path) + "pack.json"
 		if not FileAccess.file_exists(manifest_path):
 			continue
 		var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
