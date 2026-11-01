@@ -22,8 +22,14 @@ func _run() -> void:
 	root.add_child(game)
 	current_scene = game
 	await process_frame
-	check(game.get_script().resource_path.ends_with("m3046_direct_course_reference_default.gd"),
-		"new player steering code is active")
+	var current_script: Script = game.get_script()
+	var has_instant_course := false
+	while current_script != null:
+		if current_script.resource_path.ends_with("m3046_direct_course_reference_default.gd"):
+			has_instant_course = true
+			break
+		current_script = current_script.get_base_script()
+	check(has_instant_course, "immediate tap steering remains active under the ship integrity upgrade")
 	check(game._asset_mode == "private_sprite",
 		"test build with extracted SeaBattles PNG pack defaults to real reference sprites")
 	check(game.ship.get_node_or_null("ShipSprite") != null,
