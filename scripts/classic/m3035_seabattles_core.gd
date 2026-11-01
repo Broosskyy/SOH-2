@@ -10,7 +10,7 @@ var _wake_visual: MeshInstance3D
 
 func _ready() -> void:
 	_asset_mode = str(get_tree().root.get_meta("m3035_graphic_mode", "private_sprite"))
-	ASSET_BRIDGE.active_pack = "seaofbones" if _asset_mode == "seaofbones_sprite" else "seabattles"
+	ASSET_BRIDGE.active_pack = "captainofsea" if _asset_mode == "captain_sprite" else ("seaofbones" if _asset_mode == "seaofbones_sprite" else "seabattles")
 	super._ready()
 
 func _uses_private_art() -> bool:
