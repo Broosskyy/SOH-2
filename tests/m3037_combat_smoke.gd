@@ -25,21 +25,24 @@ func _run() -> void:
 	check(scene.get_node_or_null("UnifiedOcean") != null, "M303.6 ocean retained")
 	check(scene._ui_root != null, "M303.6 shared HUD retained")
 
-	# Navigation: turn toward eastern waypoint before advancing, no lateral teleport.
+	# M304.6: Seafight-style direct tap navigation, no turn-before-move delay.
 	scene.route.clear()
 	scene.ship.position = Vector3(0.0, 0.65, 0.0)
 	scene.ship.rotation.y = 0.0
 	scene._sea_speed = 0.0
 	var from: Vector3 = scene.ship.position
 	scene._course(from + Vector3(12.0, 0.0, 0.0))
-	for i in 18:
+	check(scene._sea_speed >= scene.SEA_MAX_SPEED - 0.01, "immediate cruise speed on tap")
+	scene._sail(1.0 / 60.0)
+	check(scene.ship.position.x > 0.06, "travels east on first frame without a turn pause")
+	for i in 17:
 		scene._sail(1.0 / 60.0)
-	check(scene.ship.position.distance_to(from) < 1.0, "no sideways travel while initial heading is far off course")
+	check(scene.ship.position.distance_to(from) > 2.0, "direct travel during first 300 ms")
 	for i in 102:
 		scene._sail(1.0 / 60.0)
-	check(scene.ship.position.distance_to(from) > 3.0, "ship accelerates after aligning bow")
-	check(scene.ship.position.x > from.x, "ship travels east after turning")
-	check(scene.zoom >= 66.0 and scene.zoom <= 82.0, "readable default camera zoom set")
+	check(scene.ship.position.distance_to(from) > 10.0, "direct course reaches destination")
+	check(scene.ship.position.x > from.x, "ship reaches the tapped eastern waypoint")
+	check(scene.zoom >= 55.0 and scene.zoom <= 62.0, "closer reference-ship camera zoom set")
 	scene._zoom_in()
 	for i in 8:
 		scene._zoom_in()
@@ -103,7 +106,7 @@ func _finish() -> void:
 		"status": "PASS" if failures.is_empty() else "FAIL",
 		"engine": Engine.get_version_info().string,
 		"failed": failures,
-		"scope": "M303.7 turn-then-move, closer zoom, projectile animation, delayed damage, graphics-swap stability, enemy cannon shots"
+		"scope": "M304.6 immediate click course, closer zoom, projectile animation, delayed damage, graphics-swap stability, enemy cannon shots"
 	}
 	print(JSON.stringify(report))
 	var file := OS.get_environment("M3037_QA_REPORT")
