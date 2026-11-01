@@ -32,6 +32,9 @@ var _animation_time := 0.0
 var _animation_row := 0
 var _motion_frames_verified := false
 var _last_drawn_frame := -1
+# VISUALLY AUDITED M304.7: SeaBattles ship atlases use row 0 for furled
+# sails and row 1 for FULL sails (healthy). Row 0 resembled a wreck.
+var _verified_full_sail_row := -1
 
 static func _is_available(path: String) -> bool:
 	return ResourceLoader.exists(path) or FileAccess.file_exists(path)
@@ -107,6 +110,10 @@ func set_ship_atlas(path: String, columns: int, rows: int, world_width: float, h
 	visual.hframes = columns
 	visual.vframes = rows
 	visual.frame = 0
+	# Crucial: the pictured SeaBattles row 0 has almost no visible sail area.
+	# The deployed row is row 1. This is a SAIL state, NOT hull damage!
+	_verified_full_sail_row = 1 if (active_pack == "seabattles" and
+		rows >= 2 and (path.contains("/ships/") or path.contains("\\ships\\"))) else -1
 	# Normalize visual width across different atlas resolutions.
 	visual.pixel_size = maxf(world_width, 0.1) / float(texture.get_width() / columns)
 	visual.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -155,6 +162,18 @@ func configure_frames(entry: Dictionary) -> void:
 	_idle_frames.clear()
 	_moving_frames.clear()
 	var columns := visual.hframes if visual != null else 4
+	# Dedicated health-safe visual selection. At 100% HP we ALWAYS pick
+	# the full-sail row, even when stopped. Sail state is never HP state.
+	if _verified_full_sail_row >= 0 and visual != null:
+		for column in columns:
+			_idle_frames.append(_verified_full_sail_row * columns + column)
+		frame_count = _idle_frames.size()
+		_motion_frames_verified = false
+		_animation_rows = 1
+		_animation_fps = 0.0
+		_last_drawn_frame = -1
+		_apply_frame()
+		return
 	for frame in entry.get("idle_frames", []):
 		if int(frame) >= 0 and int(frame) < columns:
 			_idle_frames.append(int(frame))
