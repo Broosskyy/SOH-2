@@ -97,6 +97,7 @@ func configure(ship_profile: String, visual_scale: float) -> void:
 		var mark_material := _mat(Color("1b1b1a"), 0.0, 1.0)
 		_mesh(_damage_marks, mark, Vector3(side * 1.2, 1.3, 0.8), mark_material)
 	_damage_marks.visible = false
+	_add_surface_details(hull_root, heavy, ghost, trim, deck_mat, sail_mat)
 	scale = Vector3.ONE * visual_scale
 	set_hull_ratio(1.0)
 
@@ -213,3 +214,39 @@ func _process(delta: float) -> void:
 	position.y = sin(_motion * 1.2 + _wave_seed) * 0.09 * intensity
 	rotation.z = sin(_motion * 0.94 + _wave_seed) * 0.021 * intensity
 	rotation.x = sin(_motion * 1.18 + _wave_seed * 0.6) * 0.025 * intensity
+
+
+func _add_surface_details(hull_root: Node3D, heavy: bool, ghost: bool, trim: Color, deck_material: Material, sail_material: Material) -> void:
+	# Lightweight first-party timber lines, hull bands and brass cabin windows.
+	# These are true 3D meshes, not randomized atlas damage-state images.
+	var details := Node3D.new()
+	details.name = "OriginalShipSurfaceDetails"
+	hull_root.add_child(details)
+	var grain := _mat(Color("ab855d") if not ghost else Color("638c87"), 0.0, 0.91)
+	var band := _mat(trim.darkened(0.19), 0.34, 0.48)
+	var window := _mat(Color("f1d5a3") if not ghost else Color("85ead0"), 0.22, 0.33)
+	if ghost:
+		window.emission_enabled = true
+		window.emission = Color("3e9d8a")
+		window.emission_energy_multiplier = 0.35
+	for i in 7:
+		var z: float = -3.13 + float(i) * 0.98
+		var width: float = 2.65 if heavy else 2.35
+		var plank := BoxMesh.new()
+		plank.size = Vector3(width, 0.025, 0.047)
+		_mesh(details, plank, Vector3(0, 1.175, z), grain)
+	for side in [-1.0, 1.0]:
+		_beam(details, Vector3(side * 1.27, 0.50, -2.7),
+			Vector3(side * 1.52, 0.50, 2.25), 0.045, band)
+		_beam(details, Vector3(side * 1.42, 0.81, -2.45),
+			Vector3(side * 1.45, 0.81, 2.24), 0.038, band)
+		for index in 3:
+			var port := BoxMesh.new()
+			port.size = Vector3(0.045, 0.22, 0.28)
+			_mesh(details, port,
+				Vector3(side * (1.2 if heavy else 1.13), 1.64, 1.78 + float(index) * 0.28), window)
+	# Shallow surface seams define the stern silhouette at close mobile zoom.
+	for index in 3:
+		var grain_line := BoxMesh.new()
+		grain_line.size = Vector3(0.045, 0.025, 0.92)
+		_mesh(details, grain_line, Vector3(-0.9 + float(index) * 0.9, 1.177, 1.8), grain)
