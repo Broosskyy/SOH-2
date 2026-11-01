@@ -1,8 +1,8 @@
-name: Abyssal Dominion M304.7 ship atlas health-state audit and artwork integration QA
+name: Abyssal Dominion M304.8 user ship variants, cosmetics and battle HUD art Android QA
 
 on:
   push:
-    branches: [rebuild/m3047-ship-art-health-qa]
+    branches: [rebuild/m3048-user-ship-variants-and-combat-art]
     paths:
       - '.github/workflows/m304-shipyard.yml'
       - 'tests/m3037_graphics_integration_smoke.gd'
@@ -22,6 +22,7 @@ on:
       - 'tests/m3046_reference_sprite_capture.gd'
       - 'tests/m3047_atlas_visual_audit.gd'
       - 'tests/m3047_health_safe_art_smoke.gd'
+      - 'tests/m3048_user_art_skins_smoke.gd'
       - 'tests/m3045_visual_capture.gd'
       - 'tests/m3041_chainshot_load_probe.gd'
       - 'project.godot'
@@ -31,7 +32,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: abyssal-dominion-m3047-android
+  group: abyssal-dominion-m3048-android
   cancel-in-progress: true
 
 permissions:
@@ -152,23 +153,26 @@ jobs:
       - name: Assert visually audited full-sail frames and user top-down import, at ALL hull HP
         timeout-minutes: 4
         run: godot --headless --path . --script res://tests/m3047_health_safe_art_smoke.gd
+      - name: Verify private original ship skins, independent cosmetic FX and functional ammo HUD
+        timeout-minutes: 4
+        run: godot --headless --path . --script res://tests/m3048_user_art_skins_smoke.gd
       - name: Build Android test APK with real integrated graphics (no placeholder option)
         run: |
           set -euo pipefail
-          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M3047_HEALTHY_SHIP.apk 2>&1 | tee /tmp/m304-apk-export.log
+          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M3048_REFERENCE_SKINS.apk 2>&1 | tee /tmp/m304-apk-export.log
           if grep -Eq 'SCRIPT ERROR|Parse Error|ERROR: Failed to load script' /tmp/m304-apk-export.log; then
             echo "Godot reported script errors during Android export"
             exit 1
           fi
-      - name: Upload M304.7 healthy-ship test APK (reference graphics; not public release)
+      - name: Upload M304.8 private-art-ready test APK (reference graphics; not public release)
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Abyssal-Dominion-M3047-HEALTHY-ATLASES-ART-IMPORT-TEST
+          name: Abyssal-Dominion-M3048-USER-SHIP-ART-TEST
           path: |
-            builds/android/ABYSSAL_DOMINION_M3047_HEALTHY_SHIP.apk
-            builds/android/ABYSSAL_DOMINION_M3047_HEALTHY_SHIP.build.json
-            builds/android/ABYSSAL_DOMINION_M3047_HEALTHY_SHIP.signature.txt
+            builds/android/ABYSSAL_DOMINION_M3048_REFERENCE_SKINS.apk
+            builds/android/ABYSSAL_DOMINION_M3048_REFERENCE_SKINS.build.json
+            builds/android/ABYSSAL_DOMINION_M3048_REFERENCE_SKINS.signature.txt
             builds/visual/*.png
             builds/atlas_audit/**
           if-no-files-found: error
