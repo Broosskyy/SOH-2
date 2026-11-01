@@ -99,7 +99,7 @@ func _toggle_original_fleet() -> void:
 
 func _apply_graphics_mode() -> void:
 	_fleet_enabled = _asset_mode == "original_fleet"
-	ASSET_BRIDGE.active_pack = "seaofbones" if _asset_mode == "seaofbones_sprite" else "seabattles"
+	ASSET_BRIDGE.active_pack = "captainofsea" if _asset_mode == "captain_sprite" else ("seaofbones" if _asset_mode == "seaofbones_sprite" else "seabattles")
 	get_tree().root.set_meta("m3035_graphic_mode", _asset_mode)
 	if ship != null:
 		_replace_visual(ship, SHIP, 0.9, "PlayerShip", CAPTAIN_ATLAS)
