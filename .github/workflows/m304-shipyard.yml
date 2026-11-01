@@ -21,6 +21,7 @@ on:
       - 'tests/m3046_immediate_course_smoke.gd'
       - 'tests/m3046_reference_sprite_capture.gd'
       - 'tests/m3047_atlas_visual_audit.gd'
+      - 'tests/m3047_health_safe_art_smoke.gd'
       - 'tests/m3045_visual_capture.gd'
       - 'tests/m3041_chainshot_load_probe.gd'
       - 'project.godot'
@@ -148,23 +149,26 @@ jobs:
       - name: Verify immediate tap speed and reference-art first launch
         timeout-minutes: 4
         run: godot --headless --path . --script res://tests/m3046_immediate_course_smoke.gd
+      - name: Assert visually audited full-sail frames and user top-down import, at ALL hull HP
+        timeout-minutes: 4
+        run: godot --headless --path . --script res://tests/m3047_health_safe_art_smoke.gd
       - name: Build Android test APK with real integrated graphics (no placeholder option)
         run: |
           set -euo pipefail
-          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.apk 2>&1 | tee /tmp/m304-apk-export.log
+          python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M3047_HEALTHY_SHIP.apk 2>&1 | tee /tmp/m304-apk-export.log
           if grep -Eq 'SCRIPT ERROR|Parse Error|ERROR: Failed to load script' /tmp/m304-apk-export.log; then
             echo "Godot reported script errors during Android export"
             exit 1
           fi
-      - name: Upload M304.6 playable test APK (reference graphics; not public release)
+      - name: Upload M304.7 healthy-ship test APK (reference graphics; not public release)
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Abyssal-Dominion-M3046-DIRECT-TAP-REFERENCE-SPRITES-TEST
+          name: Abyssal-Dominion-M3047-HEALTHY-ATLASES-ART-IMPORT-TEST
           path: |
-            builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.apk
-            builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.build.json
-            builds/android/ABYSSAL_DOMINION_M3046_DIRECT_TAP.signature.txt
+            builds/android/ABYSSAL_DOMINION_M3047_HEALTHY_SHIP.apk
+            builds/android/ABYSSAL_DOMINION_M3047_HEALTHY_SHIP.build.json
+            builds/android/ABYSSAL_DOMINION_M3047_HEALTHY_SHIP.signature.txt
             builds/visual/*.png
             builds/atlas_audit/**
           if-no-files-found: error
