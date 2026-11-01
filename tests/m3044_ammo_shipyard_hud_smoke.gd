@@ -20,7 +20,14 @@ func _run() -> void:
 	root.add_child(game)
 	current_scene = game
 	await process_frame
-	check(game.get_script().resource_path.ends_with("m3044_naval_hud_ammo_shop.gd"), "M304.4 game entry active")
+	var current_script: Script = game.get_script()
+	var has_m3044 := false
+	while current_script != null:
+		if current_script.resource_path.ends_with("m3044_naval_hud_ammo_shop.gd"):
+			has_m3044 = true
+			break
+		current_script = current_script.get_base_script()
+	check(has_m3044, "M304.4 functional HUD remains active via M304.5 inheritance")
 	check(game._ammo_panel != null and game._ammo_overlay != null and game._ammo_menu_button != null,
 		"functional ammunition inventory constructed")
 	check(game._ammo_buttons.size() == 3 and game._restock_buttons.size() == 3,
