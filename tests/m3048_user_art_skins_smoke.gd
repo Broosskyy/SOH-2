@@ -60,8 +60,8 @@ func _run() -> void:
 	if sprite != null:
 		check(sprite.visual.frame == 0 and sprite.visual.hframes == 1, "custom ship has only healthy frame")
 	var npc: Node3D = game.enemies[0]["node"]
-	var npc_id := npc.get_instance_id()
-	var ship_id := game.ship.get_instance_id()
+	var npc_id: int = npc.get_instance_id()
+	var ship_id: int = game.ship.get_instance_id()
 	game.hull = 100
 	game.gold = 95
 	game.cannonballs = 110
