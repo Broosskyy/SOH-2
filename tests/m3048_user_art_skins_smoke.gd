@@ -52,7 +52,7 @@ func _run() -> void:
 	root.add_child(game)
 	current_scene = game
 	await process_frame
-	check(game.get_script().resource_path.ends_with("m3048_user_ship_variants.gd"),
+	check((game.get_script().resource_path.ends_with("m3048_user_ship_variants.gd") or game.get_script().resource_path.ends_with("m3049_mobile_user_art_import.gd")),
 		"reference art integration is live in playable game")
 	check(not game._private_reference_manifest.is_empty(), "user artpack discovered before game starts")
 	var sprite: Node = game.ship.get_node_or_null("ShipSprite")
@@ -98,6 +98,7 @@ func _run() -> void:
 	game._layout_hud()
 	check(game._art_variants_button != null and game._pack_status != null,
 		"new responsive options controls are real and usable")
+	print("M3049_PANEL_DEBUG", str(game._options.get_global_rect()), " TOGGLE ", str(game._art_variants_button.get_global_rect()), " CLOSE ", str(game._options_close.get_global_rect()))
 	check(game._options.get_global_rect().encloses(game._art_variants_button.get_global_rect()),
 		"toggle lies entirely inside settings panel")
 	check(game._options.get_global_rect().encloses(game._options_close.get_global_rect()),
