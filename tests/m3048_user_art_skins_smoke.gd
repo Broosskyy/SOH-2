@@ -20,6 +20,7 @@ func _make_image(path: String, tint: Color) -> void:
 	check(image.save_png(ProjectSettings.globalize_path(path)) == OK, "test private texture created")
 
 func _run() -> void:
+	root.size = Vector2i(844, 390)
 	var root_path := "user://abyssal_user_art/"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(root_path + "ships"))
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(root_path + "ship_effect_variants"))
