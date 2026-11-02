@@ -28,6 +28,7 @@ func _zip(path: String, entries: Dictionary) -> void:
 	check(writer.close() == OK, "ZIP fixture closed")
 
 func _run() -> void:
+	root.size = Vector2i(844, 390)
 	root.set_meta("m3035_graphic_mode", "private_sprite")
 	var scene := load("res://scenes/classic/classic_sea_map.tscn") as PackedScene
 	check(scene != null, "playable game loads")
