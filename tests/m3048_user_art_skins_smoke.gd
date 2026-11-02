@@ -53,7 +53,7 @@ func _run() -> void:
 	root.add_child(game)
 	current_scene = game
 	await process_frame
-	check((game.get_script().resource_path.ends_with("m3048_user_ship_variants.gd") or game.get_script().resource_path.ends_with("m3049_mobile_user_art_import.gd")),
+	check((game.get_script().resource_path.ends_with("m3048_user_ship_variants.gd") or game.get_script().resource_path.ends_with("m3050_ship_skin_mobile_ui.gd")),
 		"reference art integration is live in playable game")
 	check(not game._private_reference_manifest.is_empty(), "user artpack discovered before game starts")
 	var sprite: Node = game.ship.get_node_or_null("ShipSprite")
