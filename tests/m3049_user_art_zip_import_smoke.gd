@@ -39,7 +39,7 @@ func _run() -> void:
 	root.add_child(game)
 	current_scene = game
 	await process_frame
-	check(game.get_script().resource_path.ends_with("m3049_mobile_user_art_import.gd"), "M304.9 is actual entry game")
+	check(game.get_script().resource_path.ends_with("m3050_ship_skin_mobile_ui.gd"), "M304.9 is actual entry game")
 	check(game._import_button != null and game._native_picker != null, "real import UI and file picker")
 	check(game._native_picker.use_native_dialog and game._native_picker.access == FileDialog.ACCESS_FILESYSTEM, "Android storage document picker configured")
 	check(game._safe_relative_path("ships/ship.png"), "safe PNG path allowed")
