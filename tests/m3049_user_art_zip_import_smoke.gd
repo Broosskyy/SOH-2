@@ -62,7 +62,7 @@ func _run() -> void:
 		"ship_effect_variants/ship_cosmetic.png": _png(Color(0.4, 0.8, 0.8))
 	})
 	var old_pos: Vector3 = game.ship.position
-	var old_ship_id := game.ship.get_instance_id()
+	var old_ship_id: int = game.ship.get_instance_id()
 	var old_npc_id: int = (game.enemies[0]["node"] as Node3D).get_instance_id()
 	game.hull = 79
 	game.gold = 123
