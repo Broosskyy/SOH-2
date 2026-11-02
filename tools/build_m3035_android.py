@@ -67,7 +67,7 @@ def main():
     parser.add_argument("--java-home", type=Path)
     parser.add_argument("--debug-keystore", type=Path)
     parser.add_argument("--editor-settings", type=Path, default=editor_settings_default())
-    parser.add_argument("--output", type=Path, default=ROOT / "builds/android/ABYSSAL_DOMINION_M3048_REFERENCE_SKINS.apk")
+    parser.add_argument("--output", type=Path, default=ROOT / "builds/android/ABYSSAL_DOMINION_M3049_ART_ZIP_IMPORT.apk")
     parser.add_argument("--allow-placeholders", action="store_true")
     args = parser.parse_args()
     version = subprocess.check_output([args.godot, "--version"], text=True).strip()
