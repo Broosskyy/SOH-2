@@ -161,7 +161,10 @@ jobs:
       - name: Verify Android native ZIP picker, safe curated image import and live actor HUD preservation
         timeout-minutes: 4
         run: godot --headless --path . --script res://tests/m3049_user_art_zip_import_smoke.gd
-      - name: Verify ship skin selection and all seven settings actions never overlap\n        timeout-minutes: 4\n        run: godot --headless --path . --script res://tests/m3050_ship_skin_ui_smoke.gd\n      - name: Build Android test APK with real integrated graphics (no placeholder option)
+      - name: Verify ship skin selection and all seven settings actions never overlap
+        timeout-minutes: 4
+        run: godot --headless --path . --script res://tests/m3050_ship_skin_ui_smoke.gd
+      - name: Build Android test APK with real integrated graphics (no placeholder option)
         run: |
           set -euo pipefail
           python3 tools/build_m3035_android.py --godot godot --android-sdk "$ANDROID_HOME" --java-home "$JAVA_HOME" --debug-keystore "$HOME/.android/debug.keystore" --output builds/android/ABYSSAL_DOMINION_M3050_SHIP_DESIGNS.apk 2>&1 | tee /tmp/m304-apk-export.log
